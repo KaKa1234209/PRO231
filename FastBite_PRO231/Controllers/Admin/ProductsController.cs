@@ -12,13 +12,23 @@ public class ProductsController : Controller
         _context = context;
     }
 
-    // GET: PRODUCTS
-    public async Task<IActionResult> Index()    
+    // Trang chủ: Danh sách + tìm kiếm
+    public async Task<IActionResult> Index(string searchString)
     {
-        return View(await _context.Products.ToListAsync());
+        var products = _context.Products
+            .Include(c => c.Category)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            products = products.Where(c =>
+                c.ProductName.Contains(searchString));
+        }
+
+        return View(await products.ToListAsync());
     }
 
-    // GET: PRODUCTS/Details/5
+    // Chi tiết
     public async Task<IActionResult> Details(int? productid)
     {
         if (productid == null)
@@ -36,18 +46,15 @@ public class ProductsController : Controller
         return View(product);
     }
 
-    // GET: PRODUCTS/Create
+    // Thêm
     public IActionResult Create()
     {
         return View();
     }
 
-    // POST: PRODUCTS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ProductId,CategoryId,ProductName,Price,Description,Image,Status,CartItems,Category,Inventory,InvoiceDetails,OrderDetails,PromotionDetails")] Product product)
+    public async Task<IActionResult> Create([Bind("CategoryId,ProductName,Price,Description,Image,Status")] Product product)
     {
         if (ModelState.IsValid)
         {
@@ -58,7 +65,7 @@ public class ProductsController : Controller
         return View(product);
     }
 
-    // GET: PRODUCTS/Edit/5
+    // Sửa
     public async Task<IActionResult> Edit(int? productid)
     {
         if (productid == null)
@@ -74,12 +81,9 @@ public class ProductsController : Controller
         return View(product);
     }
 
-    // POST: PRODUCTS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? productid, [Bind("ProductId,CategoryId,ProductName,Price,Description,Image,Status,CartItems,Category,Inventory,InvoiceDetails,OrderDetails,PromotionDetails")] Product product)
+    public async Task<IActionResult> Edit(int? productid, [Bind("CategoryId,ProductName,Price,Description,Image,Status")] Product product)
     {
         if (productid != product.ProductId)
         {
@@ -109,7 +113,7 @@ public class ProductsController : Controller
         return View(product);
     }
 
-    // GET: PRODUCTS/Delete/5
+    // Xóa
     public async Task<IActionResult> Delete(int? productid)
     {
         if (productid == null)
@@ -127,7 +131,6 @@ public class ProductsController : Controller
         return View(product);
     }
 
-    // POST: PRODUCTS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? productid)
@@ -145,5 +148,22 @@ public class ProductsController : Controller
     private bool ProductExists(int? productid)
     {
         return _context.Products.Any(e => e.ProductId == productid);
+    }
+
+    //Cập nhật trạng thái
+    [HttpPost]
+    public async Task<IActionResult> UpdateStatus(int productId, bool status)
+    {
+        var product = await _context.Products.FindAsync(productId);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        product.Status = status;
+        await _context.SaveChangesAsync();
+            
+        return Json(new { success = true });
     }
 }

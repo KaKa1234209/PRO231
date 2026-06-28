@@ -12,13 +12,21 @@ public class EmployeesController : Controller
         _context = context;
     }
 
-    // GET: EMPLOYEES
-    public async Task<IActionResult> Index()    
+    // Trang chủ: Danh sách + tìm kiếm
+    public async Task<IActionResult> Index(string searchString)
     {
-        return View(await _context.Employees.ToListAsync());
+        var employees = _context.Employees.AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            employees = employees.Where(c =>
+                c.FullName.Contains(searchString));
+        }
+
+        return View(await employees.ToListAsync());
     }
 
-    // GET: EMPLOYEES/Details/5
+    // Chi tiết
     public async Task<IActionResult> Details(int? employeeid)
     {
         if (employeeid == null)
@@ -36,114 +44,106 @@ public class EmployeesController : Controller
         return View(employee);
     }
 
-    // GET: EMPLOYEES/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
 
-    // POST: EMPLOYEES/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Add(employee);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(employee);
-    }
+    //// GET: EMPLOYEES/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
 
-    // GET: EMPLOYEES/Edit/5
-    public async Task<IActionResult> Edit(int? employeeid)
-    {
-        if (employeeid == null)
-        {
-            return NotFound();
-        }
+    //[HttpPost]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> Create([Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
+    //{
+    //    if (ModelState.IsValid)
+    //    {
+    //        _context.Add(employee);
+    //        await _context.SaveChangesAsync();
+    //        return RedirectToAction(nameof(Index));
+    //    }
+    //    return View(employee);
+    //}
 
-        var employee = await _context.Employees.FindAsync(employeeid);
-        if (employee == null)
-        {
-            return NotFound();
-        }
-        return View(employee);
-    }
+    //// GET: EMPLOYEES/Edit/5
+    //public async Task<IActionResult> Edit(int? employeeid)
+    //{
+    //    if (employeeid == null)
+    //    {
+    //        return NotFound();
+    //    }
 
-    // POST: EMPLOYEES/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? employeeid, [Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
-    {
-        if (employeeid != employee.EmployeeId)
-        {
-            return NotFound();
-        }
+    //    var employee = await _context.Employees.FindAsync(employeeid);
+    //    if (employee == null)
+    //    {
+    //        return NotFound();
+    //    }
+    //    return View(employee);
+    //}
 
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(employee);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EmployeeExists(employee.EmployeeId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(employee);
-    }
+    //[HttpPost]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> Edit(int? employeeid, [Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
+    //{
+    //    if (employeeid != employee.EmployeeId)
+    //    {
+    //        return NotFound();
+    //    }
 
-    // GET: EMPLOYEES/Delete/5
-    public async Task<IActionResult> Delete(int? employeeid)
-    {
-        if (employeeid == null)
-        {
-            return NotFound();
-        }
+    //    if (ModelState.IsValid)
+    //    {
+    //        try
+    //        {
+    //            _context.Update(employee);
+    //            await _context.SaveChangesAsync();
+    //        }
+    //        catch (DbUpdateConcurrencyException)
+    //        {
+    //            if (!EmployeeExists(employee.EmployeeId))
+    //            {
+    //                return NotFound();
+    //            }
+    //            else
+    //            {
+    //                throw;
+    //            }
+    //        }
+    //        return RedirectToAction(nameof(Index));
+    //    }
+    //    return View(employee);
+    //}
 
-        var employee = await _context.Employees
-            .FirstOrDefaultAsync(m => m.EmployeeId == employeeid);
-        if (employee == null)
-        {
-            return NotFound();
-        }
+    //// GET: EMPLOYEES/Delete/5
+    //public async Task<IActionResult> Delete(int? employeeid)
+    //{
+    //    if (employeeid == null)
+    //    {
+    //        return NotFound();
+    //    }
 
-        return View(employee);
-    }
+    //    var employee = await _context.Employees
+    //        .FirstOrDefaultAsync(m => m.EmployeeId == employeeid);
+    //    if (employee == null)
+    //    {
+    //        return NotFound();
+    //    }
 
-    // POST: EMPLOYEES/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? employeeid)
-    {
-        var employee = await _context.Employees.FindAsync(employeeid);
-        if (employee != null)
-        {
-            _context.Employees.Remove(employee);
-        }
+    //    return View(employee);
+    //}
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
+    //public async Task<IActionResult> DeleteConfirmed(int? employeeid)
+    //{
+    //    var employee = await _context.Employees.FindAsync(employeeid);
+    //    if (employee != null)
+    //    {
+    //        _context.Employees.Remove(employee);
+    //    }
 
-    private bool EmployeeExists(int? employeeid)
-    {
-        return _context.Employees.Any(e => e.EmployeeId == employeeid);
-    }
+    //    await _context.SaveChangesAsync();
+    //    return RedirectToAction(nameof(Index));
+    //}
+
+    //private bool EmployeeExists(int? employeeid)
+    //{
+    //    return _context.Employees.Any(e => e.EmployeeId == employeeid);
+    //}
 }

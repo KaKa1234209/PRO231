@@ -12,7 +12,7 @@ public class CategoriesController : Controller
         _context = context;
     }
 
-    // Trang chủ
+    // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index(string searchString)
     {
         var categories = _context.Categories
@@ -54,7 +54,7 @@ public class CategoriesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description")] Category category)
+    public async Task<IActionResult> Create([Bind("CategoryName,Description")] Category category)
     {
         if (ModelState.IsValid)
         {
@@ -83,7 +83,7 @@ public class CategoriesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description")] Category category)
+    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryName,Description")] Category category)
     {
         if (categoryid != category.CategoryId)
         {

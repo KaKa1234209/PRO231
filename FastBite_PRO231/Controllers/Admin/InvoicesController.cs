@@ -12,13 +12,23 @@ public class InvoicesController : Controller
         _context = context;
     }
 
-    // GET: INVOICES
-    public async Task<IActionResult> Index()    
+    // Trang chủ: Danh sách + tìm kiếm
+    public async Task<IActionResult> Index(int? searchId)
     {
-        return View(await _context.Invoices.ToListAsync());
+        var invoices = _context.Invoices
+            .Include(i => i.Order)
+            .Include(i => i.Employee)
+            .AsQueryable();
+
+        if (searchId.HasValue)
+        {
+            invoices = invoices.Where(i => i.InvoiceId == searchId);
+        }
+
+        return View(await invoices.ToListAsync());
     }
 
-    // GET: INVOICES/Details/5
+    // Chi tiết
     public async Task<IActionResult> Details(int? invoiceid)
     {
         if (invoiceid == null)
@@ -27,7 +37,11 @@ public class InvoicesController : Controller
         }
 
         var invoice = await _context.Invoices
-            .FirstOrDefaultAsync(m => m.InvoiceId == invoiceid);
+            .Include(i => i.InvoiceDetails)
+            .ThenInclude(d => d.Product)
+            .Include(i => i.Employee)
+            .Include(i => i.Order)
+            .FirstOrDefaultAsync(i => i.InvoiceId == invoiceid);
         if (invoice == null)
         {
             return NotFound();
@@ -36,18 +50,15 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // GET: INVOICES/Create
+    // Thêm
     public IActionResult Create()
     {
         return View();
     }
 
-    // POST: INVOICES/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("InvoiceId,OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
+    public async Task<IActionResult> Create([Bind("OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
     {
         if (ModelState.IsValid)
         {
@@ -58,7 +69,7 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // GET: INVOICES/Edit/5
+    // Sửa
     public async Task<IActionResult> Edit(int? invoiceid)
     {
         if (invoiceid == null)
@@ -74,12 +85,9 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // POST: INVOICES/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? invoiceid, [Bind("InvoiceId,OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
+    public async Task<IActionResult> Edit(int? invoiceid, [Bind("OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
     {
         if (invoiceid != invoice.InvoiceId)
         {
@@ -109,7 +117,7 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // GET: INVOICES/Delete/5
+    // Xóa
     public async Task<IActionResult> Delete(int? invoiceid)
     {
         if (invoiceid == null)
@@ -127,7 +135,6 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // POST: INVOICES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? invoiceid)
