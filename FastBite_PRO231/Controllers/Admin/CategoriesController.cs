@@ -28,7 +28,7 @@ public class CategoriesController : Controller
         return View(await categories.ToListAsync());
     }
 
-    // GET: CATEGORYS/Details
+    // Xem chi tiết
     public async Task<IActionResult> Details(int? categoryid)
     {
         if (categoryid == null)
@@ -46,13 +46,12 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // GET: CATEGORYS/Create
+    // Thêm
     public IActionResult Create()
     {
         return View();
     }
 
-    // POST: CATEGORYS/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description")] Category category)
@@ -66,7 +65,7 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // GET: CATEGORYS/Edit
+    // Sửa
     public async Task<IActionResult> Edit(int? categoryid)
     {
         if (categoryid == null)
@@ -82,7 +81,6 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // POST: CATEGORYS/Edit
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description")] Category category)
@@ -150,19 +148,5 @@ public class CategoriesController : Controller
     private bool CategoryExists(int? categoryid)
     {
         return _context.Categories.Any(e => e.CategoryId == categoryid);
-    }
-
-    //Tìm kiếm
-    public async Task<IActionResult> Index(string searchString)
-    {
-        var categories = _context.Categories.AsQueryable();
-
-        if (!string.IsNullOrEmpty(searchString))
-        {
-            categories = categories.Where(c =>
-                c.CategoryName.Contains(searchString));
-        }
-
-        return View(await categories.ToListAsync());
     }
 }
