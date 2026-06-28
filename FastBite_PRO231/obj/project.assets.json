@@ -3097,11 +3097,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Kỳ 7\\NET107\\BT\\FastBite_PRO231\\FastBite_PRO231.csproj",
+      "projectUniqueName": "D:\\Kỳ 7\\PRO231\\PRO231\\FastBite_PRO231\\FastBite_PRO231.csproj",
       "projectName": "FastBite_PRO231",
-      "projectPath": "D:\\Kỳ 7\\NET107\\BT\\FastBite_PRO231\\FastBite_PRO231.csproj",
+      "projectPath": "D:\\Kỳ 7\\PRO231\\PRO231\\FastBite_PRO231\\FastBite_PRO231.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\Kỳ 7\\NET107\\BT\\FastBite_PRO231\\obj\\",
+      "outputPath": "D:\\Kỳ 7\\PRO231\\PRO231\\FastBite_PRO231\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

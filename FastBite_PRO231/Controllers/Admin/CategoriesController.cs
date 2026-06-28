@@ -12,13 +12,23 @@ public class CategoriesController : Controller
         _context = context;
     }
 
-    // GET: CATEGORYS
-    public async Task<IActionResult> Index()    
+    // Trang chủ
+    public async Task<IActionResult> Index(string searchString)
     {
-        return View(await _context.Categories.ToListAsync());
+        var categories = _context.Categories
+            .Include(c => c.Products)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            categories = categories.Where(c =>
+                c.CategoryName.Contains(searchString));
+        }
+
+        return View(await categories.ToListAsync());
     }
 
-    // GET: CATEGORYS/Details/5
+    // GET: CATEGORYS/Details
     public async Task<IActionResult> Details(int? categoryid)
     {
         if (categoryid == null)
@@ -43,11 +53,9 @@ public class CategoriesController : Controller
     }
 
     // POST: CATEGORYS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Products")] Category category)
+    public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description")] Category category)
     {
         if (ModelState.IsValid)
         {
@@ -58,7 +66,7 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // GET: CATEGORYS/Edit/5
+    // GET: CATEGORYS/Edit
     public async Task<IActionResult> Edit(int? categoryid)
     {
         if (categoryid == null)
@@ -74,12 +82,10 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // POST: CATEGORYS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    // POST: CATEGORYS/Edit
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description,Products")] Category category)
+    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description")] Category category)
     {
         if (categoryid != category.CategoryId)
         {
@@ -109,7 +115,7 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // GET: CATEGORYS/Delete/5
+    // Xóa
     public async Task<IActionResult> Delete(int? categoryid)
     {
         if (categoryid == null)
@@ -127,7 +133,6 @@ public class CategoriesController : Controller
         return View(category);
     }
 
-    // POST: CATEGORYS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? categoryid)
@@ -145,5 +150,19 @@ public class CategoriesController : Controller
     private bool CategoryExists(int? categoryid)
     {
         return _context.Categories.Any(e => e.CategoryId == categoryid);
+    }
+
+    //Tìm kiếm
+    public async Task<IActionResult> Index(string searchString)
+    {
+        var categories = _context.Categories.AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            categories = categories.Where(c =>
+                c.CategoryName.Contains(searchString));
+        }
+
+        return View(await categories.ToListAsync());
     }
 }

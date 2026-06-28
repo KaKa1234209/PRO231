@@ -1,5 +1,4 @@
-﻿using FastBite_PRO231.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace FastBite_PRO231.Metadata

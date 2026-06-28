@@ -1,15 +1,15 @@
-﻿    using FastBite_PRO231.Models;
-    using FastBite_PRO231.ViewModels;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
+﻿using FastBite_PRO231.Models;
+using FastBite_PRO231.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-    namespace FastBite_PRO231.Controllers
+namespace FastBite_PRO231.Controllers.Auth
     {
-        public class AccountController : Controller
+        public class LoginController : Controller
         {
             private readonly FastBiteDbContext _context;
 
-            public AccountController(FastBiteDbContext context)
+            public LoginController(FastBiteDbContext context)
             {
                 _context = context;
             }

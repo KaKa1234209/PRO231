@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace FastBite_PRO231.Dashboards
+namespace FastBite_PRO231.Controllers.Auth
 {
-    public class AdminController : Controller
+    public class ProfileController : Controller
     {
         public IActionResult Index()
         {
