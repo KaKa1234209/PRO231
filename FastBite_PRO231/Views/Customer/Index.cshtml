@@ -1,0 +1,71 @@
+@model IEnumerable<FastBite_PRO231.Models.Customer>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.UserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FullName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Address)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Point)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cart)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Orders)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.User)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.UserId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.FullName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Address)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Point)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Cart)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Orders)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.User)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CustomerId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CustomerId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CustomerId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,9 @@
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.csproj.AssemblyReference.cache
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\rpswa.dswa.cache.json
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.GeneratedMSBuildEditorConfig.editorconfig
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.AssemblyInfoInputs.cache
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.AssemblyInfo.cs
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.csproj.CoreCompileInputs.cache
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.MvcApplicationPartsAssemblyInfo.cache
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.RazorAssemblyInfo.cache
+D:\Kỳ 7\NET107\BT\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.RazorAssemblyInfo.cs

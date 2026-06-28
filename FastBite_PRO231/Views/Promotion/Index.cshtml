@@ -1,0 +1,59 @@
+@model IEnumerable<FastBite_PRO231.Models.Promotion>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.PromotionName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DiscountType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DiscountValue)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PromotionDetails)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.PromotionName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DiscountType)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DiscountValue)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PromotionDetails)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.PromotionId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.PromotionId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.PromotionId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
