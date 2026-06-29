@@ -19,11 +19,11 @@ public class CustomersController : Controller
 
         if (!string.IsNullOrEmpty(searchString))
         {
-            employees = employees.Where(c =>
+            customer = customer.Where(c =>
                 c.FullName.Contains(searchString));
         }
 
-        return View(await employees.ToListAsync());
+        return View(await customer.ToListAsync());
     }
 
     // GET: CUSTOMERS/Details/5

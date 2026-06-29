@@ -15,7 +15,11 @@ public partial class Order
 
     public decimal TotalAmount { get; set; }
 
+    public int? EmployeeId { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
+
+    public virtual Employee? Employee { get; set; }
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
