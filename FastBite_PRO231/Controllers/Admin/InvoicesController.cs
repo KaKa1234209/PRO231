@@ -13,16 +13,35 @@ public class InvoicesController : Controller
     }
 
     // Trang chủ: Danh sách + tìm kiếm
-    public async Task<IActionResult> Index(int? searchId)
+    public async Task<IActionResult> Index(int? searchId, int? invoiceId, bool? status, DateTime? invoiceDate)
     {
         var invoices = _context.Invoices
             .Include(i => i.Order)
             .Include(i => i.Employee)
             .AsQueryable();
-
+        //Tìm kiếm
         if (searchId.HasValue)
         {
             invoices = invoices.Where(i => i.InvoiceId == searchId);
+        }
+
+        // Lọc theo mã hóa đơn
+        if (invoiceId.HasValue)
+        {
+            invoices = invoices.Where(i => i.InvoiceId == invoiceId.Value);
+        }
+
+        // Lọc theo trạng thái
+        if (status.HasValue)
+        {
+            invoices = invoices.Where(i => i.Status == status.Value);
+        }
+
+        // Lọc theo ngày
+        if (invoiceDate.HasValue)
+        {
+            invoices = invoices.Where(i =>
+                i.InvoiceDate.Date == invoiceDate.Value.Date);
         }
 
         return View(await invoices.ToListAsync());
@@ -50,107 +69,21 @@ public class InvoicesController : Controller
         return View(invoice);
     }
 
-    // Thêm
-    public IActionResult Create()
-    {
-        return View();
-    }
-
+    //Hủy 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
+    public async Task<IActionResult> Cancel(int invoiceId)
     {
-        if (ModelState.IsValid)
-        {
-            _context.Add(invoice);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(invoice);
-    }
+        var invoice = await _context.Invoices.FindAsync(invoiceId);
 
-    // Sửa
-    public async Task<IActionResult> Edit(int? invoiceid)
-    {
-        if (invoiceid == null)
-        {
-            return NotFound();
-        }
-
-        var invoice = await _context.Invoices.FindAsync(invoiceid);
-        if (invoice == null)
-        {
-            return NotFound();
-        }
-        return View(invoice);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? invoiceid, [Bind("OrderId,EmployeeId,InvoiceDate,TotalAmount,PaymentMethod,Status,Employee,InvoiceDetails,Order")] Invoice invoice)
-    {
-        if (invoiceid != invoice.InvoiceId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(invoice);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!InvoiceExists(invoice.InvoiceId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(invoice);
-    }
-
-    // Xóa
-    public async Task<IActionResult> Delete(int? invoiceid)
-    {
-        if (invoiceid == null)
-        {
-            return NotFound();
-        }
-
-        var invoice = await _context.Invoices
-            .FirstOrDefaultAsync(m => m.InvoiceId == invoiceid);
         if (invoice == null)
         {
             return NotFound();
         }
 
-        return View(invoice);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? invoiceid)
-    {
-        var invoice = await _context.Invoices.FindAsync(invoiceid);
-        if (invoice != null)
-        {
-            _context.Invoices.Remove(invoice);
-        }
+        invoice.Status = false;
 
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
 
-    private bool InvoiceExists(int? invoiceid)
-    {
-        return _context.Invoices.Any(e => e.InvoiceId == invoiceid);
+        return RedirectToAction(nameof(Index));
     }
 }

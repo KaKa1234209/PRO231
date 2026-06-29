@@ -12,7 +12,7 @@ public class OrdersController : Controller
         _context = context;
     }
 
-    // GET: ORDERS
+    // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index()    
     {
         return View(await _context.Orders.ToListAsync());
@@ -36,114 +36,38 @@ public class OrdersController : Controller
         return View(order);
     }
 
-    // GET: ORDERS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: ORDERS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    //Cập nhật trạng thái
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("OrderId,CustomerId,OrderDate,Status,TotalAmount,Customer,Invoices,OrderDetails")] Order order)
+    public async Task<IActionResult> UpdateStatus(int ordrId, bool status)
     {
-        if (ModelState.IsValid)
-        {
-            _context.Add(order);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(order);
-    }
+        var order = await _context.Products.FindAsync(ordrId);
 
-    // GET: ORDERS/Edit/5
-    public async Task<IActionResult> Edit(int? orderid)
-    {
-        if (orderid == null)
-        {
-            return NotFound();
-        }
-
-        var order = await _context.Orders.FindAsync(orderid);
-        if (order == null)
-        {
-            return NotFound();
-        }
-        return View(order);
-    }
-
-    // POST: ORDERS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? orderid, [Bind("OrderId,CustomerId,OrderDate,Status,TotalAmount,Customer,Invoices,OrderDetails")] Order order)
-    {
-        if (orderid != order.OrderId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(order.OrderId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(order);
-    }
-
-    // GET: ORDERS/Delete/5
-    public async Task<IActionResult> Delete(int? orderid)
-    {
-        if (orderid == null)
-        {
-            return NotFound();
-        }
-
-        var order = await _context.Orders
-            .FirstOrDefaultAsync(m => m.OrderId == orderid);
         if (order == null)
         {
             return NotFound();
         }
 
-        return View(order);
+        order.Status = status;
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true });
     }
 
-    // POST: ORDERS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? orderid)
+    //Hủy 
+    [HttpPost]
+    public async Task<IActionResult> Cancel(int orderId)
     {
-        var order = await _context.Orders.FindAsync(orderid);
-        if (order != null)
+        var order = await _context.Orders.FindAsync(orderId);
+
+        if (order == null)
         {
-            _context.Orders.Remove(order);
+            return NotFound();
         }
+
+        order.Status = "Cancelled";
 
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
 
-    private bool OrderExists(int? orderid)
-    {
-        return _context.Orders.Any(e => e.OrderId == orderid);
+        return RedirectToAction(nameof(Index));
     }
 }
