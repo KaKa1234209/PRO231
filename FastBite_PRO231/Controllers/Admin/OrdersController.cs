@@ -18,7 +18,7 @@ public class OrdersController : Controller
         return View(await _context.Orders.ToListAsync());
     }
 
-    // GET: ORDERS/Details/5
+    // Chi tiết
     public async Task<IActionResult> Details(int? orderid)
     {
         if (orderid == null)

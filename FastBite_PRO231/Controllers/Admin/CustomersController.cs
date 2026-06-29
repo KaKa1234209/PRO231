@@ -12,10 +12,18 @@ public class CustomersController : Controller
         _context = context;
     }
 
-    // GET: CUSTOMERS
-    public async Task<IActionResult> Index()    
+    // Trang chủ: Danh sách + tìm kiếm
+    public async Task<IActionResult> Index(string searchString)
     {
-        return View(await _context.Customers.ToListAsync());
+        var customer = _context.Employees.AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            employees = employees.Where(c =>
+                c.FullName.Contains(searchString));
+        }
+
+        return View(await employees.ToListAsync());
     }
 
     // GET: CUSTOMERS/Details/5
