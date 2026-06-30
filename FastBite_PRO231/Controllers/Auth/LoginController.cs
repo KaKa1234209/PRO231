@@ -1,5 +1,6 @@
 ﻿using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,8 +39,16 @@ namespace FastBite_PRO231.Controllers.Auth
                     return View(model);
                 }
 
+                //mã hóa 
+            var passwordHasher = new PasswordHasher<object>();
 
-                if (user.Password != model.Password)
+            var result = passwordHasher.VerifyHashedPassword(
+                null,
+                user.Password,
+                model.Password
+            );
+
+            if (user.Password != model.Password)
                 {
                     ModelState.AddModelError("", "Sai tên đăng nhập hoặc mật khẩu");
                     return View(model);
@@ -71,10 +80,58 @@ namespace FastBite_PRO231.Controllers.Auth
                         return RedirectToAction("Login");
                 }
             }
+        [HttpPost]
+        public IActionResult Login(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
 
-            // ================= ĐĂNG KÝ =================
+            var user = _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefault(u => u.UserName == model.UserName);
 
-            [HttpGet]
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Sai tài khoản hoặc mật khẩu");
+                return View(model);
+            }
+
+            var hasher = new PasswordHasher<object>();
+
+            var result = hasher.VerifyHashedPassword(
+                null,
+                user.Password,
+                model.Password
+            );
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                ModelState.AddModelError("", "Sai tài khoản hoặc mật khẩu");
+                return View(model);
+            }
+
+            if (user.Status != "Hoạt động")
+            {
+                ModelState.AddModelError("", $"Tài khoản: {user.Status}");
+                return View(model);
+            }
+
+            HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("UserName", user.UserName);
+            HttpContext.Session.SetString("Role", user.Role.RoleName);
+
+            return user.Role.RoleName switch
+            {
+                "Admin" => RedirectToAction("Index", "AdminDashboard"),
+                "Employee" => RedirectToAction("Index", "EmployeeDashboard"),
+                "Customer" => RedirectToAction("Index", "CustomerDashboard"),
+                _ => RedirectToAction("Login")
+            };
+        }
+
+        // ================= ĐĂNG KÝ =================
+
+        [HttpGet]
             public IActionResult Register()
             {
                 return View();
@@ -107,7 +164,7 @@ namespace FastBite_PRO231.Controllers.Auth
                 if (!ModelState.IsValid)
                     return View(model);
 
-                User user = new User
+            User user = new User
                 {
                     UserName = model.UserName,
                     Password = model.Password,
@@ -117,8 +174,15 @@ namespace FastBite_PRO231.Controllers.Auth
                     CreatedAt = DateTime.Now,
                     RoleId = 3 // Customer
                 };
+            //mã hóa 
+            var hasher = new PasswordHasher<object>();
 
-                _context.Users.Add(user);
+            user.Password = hasher.HashPassword(null, model.Password);
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            _context.Users.Add(user);
                 _context.SaveChanges();
 
                 Customer customer = new Customer
