@@ -22,4 +22,10 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Views\Employee\Invoice\" />
+	  <Folder Include="Views\Employee\Inventory\" />
+	  <Folder Include="Views\Employee\Product\" />
+	</ItemGroup>
+
 </Project>
