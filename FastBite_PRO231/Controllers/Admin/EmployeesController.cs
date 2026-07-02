@@ -53,7 +53,7 @@ public class EmployeesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
+    public async Task<IActionResult> Create([Bind("EmployeeId,UserId,FullName,Position,HireDate,Status")] Employee employee)
     {
         if (ModelState.IsValid)
         {
@@ -73,16 +73,18 @@ public class EmployeesController : Controller
         }
 
         var employee = await _context.Employees.FindAsync(employeeid);
+
         if (employee == null)
         {
             return NotFound();
         }
+
         return View(employee);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? employeeid, [Bind("EmployeeId,UserId,FullName,Position,Phone,Email,HireDate,Status,Invoices,User")] Employee employee)
+    public async Task<IActionResult> Edit(int? employeeid, [Bind("EmployeeId,UserId,FullName,Position,HireDate,Status")] Employee employee)
     {
         if (employeeid != employee.EmployeeId)
         {
@@ -94,6 +96,21 @@ public class EmployeesController : Controller
             try
             {
                 _context.Update(employee);
+
+                var user = await _context.Users.FindAsync(employee.UserId);
+
+                if (user != null)
+                {
+                    if (employee.Status == "Đã nghỉ việc")
+                    {
+                        user.Status = "Ngừng hoạt động";
+                    }
+                    else
+                    {
+                        user.Status = "Hoạt động";
+                    }
+                }
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -110,36 +127,6 @@ public class EmployeesController : Controller
             return RedirectToAction(nameof(Index));
         }
         return View(employee);
-    }
-
-    // Xóa
-    public async Task<IActionResult> Delete(int? employeeid)
-    {
-        if (employeeid == null)
-        {
-            return NotFound();
-        }
-
-        var employee = await _context.Employees
-            .FirstOrDefaultAsync(m => m.EmployeeId == employeeid);
-        if (employee == null)
-        {
-            return NotFound();
-        }
-
-        return View(employee);
-    }
-
-    public async Task<IActionResult> DeleteConfirmed(int? employeeid)
-    {
-        var employee = await _context.Employees.FindAsync(employeeid);
-        if (employee != null)
-        {
-            _context.Employees.Remove(employee);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
     }
 
     private bool EmployeeExists(int? employeeid)
