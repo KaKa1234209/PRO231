@@ -5,10 +5,6 @@ namespace FastBite_PRO231.Models
 {
     public class CustomerMetadata
     {
-        [Required(ErrorMessage = "Họ tên không được để trống")]
-        [StringLength(100)]
-        public string FullName { get; set; }
-
         [Required(ErrorMessage = "Địa chỉ không được để trống")]
         [StringLength(255)]
         public string Address { get; set; }

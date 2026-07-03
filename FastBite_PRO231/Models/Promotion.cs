@@ -15,5 +15,9 @@ public partial class Promotion
 
     public string Status { get; set; } = null!;
 
+    public DateTime StartDate { get; set; }
+
+    public DateTime EndDate { get; set; }
+
     public virtual ICollection<PromotionDetail> PromotionDetails { get; set; } = new List<PromotionDetail>();
 }

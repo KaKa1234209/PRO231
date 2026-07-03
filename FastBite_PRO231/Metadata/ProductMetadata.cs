@@ -6,18 +6,18 @@ namespace FastBite_PRO231.Models
     public class ProductMetadata
     {
         [Required(ErrorMessage = "Tên món ăn không được để trống")]
-        [StringLength(100)]
+        [StringLength(100,
+            ErrorMessage = "Tên món ăn tối đa 100 ký tự")]
         public string ProductName { get; set; }
 
         [Required(ErrorMessage = "Giá bán không được để trống")]
-        [Range(0, int.MaxValue,
-            ErrorMessage = "Giá bán phải từ 0 trở lên")]
+        [Range(typeof(decimal), "0", "999999999", ErrorMessage = "Giá bán phải lớn hơn hoặc bằng 0")]
         public decimal Price { get; set; }
 
-        [StringLength(255)]
-        public string Description { get; set; }
+        [StringLength(255, ErrorMessage = "Mô tả tối đa 255 ký tự")]
+        public string? Description { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn hình ảnh")]
+        [Required(ErrorMessage = "Vui lòng chọn hình ảnh sản phẩm")]
         public string Image { get; set; }
     }
 

@@ -194,6 +194,8 @@ public partial class FastBiteDbContext : DbContext
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF387FBEC1");
 
+            entity.Property(e => e.DeliveryAddress).HasMaxLength(255);
+            entity.Property(e => e.Note).HasMaxLength(500);
             entity.Property(e => e.OrderDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -255,7 +257,13 @@ public partial class FastBiteDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false);
             entity.Property(e => e.DiscountValue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EndDate)
+                .HasDefaultValueSql("(dateadd(day,(30),getdate()))")
+                .HasColumnType("datetime");
             entity.Property(e => e.PromotionName).HasMaxLength(100);
+            entity.Property(e => e.StartDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("Sắp diễn ra");
