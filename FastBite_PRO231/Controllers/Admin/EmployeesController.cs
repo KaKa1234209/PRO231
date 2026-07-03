@@ -15,7 +15,9 @@ public class EmployeesController : Controller
     // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index(string searchString)
     {
-        var employees = _context.Employees.AsQueryable();
+        var employees = _context.Employees
+            .Include(c => c.User)
+            .AsQueryable();
 
         if (!string.IsNullOrEmpty(searchString))
         {

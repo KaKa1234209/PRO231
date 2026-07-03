@@ -15,7 +15,9 @@ public class CustomersController : Controller
     // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index(string searchString)
     {
-        var customer = _context.Employees.AsQueryable();
+        var customer = _context.Employees
+            .Include(c => c.User)
+            .AsQueryable();
 
         if (!string.IsNullOrEmpty(searchString))
         {
@@ -50,9 +52,6 @@ public class CustomersController : Controller
         return View();
     }
 
-    // POST: CUSTOMERS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("CustomerId,UserId,FullName,Address,Point,Cart,Orders,User")] Customer customer)
@@ -82,9 +81,6 @@ public class CustomersController : Controller
         return View(customer);
     }
 
-    // POST: CUSTOMERS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int? customerid, [Bind("CustomerId,UserId,FullName,Address,Point,Cart,Orders,User")] Customer customer)
