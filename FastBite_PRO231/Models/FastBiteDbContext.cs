@@ -102,13 +102,6 @@ public partial class FastBiteDbContext : DbContext
             entity.HasIndex(e => e.UserId, "UQ__Customer__1788CC4D4DB1F31F").IsUnique();
 
             entity.Property(e => e.Address).HasMaxLength(255);
-            entity.Property(e => e.Email)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.Phone)
-                .HasMaxLength(15)
-                .IsUnicode(false);
 
             entity.HasOne(d => d.User).WithOne(p => p.Customer)
                 .HasForeignKey<Customer>(d => d.UserId)
@@ -122,7 +115,6 @@ public partial class FastBiteDbContext : DbContext
 
             entity.HasIndex(e => e.UserId, "UQ__Employee__1788CC4DB5D4965C").IsUnique();
 
-            entity.Property(e => e.FullName).HasMaxLength(100);
             entity.Property(e => e.HireDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -301,9 +293,10 @@ public partial class FastBiteDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Email)
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.FullName)
                 .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasDefaultValue("");
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .IsUnicode(false);

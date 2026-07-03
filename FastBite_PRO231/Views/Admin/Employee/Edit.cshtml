@@ -1,4 +1,4 @@
-@model FastBite_PRO231.Models.Employee
+@model FastBite_PRO231.Models.EmployeeCreateVM
 
 @{
     ViewData["Title"] = "Edit";
@@ -42,21 +42,6 @@
                 <label asp-for="HireDate" class="control-label"></label>
                 <input asp-for="HireDate" class="form-control" />
                 <span asp-validation-for="HireDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Invoices" class="control-label"></label>
-                <input asp-for="Invoices" class="form-control" />
-                <span asp-validation-for="Invoices" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="User" class="control-label"></label>
-                <input asp-for="User" class="form-control" />
-                <span asp-validation-for="User" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

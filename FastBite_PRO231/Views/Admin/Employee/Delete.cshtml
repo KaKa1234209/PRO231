@@ -1,4 +1,4 @@
-@model FastBite_PRO231.Models.Employee
+@model FastBite_PRO231.Models.EmployeeCreateVM
 
 @{
     ViewData["Title"] = "Delete";
@@ -64,22 +64,6 @@
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Invoices)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Invoices)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User)
         </dd>
     </dl>
     <form asp-action="Delete">

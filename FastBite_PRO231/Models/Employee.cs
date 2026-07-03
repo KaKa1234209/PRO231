@@ -9,8 +9,6 @@ public partial class Employee
 
     public int UserId { get; set; }
 
-    public string FullName { get; set; } = null!;
-
     public string Position { get; set; } = null!;
 
     public DateTime HireDate { get; set; }

@@ -21,6 +21,8 @@ public partial class User
 
     public string Phone { get; set; } = null!;
 
+    public string FullName { get; set; } = null!;
+
     public virtual Customer? Customer { get; set; }
 
     public virtual Employee? Employee { get; set; }

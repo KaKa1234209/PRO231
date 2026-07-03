@@ -9,15 +9,9 @@ public partial class Customer
 
     public int UserId { get; set; }
 
-    public string FullName { get; set; } = null!;
-
     public string Address { get; set; } = null!;
 
     public int Point { get; set; }
-
-    public string Email { get; set; } = null!;
-
-    public string Phone { get; set; } = null!;
 
     public virtual Cart? Cart { get; set; }
 
