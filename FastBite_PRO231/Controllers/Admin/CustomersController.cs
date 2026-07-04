@@ -15,20 +15,20 @@ public class CustomersController : Controller
     // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index(string searchString)
     {
-        var customer = _context.Employees
+        var customer = _context.Customers
             .Include(c => c.User)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(searchString))
         {
             customer = customer.Where(c =>
-                c.FullName.Contains(searchString));
+                c.User.FullName.Contains(searchString));
         }
 
         return View(await customer.ToListAsync());
     }
 
-    // GET: CUSTOMERS/Details/5
+    // Chi Tiết
     public async Task<IActionResult> Details(int? customerid)
     {
         if (customerid == null)
@@ -37,6 +37,7 @@ public class CustomersController : Controller
         }
 
         var customer = await _context.Customers
+            .Include(c => c.User)
             .FirstOrDefaultAsync(m => m.CustomerId == customerid);
         if (customer == null)
         {
@@ -46,7 +47,7 @@ public class CustomersController : Controller
         return View(customer);
     }
 
-    // GET: CUSTOMERS/Create
+    // Thêm
     public IActionResult Create()
     {
         return View();
@@ -65,7 +66,7 @@ public class CustomersController : Controller
         return View(customer);
     }
 
-    // GET: CUSTOMERS/Edit/5
+    // Sửa
     public async Task<IActionResult> Edit(int? customerid)
     {
         if (customerid == null)
@@ -113,7 +114,7 @@ public class CustomersController : Controller
         return View(customer);
     }
 
-    // GET: CUSTOMERS/Delete/5
+    // Xóa
     public async Task<IActionResult> Delete(int? customerid)
     {
         if (customerid == null)
@@ -131,7 +132,6 @@ public class CustomersController : Controller
         return View(customer);
     }
 
-    // POST: CUSTOMERS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? customerid)

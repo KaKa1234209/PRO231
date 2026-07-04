@@ -22,7 +22,7 @@ public class EmployeesController : Controller
         if (!string.IsNullOrEmpty(searchString))
         {
             employees = employees.Where(c =>
-                c.FullName.Contains(searchString));
+                c.User.FullName.Contains(searchString));
         }
 
         return View(await employees.ToListAsync());

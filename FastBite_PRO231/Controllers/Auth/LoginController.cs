@@ -100,6 +100,7 @@ namespace FastBite_PRO231.Controllers.Auth
                 Password = hasher.HashPassword(null, model.Password),
                 Email = model.Email,
                 Phone = model.Phone,
+                FullName = model.FullName,
                 Status = "Hoạt động",
                 CreatedAt = DateTime.Now,
                 RoleId = 3
@@ -111,7 +112,6 @@ namespace FastBite_PRO231.Controllers.Auth
             var customer = new Customer
             {
                 UserId = user.UserId,
-                FullName = model.UserName,
                 Address = "",
                 Point = 0
             };
