@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FastBite_PRO231")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+983622b483998c28893a1f1ea948cfa4cd7d17cf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+76cf8d153bfb42dd867c8b3535f48c2409944755")]
 [assembly: System.Reflection.AssemblyProductAttribute("FastBite_PRO231")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FastBite_PRO231")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

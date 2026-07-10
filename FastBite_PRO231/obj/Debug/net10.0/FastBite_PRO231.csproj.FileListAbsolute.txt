@@ -157,7 +157,6 @@ D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\rjsmcshtml.dswa.cache.
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\scopedcss\bundle\FastBite_PRO231.styles.css
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\scopedcss\projectbundle\FastBite_PRO231.bundle.scp.css
-D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\befnha43ht-{0}-b9sayid5wm-b9sayid5wm.gz
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\obsief9we2-{0}-61n19gt1b8-61n19gt1b8.gz
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\j9rrmwtn8o-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\29qianqpmq-{0}-t1cqhe9u97-t1cqhe9u97.gz
@@ -233,3 +232,9 @@ D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\refint\FastBite_PRO231
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.pdb
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\FastBite_PRO231.genruntimeconfig.cache
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\ref\FastBite_PRO231.dll
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\deuijubf68-{0}-dvk6r74y11-dvk6r74y11.gz
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\vfu11rgv8e-{0}-q0jgtng7wh-q0jgtng7wh.gz
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\024wdrp1oi-{0}-x0w7dpiu6q-x0w7dpiu6q.gz
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\7v08yuy38q-{0}-03trml5kpm-03trml5kpm.gz
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\54cu6oir9b-{0}-1hi9i44dn1-1hi9i44dn1.gz
+D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\obj\Debug\net10.0\compressed\befnha43ht-{0}-l1uwslmd7z-l1uwslmd7z.gz
