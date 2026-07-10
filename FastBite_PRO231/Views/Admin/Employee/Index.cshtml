@@ -1,64 +1,372 @@
-@model IEnumerable<FastBite_PRO231.Models.EmployeeCreateVM>
+@model FastBite_PRO231.ViewModels.EmployeeManagementIndexViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý nhân viên";
+
+    bool IsWorking(string status)
+    {
+        return string.Equals(
+            status,
+            "Đang làm việc",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    bool IsAccountActive(string status)
+    {
+        return string.Equals(
+            status,
+            "Hoạt động",
+            StringComparison.OrdinalIgnoreCase);
+    }
 }
 
-<h1>Index</h1>
+<section class="fbemployee-page">
+    <div class="fbemployee-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FullName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Position)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HireDate)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.FullName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Position)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.HireDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.EmployeeId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.EmployeeId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.EmployeeId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <h1>Nhân viên</h1>
+
+            <span>
+                Quản lý hồ sơ, tài khoản và hoạt động của nhân viên.
+            </span>
+        </div>
+
+        <a asp-controller="Employees"
+           asp-action="Create"
+           class="fbemployee-create-button">
+
+            + Thêm nhân viên
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Tổng nhân viên</span>
+
+                <strong>
+                    @Model.TotalEmployees
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Đang làm việc</span>
+
+                <strong class="fbemployee-green">
+                    @Model.WorkingEmployees
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Đã nghỉ việc</span>
+
+                <strong class="fbemployee-red">
+                    @Model.ResignedEmployees
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Tài khoản hoạt động</span>
+
+                <strong class="fbemployee-blue">
+                    @Model.ActiveAccounts
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Employees"
+          asp-action="Index"
+          method="get"
+          class="fbemployee-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Tên, tài khoản, email, điện thoại hoặc chức vụ..." />
+
+        <select name="status"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+            {
+                <option value="" selected>
+                    Tất cả trạng thái
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+            }
+
+            @if (Model.StatusFilter == "working")
+            {
+                <option value="working" selected>
+                    Đang làm việc
+                </option>
+            }
+            else
+            {
+                <option value="working">
+                    Đang làm việc
+                </option>
+            }
+
+            @if (Model.StatusFilter == "resigned")
+            {
+                <option value="resigned" selected>
+                    Đã nghỉ việc
+                </option>
+            }
+            else
+            {
+                <option value="resigned">
+                    Đã nghỉ việc
+                </option>
+            }
+
+            @if (Model.StatusFilter == "inactive")
+            {
+                <option value="inactive" selected>
+                    Tài khoản bị khóa
+                </option>
+            }
+            else
+            {
+                <option value="inactive">
+                    Tài khoản bị khóa
+                </option>
+            }
+        </select>
+
+        <button type="submit"
+                class="fbemployee-search-button">
+
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Employees"
+           asp-action="Index"
+           class="fbemployee-reset-button">
+
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Employees.Count == 0)
+    {
+        <div class="fbemployee-empty">
+            <div>👨‍🍳</div>
+
+            <h2>Không tìm thấy nhân viên</h2>
+
+            <p>
+                Hãy thử thay đổi từ khóa hoặc bộ lọc trạng thái.
+            </p>
+
+            <a asp-controller="Employees"
+               asp-action="Create"
+               class="fbemployee-create-button">
+
+                + Thêm nhân viên
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="fbemployee-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Liên hệ</th>
+                            <th>Chức vụ</th>
+                            <th>Ngày vào làm</th>
+                            <th>Hoạt động</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var employee in Model.Employees)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fbemployee-profile">
+                                        <div class="fbemployee-avatar">
+                                            @{
+                                                var firstCharacter =
+                                                    string.IsNullOrWhiteSpace(
+                                                        employee.FullName)
+                                                        ? "N"
+                                                        : employee.FullName
+                                                            .Substring(0, 1)
+                                                            .ToUpper();
+                                            }
+
+                                            @firstCharacter
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                @employee.FullName
+                                            </strong>
+
+                                            <span>
+                                                @("@")@employee.UserName
+                                            </span>
+
+                                            <small>
+                                                Mã NV: #@employee.EmployeeId
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-contact">
+                                        <span>
+                                            ✉ @employee.Email
+                                        </span>
+
+                                        <span>
+                                            ☎ @employee.Phone
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="fbemployee-position">
+                                        @employee.Position
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @employee.HireDate.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-work-count">
+                                        <span>
+                                            🧾 @employee.OrdersHandled đơn
+                                        </span>
+
+                                        <span>
+                                            💳 @employee.InvoicesCreated hóa đơn
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-status-list">
+                                        @if (IsWorking(employee.EmployeeStatus))
+                                        {
+                                            <span class="fbemployee-status working">
+                                                Đang làm việc
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fbemployee-status resigned">
+                                                Đã nghỉ việc
+                                            </span>
+                                        }
+
+                                        @if (IsAccountActive(employee.AccountStatus))
+                                        {
+                                            <span class="fbemployee-account active">
+                                                Tài khoản mở
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fbemployee-account inactive">
+                                                Tài khoản khóa
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-actions">
+                                        <a asp-controller="Employees"
+                                           asp-action="Details"
+                                           asp-route-id="@employee.EmployeeId"
+                                           class="fbemployee-details-button">
+
+                                            Chi tiết
+                                        </a>
+
+                                        <a asp-controller="Employees"
+                                           asp-action="Edit"
+                                           asp-route-id="@employee.EmployeeId"
+                                           class="fbemployee-edit-button">
+
+                                            Sửa
+                                        </a>
+
+                                        <form asp-controller="Employees"
+                                              asp-action="ToggleStatus"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@employee.EmployeeId" />
+
+                                            @if (IsWorking(employee.EmployeeStatus))
+                                            {
+                                                <button type="submit"
+                                                        class="fbemployee-resign-button"
+                                                        onclick="return confirm('Xác nhận chuyển nhân viên này sang trạng thái đã nghỉ việc?')">
+
+                                                    Cho nghỉ
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="fbemployee-return-button"
+                                                        onclick="return confirm('Xác nhận cho nhân viên này làm việc lại?')">
+
+                                                    Làm lại
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

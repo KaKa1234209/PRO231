@@ -1,89 +1,122 @@
-@model FastBite_PRO231.Models.Product
+@model Product
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Sửa sản phẩm";
 }
 
-<h1>Edit</h1>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Sửa sản phẩm</h1>
+                <p>Cập nhật thông tin món ăn của FastBite.</p>
+            </div>
 
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ProductId" />
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label"></label>
-                <input asp-for="CategoryId" class="form-control" />
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ProductName" class="control-label"></label>
-                <input asp-for="ProductName" class="form-control" />
-                <span asp-validation-for="ProductName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Image" class="control-label"></label>
-                <input asp-for="Image" class="form-control" />
-                <span asp-validation-for="Image" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-check-input" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CartItems" class="control-label"></label>
-                <input asp-for="CartItems" class="form-control" />
-                <span asp-validation-for="CartItems" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-                <input asp-for="Category" class="form-control" />
-                <span asp-validation-for="Category" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Inventory" class="control-label"></label>
-                <input asp-for="Inventory" class="form-control" />
-                <span asp-validation-for="Inventory" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InvoiceDetails" class="control-label"></label>
-                <input asp-for="InvoiceDetails" class="form-control" />
-                <span asp-validation-for="InvoiceDetails" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OrderDetails" class="control-label"></label>
-                <input asp-for="OrderDetails" class="form-control" />
-                <span asp-validation-for="OrderDetails" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PromotionDetails" class="control-label"></label>
-                <input asp-for="PromotionDetails" class="form-control" />
-                <span asp-validation-for="PromotionDetails" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <form asp-controller="Products"
+                  asp-action="Edit"
+                  asp-route-productid="@Model.ProductId"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="ProductId" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3 fw-bold">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="fb-form-label">
+                        Tên sản phẩm
+                    </label>
+
+                    <input asp-for="ProductName"
+                           class="form-control fb-form-control" />
+
+                    <span asp-validation-for="ProductName"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="fb-form-label">
+                        Danh mục
+                    </label>
+
+                    <select asp-for="CategoryId"
+                            asp-items="ViewBag.CategoryId"
+                            class="form-select fb-form-control">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+
+                    <span asp-validation-for="CategoryId"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Price" class="fb-form-label">
+                        Giá bán
+                    </label>
+
+                    <input asp-for="Price"
+                           class="form-control fb-form-control" />
+
+                    <span asp-validation-for="Price"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Image" class="fb-form-label">
+                        Đường dẫn hình ảnh
+                    </label>
+
+                    <input asp-for="Image"
+                           class="form-control fb-form-control" />
+
+                    <span asp-validation-for="Image"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="fb-form-label">
+                        Mô tả
+                    </label>
+
+                    <textarea asp-for="Description"
+                              rows="4"
+                              class="form-control fb-form-control"></textarea>
+
+                    <span asp-validation-for="Description"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="Status" class="form-check-input" />
+
+                    <label asp-for="Status" class="form-check-label fw-bold">
+                        Đang bán
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="submit" class="btn fb-btn-primary">
+                        Cập nhật
+                    </button>
+
+                    <a class="btn fb-btn-outline"
+                       asp-controller="Products"
+                       asp-action="Index">
+                        Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
 }

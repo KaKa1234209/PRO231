@@ -1,101 +1,101 @@
-@model FastBite_PRO231.Models.Product
+@model Product
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết sản phẩm";
 }
 
-<h1>Details</h1>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Chi tiết sản phẩm</h1>
+                <p>Xem thông tin chi tiết sản phẩm.</p>
+            </div>
 
-<div>
-    <h4>Product</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CategoryId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CategoryId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ProductName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ProductName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Image)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Image)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CartItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CartItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Inventory)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Inventory)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceDetails)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceDetails)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderDetails)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderDetails)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PromotionDetails)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PromotionDetails)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.ProductId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+            <div class="text-center mb-4">
+                @if (!string.IsNullOrWhiteSpace(Model.Image))
+                {
+                    <img src="@Model.Image"
+                         class="fb-product-thumb"
+                         style="width: 130px; height: 130px;"
+                         alt="@Model.ProductName" />
+                }
+                else
+                {
+                    <div class="fb-product-placeholder mx-auto"
+                         style="width: 130px; height: 130px; font-size: 60px;">
+                        🍔
+                    </div>
+                }
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Mã sản phẩm</div>
+                <div class="fb-detail-value">#@Model.ProductId</div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Tên sản phẩm</div>
+                <div class="fb-detail-value">@Model.ProductName</div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Danh mục</div>
+                <div class="fb-detail-value">
+                    @(Model.Category == null
+                        ? "Chưa có danh mục"
+                        : Model.Category.CategoryName)
+                </div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Giá bán</div>
+                <div class="fb-detail-value fb-price">
+                    @String.Format("{0:N0}đ", Model.Price)
+                </div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Trạng thái</div>
+                <div class="fb-detail-value">
+                    @if (Model.Status)
+                    {
+                        <span class="fb-badge fb-status-active">
+                            Đang bán
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="fb-badge fb-status-inactive">
+                            Ngừng bán
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Mô tả</div>
+                <div class="fb-detail-value">
+                    @(string.IsNullOrWhiteSpace(Model.Description)
+                        ? "Chưa có mô tả"
+                        : Model.Description)
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center mt-4">
+                <a class="btn fb-btn-primary"
+                   asp-controller="Products"
+                   asp-action="Edit"
+                   asp-route-productid="@Model.ProductId">
+                    Sửa
+                </a>
+
+                <a class="btn fb-btn-outline"
+                   asp-controller="Products"
+                   asp-action="Index">
+                    Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

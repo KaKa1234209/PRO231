@@ -1,5 +1,65 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model FastBite_PRO231.Models.Customer
+
 @{
+    ViewData["Title"] = "Thêm khách hàng";
+}
+
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Thêm khách hàng</h1>
+                <p>Tạo hồ sơ khách hàng từ tài khoản có quyền Customer.</p>
+            </div>
+
+            <form asp-controller="Customers" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+                <div class="mb-3">
+                    <label asp-for="UserId" class="fb-form-label">Tài khoản khách hàng</label>
+
+                    <select asp-for="UserId" asp-items="ViewBag.UserId" class="form-select fb-form-control">
+                        <option value="">-- Chọn tài khoản khách hàng --</option>
+                    </select>
+
+                    <span asp-validation-for="UserId" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Address" class="fb-form-label">Địa chỉ</label>
+
+                    <textarea asp-for="Address"
+                              rows="4"
+                              class="form-control fb-form-control"
+                              placeholder="Nhập địa chỉ khách hàng"></textarea>
+
+                    <span asp-validation-for="Address" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Point" class="fb-form-label">Điểm tích lũy</label>
+
+                    <input asp-for="Point" class="form-control fb-form-control" placeholder="Ví dụ: 0" />
+
+                    <span asp-validation-for="Point" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="submit" class="btn fb-btn-primary">
+                        Lưu khách hàng
+                    </button>
+
+                    <a class="btn fb-btn-outline" asp-controller="Customers" asp-action="Index">
+                        Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

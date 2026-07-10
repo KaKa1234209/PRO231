@@ -1,59 +1,476 @@
-@model FastBite_PRO231.Models.EmployeeCreateVM
+@model FastBite_PRO231.ViewModels.EmployeeManagementDetailsViewModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết nhân viên";
+
+    var isWorking =
+        string.Equals(
+            Model.EmployeeStatus,
+            "Đang làm việc",
+            StringComparison.OrdinalIgnoreCase);
+
+    var isAccountActive =
+        string.Equals(
+            Model.AccountStatus,
+            "Hoạt động",
+            StringComparison.OrdinalIgnoreCase);
+
+    string OrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbemployee-order-completed",
+            "Đã hủy" => "fbemployee-order-cancelled",
+            "Đang giao" => "fbemployee-order-delivering",
+            "Đang xử lý" => "fbemployee-order-processing",
+            "Đang chuẩn bị" => "fbemployee-order-processing",
+            _ => "fbemployee-order-pending"
+        };
+    }
 }
 
-<h1>Details</h1>
+<section class="fbemployee-page">
+    <div class="fbemployee-header">
+        <div>
+            <p>CHI TIẾT NHÂN VIÊN</p>
 
-<div>
-    <h4>Employee</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FullName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FullName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Position)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Position)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Phone)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Phone)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.HireDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.HireDate)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.EmployeeId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+            <h1>@Model.FullName</h1>
+
+            <span>
+                Kiểm tra hồ sơ, đơn hàng và hóa đơn nhân viên đã xử lý.
+            </span>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-controller="Employees"
+               asp-action="Edit"
+               asp-route-id="@Model.EmployeeId"
+               class="fbemployee-edit-button">
+
+                Chỉnh sửa
+            </a>
+
+            <a asp-controller="Employees"
+               asp-action="Index"
+               class="fbemployee-reset-button">
+
+                ← Quay lại
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="fbemployee-details-grid">
+        <div class="fbemployee-details-main">
+
+            <section class="fbemployee-panel">
+                <div class="fbemployee-panel-heading">
+                    <div>
+                        <p>HỒ SƠ NHÂN VIÊN</p>
+                        <h2>Thông tin cá nhân</h2>
+                    </div>
+
+                    @if (isWorking)
+                    {
+                        <span class="fbemployee-status working">
+                            Đang làm việc
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="fbemployee-status resigned">
+                            Đã nghỉ việc
+                        </span>
+                    }
+                </div>
+
+                <div class="fbemployee-large-profile">
+                    <div class="fbemployee-large-avatar">
+                        @{
+                            var firstCharacter =
+                                string.IsNullOrWhiteSpace(Model.FullName)
+                                    ? "N"
+                                    : Model.FullName
+                                        .Substring(0, 1)
+                                        .ToUpper();
+                        }
+
+                        @firstCharacter
+                    </div>
+
+                    <div>
+                        <h2>@Model.FullName</h2>
+
+                        <span>
+                            @("@")@Model.UserName
+                        </span>
+
+                        <small>
+                            Mã nhân viên: #@Model.EmployeeId
+                        </small>
+                    </div>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Mã tài khoản</span>
+
+                    <strong>
+                        #@Model.UserId
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Chức vụ</span>
+
+                    <strong>
+                        @Model.Position
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Email</span>
+
+                    <strong>
+                        @Model.Email
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Số điện thoại</span>
+
+                    <strong>
+                        @Model.Phone
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Ngày vào làm</span>
+
+                    <strong>
+                        @Model.HireDate.ToString("dd/MM/yyyy")
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Ngày tạo tài khoản</span>
+
+                    <strong>
+                        @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div class="fbemployee-info-row">
+                    <span>Trạng thái tài khoản</span>
+
+                    @if (isAccountActive)
+                    {
+                        <strong class="fbemployee-account-text active">
+                            Hoạt động
+                        </strong>
+                    }
+                    else
+                    {
+                        <strong class="fbemployee-account-text inactive">
+                            Ngừng hoạt động
+                        </strong>
+                    }
+                </div>
+            </section>
+
+            <section class="fbemployee-panel">
+                <div class="fbemployee-panel-heading">
+                    <div>
+                        <p>ĐƠN HÀNG ĐÃ XỬ LÝ</p>
+                        <h2>Đơn hàng gần đây</h2>
+                    </div>
+
+                    <a asp-controller="Orders"
+                       asp-action="Index"
+                       asp-route-search="@Model.FullName"
+                       class="fbemployee-panel-link">
+
+                        Xem tất cả →
+                    </a>
+                </div>
+
+                @if (Model.RecentOrders.Count == 0)
+                {
+                    <div class="fbemployee-empty-small">
+                        <div>🧾</div>
+
+                        <h3>Chưa xử lý đơn hàng</h3>
+
+                        <p>
+                            Nhân viên này chưa được ghi nhận xử lý đơn.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                #@order.OrderId
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            @order.CustomerName
+                                        </td>
+
+                                        <td>
+                                            @order.OrderDate.ToString(
+                                                "dd/MM/yyyy HH:mm")
+                                        </td>
+
+                                        <td>
+                                            <strong class="fbemployee-money">
+                                                @order.TotalAmount.ToString("N0")đ
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            <span class="fbemployee-order-status @OrderStatusClass(order.Status)">
+                                                @order.Status
+                                            </span>
+                                        </td>
+
+                                        <td class="text-end">
+                                            <a asp-controller="Orders"
+                                               asp-action="Details"
+                                               asp-route-id="@order.OrderId"
+                                               class="fbemployee-small-button">
+
+                                                Xem đơn
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+
+            <section class="fbemployee-panel">
+                <div class="fbemployee-panel-heading">
+                    <div>
+                        <p>HÓA ĐƠN ĐÃ LẬP</p>
+                        <h2>Hóa đơn gần đây</h2>
+                    </div>
+
+                    <a asp-controller="Invoices"
+                       asp-action="Index"
+                       asp-route-search="@Model.FullName"
+                       class="fbemployee-panel-link">
+
+                        Xem tất cả →
+                    </a>
+                </div>
+
+                @if (Model.RecentInvoices.Count == 0)
+                {
+                    <div class="fbemployee-empty-small">
+                        <div>💳</div>
+
+                        <h3>Chưa lập hóa đơn</h3>
+
+                        <p>
+                            Nhân viên này chưa được ghi nhận lập hóa đơn.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Mã hóa đơn</th>
+                                    <th>Mã đơn</th>
+                                    <th>Ngày lập</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var invoice in Model.RecentInvoices)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                #@invoice.InvoiceId
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            #@invoice.OrderId
+                                        </td>
+
+                                        <td>
+                                            @invoice.InvoiceDate.ToString(
+                                                "dd/MM/yyyy HH:mm")
+                                        </td>
+
+                                        <td>
+                                            <strong class="fbemployee-money">
+                                                @invoice.TotalAmount.ToString("N0")đ
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            @if (invoice.Status)
+                                            {
+                                                <span class="fbemployee-invoice active">
+                                                    Hoạt động
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fbemployee-invoice cancelled">
+                                                    Đã hủy
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <td class="text-end">
+                                            <a asp-controller="Invoices"
+                                               asp-action="Details"
+                                               asp-route-id="@invoice.InvoiceId"
+                                               class="fbemployee-small-button">
+
+                                                Xem hóa đơn
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        </div>
+
+        <aside class="fbemployee-details-side">
+            <section class="fbemployee-summary-card">
+                <p>TỔNG QUAN HOẠT ĐỘNG</p>
+
+                <h2>@Model.FullName</h2>
+
+                <div class="fbemployee-summary-stat">
+                    <span>Đơn đã xử lý</span>
+
+                    <strong>
+                        @Model.TotalOrdersHandled
+                    </strong>
+                </div>
+
+                <div class="fbemployee-summary-stat">
+                    <span>Đơn hoàn thành</span>
+
+                    <strong class="fbemployee-green">
+                        @Model.CompletedOrders
+                    </strong>
+                </div>
+
+                <div class="fbemployee-summary-stat">
+                    <span>Hóa đơn đã lập</span>
+
+                    <strong class="fbemployee-blue">
+                        @Model.TotalInvoices
+                    </strong>
+                </div>
+
+                <div class="fbemployee-summary-money">
+                    <span>Doanh thu hóa đơn</span>
+
+                    <strong>
+                        @Model.ActiveInvoiceRevenue.ToString("N0")đ
+                    </strong>
+                </div>
+
+                <a asp-controller="Employees"
+                   asp-action="Edit"
+                   asp-route-id="@Model.EmployeeId"
+                   class="fbemployee-primary-action">
+
+                    Chỉnh sửa nhân viên
+                </a>
+
+                <a asp-controller="Users"
+                   asp-action="ResetPassword"
+                   asp-route-id="@Model.UserId"
+                   class="fbemployee-password-action">
+
+                    Đặt lại mật khẩu
+                </a>
+
+                <form asp-controller="Employees"
+                      asp-action="ToggleStatus"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.EmployeeId" />
+
+                    @if (isWorking)
+                    {
+                        <button type="submit"
+                                class="fbemployee-resign-full-button"
+                                onclick="return confirm('Xác nhận chuyển nhân viên sang trạng thái đã nghỉ việc?')">
+
+                            Chuyển sang nghỉ việc
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit"
+                                class="fbemployee-return-full-button"
+                                onclick="return confirm('Xác nhận cho nhân viên làm việc lại?')">
+
+                            Cho làm việc lại
+                        </button>
+                    }
+                </form>
+
+                <div class="fbemployee-summary-note">
+                    Khi chuyển sang nghỉ việc, tài khoản nhân viên
+                    cũng sẽ bị ngừng hoạt động.
+                </div>
+            </section>
+        </aside>
+    </div>
+</section>

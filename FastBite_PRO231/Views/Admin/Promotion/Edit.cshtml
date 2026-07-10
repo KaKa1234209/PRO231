@@ -1,54 +1,503 @@
-@model FastBite_PRO231.Models.Promotion
+@model FastBite_PRO231.ViewModels.PromotionManagementFormViewModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa khuyến mãi";
 }
 
-<h1>Edit</h1>
+<section class="fbpromo-page">
+    <div class="fbpromo-header">
+        <div>
+            <p>CHỈNH SỬA CHƯƠNG TRÌNH</p>
 
-<h4>Promotion</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="PromotionId" />
-            <div class="form-group">
-                <label asp-for="PromotionName" class="control-label"></label>
-                <input asp-for="PromotionName" class="form-control" />
-                <span asp-validation-for="PromotionName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DiscountType" class="control-label"></label>
-                <input asp-for="DiscountType" class="form-control" />
-                <span asp-validation-for="DiscountType" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DiscountValue" class="control-label"></label>
-                <input asp-for="DiscountValue" class="form-control" />
-                <span asp-validation-for="DiscountValue" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PromotionDetails" class="control-label"></label>
-                <input asp-for="PromotionDetails" class="form-control" />
-                <span asp-validation-for="PromotionDetails" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <h1>@Model.PromotionName</h1>
+
+            <span>
+                Cập nhật mức giảm giá, trạng thái và sản phẩm áp dụng.
+            </span>
+        </div>
+
+        <a asp-controller="Promotions"
+           asp-action="Index"
+           class="fbpromo-reset-button">
+
+            ← Quay lại danh sách
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <form asp-controller="Promotions"
+          asp-action="Edit"
+          asp-route-id="@Model.PromotionId"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="PromotionId"
+               type="hidden" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger">
+        </div>
+
+        <div class="fbpromo-form-grid">
+            <div class="fbpromo-form-left">
+                <section class="fbpromo-panel">
+                    <div class="fbpromo-panel-heading">
+                        <div>
+                            <p>THÔNG TIN CHUNG</p>
+                            <h2>Chỉnh sửa khuyến mãi</h2>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PromotionName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="PromotionName"
+                               class="form-control" />
+
+                        <span asp-validation-for="PromotionName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="DiscountType"
+                                   class="form-label fw-bold">
+                            </label>
+
+                            <select asp-for="DiscountType"
+                                    class="form-select"
+                                    id="discountType">
+
+                                <option value="Percent">
+                                    Giảm theo phần trăm (%)
+                                </option>
+
+                                <option value="Fixed">
+                                    Giảm số tiền cố định (VNĐ)
+                                </option>
+                            </select>
+
+                            <span asp-validation-for="DiscountType"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DiscountValue"
+                                   class="form-label fw-bold">
+                            </label>
+
+                            <div class="fbpromo-value-input">
+                                <input asp-for="DiscountValue"
+                                       type="number"
+                                       min="0.01"
+                                       step="0.01"
+                                       class="form-control"
+                                       id="discountValue" />
+
+                                <span id="discountUnit">
+                                    %
+                                </span>
+                            </div>
+
+                            <span asp-validation-for="DiscountValue"
+                                  class="text-danger">
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label asp-for="Status"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <select asp-for="Status"
+                                class="form-select"
+                                id="promotionStatus">
+
+                            <option value="Đang hoạt động">
+                                Đang hoạt động
+                            </option>
+
+                            <option value="Tạm ngưng">
+                                Tạm ngưng
+                            </option>
+
+                            <option value="Sắp diễn ra">
+                                Sắp diễn ra
+                            </option>
+                        </select>
+
+                        <span asp-validation-for="Status"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </section>
+
+                <section class="fbpromo-panel">
+                    <div class="fbpromo-panel-heading">
+                        <div>
+                            <p>SẢN PHẨM ÁP DỤNG</p>
+                            <h2>Chọn sản phẩm</h2>
+                        </div>
+
+                        <strong id="selectedCount"
+                                class="fbpromo-selected-count">
+
+                            0 sản phẩm đã chọn
+                        </strong>
+                    </div>
+
+                    <div class="fbpromo-product-toolbar">
+                        <input type="text"
+                               id="productSearch"
+                               class="form-control"
+                               placeholder="Tìm tên sản phẩm hoặc danh mục..." />
+
+                        <div class="fbpromo-select-actions">
+                            <button type="button"
+                                    id="selectAllButton"
+                                    class="fbpromo-select-all-button">
+
+                                Chọn tất cả đang hiển thị
+                            </button>
+
+                            <button type="button"
+                                    id="clearAllButton"
+                                    class="fbpromo-clear-button">
+
+                                Bỏ chọn
+                            </button>
+                        </div>
+                    </div>
+
+                    <span asp-validation-for="SelectedProductIds"
+                          class="text-danger d-block mb-3">
+                    </span>
+
+                    <div class="fbpromo-product-grid"
+                         id="productGrid">
+
+                        @foreach (var product in Model.Products)
+                        {
+                            var isSelected =
+                                Model.SelectedProductIds.Contains(
+                                    product.ProductId);
+
+                            <article class="fbpromo-product-option @(isSelected ? "selected" : "")"
+                                     data-product-name="@product.ProductName.ToLower()"
+                                     data-category-name="@product.CategoryName.ToLower()">
+
+                                <label for="product-@product.ProductId"
+                                       class="fbpromo-product-label">
+
+                                    <div class="fbpromo-product-image-wrap">
+                                        @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                                        {
+                                            <img src="@product.ImageUrl"
+                                                 alt="@product.ProductName"
+                                                 class="fbpromo-product-image"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+
+                                            <div class="fbpromo-product-placeholder"
+                                                 style="display:none;">
+                                                🍔
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="fbpromo-product-placeholder">
+                                                🍔
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="fbpromo-product-content">
+                                        <div class="fbpromo-product-top">
+                                            <strong>
+                                                @product.ProductName
+                                            </strong>
+
+                                            @if (product.Status)
+                                            {
+                                                <span class="fbpromo-product-active">
+                                                    Đang bán
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fbpromo-product-inactive">
+                                                    Tạm ẩn
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <span>
+                                            @product.CategoryName
+                                        </span>
+
+                                        <strong class="fbpromo-product-price">
+                                            @product.Price.ToString("N0")đ
+                                        </strong>
+                                    </div>
+
+                                    <input type="checkbox"
+                                           name="SelectedProductIds"
+                                           value="@product.ProductId"
+                                           id="product-@product.ProductId"
+                                           class="form-check-input fbpromo-product-checkbox"
+                                           checked="@isSelected" />
+                                </label>
+                            </article>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <aside class="fbpromo-form-right">
+                <section class="fbpromo-preview-card">
+                    <p>XEM TRƯỚC KHUYẾN MÃI</p>
+
+                    <div class="fbpromo-preview-discount">
+                        <span>GIẢM</span>
+
+                        <strong id="discountPreview">
+                            0%
+                        </strong>
+                    </div>
+
+                    <h2 id="promotionNamePreview">
+                        @Model.PromotionName
+                    </h2>
+
+                    <div class="fbpromo-preview-info">
+                        <span>Mã khuyến mãi</span>
+
+                        <strong>
+                            #@Model.PromotionId
+                        </strong>
+                    </div>
+
+                    <div class="fbpromo-preview-info">
+                        <span>Trạng thái</span>
+
+                        <strong id="statusPreview">
+                            @Model.Status
+                        </strong>
+                    </div>
+
+                    <div class="fbpromo-preview-info">
+                        <span>Sản phẩm áp dụng</span>
+
+                        <strong id="productCountPreview">
+                            0 sản phẩm
+                        </strong>
+                    </div>
+                </section>
+
+                <div class="fbpromo-submit-actions">
+                    <button type="submit"
+                            class="fbpromo-save-button"
+                            onclick="return confirm('Xác nhận lưu thay đổi khuyến mãi?')">
+
+                        Lưu thay đổi
+                    </button>
+
+                    <a asp-controller="Promotions"
+                       asp-action="Details"
+                       asp-route-id="@Model.PromotionId"
+                       class="fbpromo-reset-button">
+
+                        Hủy
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </form>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const discountType =
+                document.getElementById("discountType");
+
+            const discountValue =
+                document.getElementById("discountValue");
+
+            const discountUnit =
+                document.getElementById("discountUnit");
+
+            const discountPreview =
+                document.getElementById("discountPreview");
+
+            const promotionName =
+                document.getElementById("PromotionName");
+
+            const promotionNamePreview =
+                document.getElementById("promotionNamePreview");
+
+            const promotionStatus =
+                document.getElementById("promotionStatus");
+
+            const statusPreview =
+                document.getElementById("statusPreview");
+
+            const selectedCount =
+                document.getElementById("selectedCount");
+
+            const productCountPreview =
+                document.getElementById("productCountPreview");
+
+            const productSearch =
+                document.getElementById("productSearch");
+
+            const productCards =
+                document.querySelectorAll(".fbpromo-product-option");
+
+            const checkboxes =
+                document.querySelectorAll(".fbpromo-product-checkbox");
+
+            const selectAllButton =
+                document.getElementById("selectAllButton");
+
+            const clearAllButton =
+                document.getElementById("clearAllButton");
+
+            const numberFormatter =
+                new Intl.NumberFormat("vi-VN");
+
+            function updateDiscountPreview() {
+                const value =
+                    Number(discountValue.value || 0);
+
+                if (discountType.value === "Percent") {
+                    discountUnit.textContent = "%";
+                    discountPreview.textContent =
+                        numberFormatter.format(value) + "%";
+                }
+                else {
+                    discountUnit.textContent = "đ";
+                    discountPreview.textContent =
+                        numberFormatter.format(value) + "đ";
+                }
+            }
+
+            function updatePromotionName() {
+                const value =
+                    promotionName.value.trim();
+
+                promotionNamePreview.textContent =
+                    value.length > 0
+                        ? value
+                        : "Chương trình khuyến mãi";
+            }
+
+            function updateProductCount() {
+                const count =
+                    document.querySelectorAll(
+                        ".fbpromo-product-checkbox:checked")
+                        .length;
+
+                selectedCount.textContent =
+                    count + " sản phẩm đã chọn";
+
+                productCountPreview.textContent =
+                    count + " sản phẩm";
+
+                productCards.forEach(function (card) {
+                    const checkbox =
+                        card.querySelector(
+                            ".fbpromo-product-checkbox");
+
+                    card.classList.toggle(
+                        "selected",
+                        checkbox.checked);
+                });
+            }
+
+            function filterProducts() {
+                const keyword =
+                    productSearch.value
+                        .trim()
+                        .toLowerCase();
+
+                productCards.forEach(function (card) {
+                    const name =
+                        card.dataset.productName || "";
+
+                    const category =
+                        card.dataset.categoryName || "";
+
+                    card.style.display =
+                        name.includes(keyword) ||
+                        category.includes(keyword)
+                            ? ""
+                            : "none";
+                });
+            }
+
+            discountType.addEventListener(
+                "change",
+                updateDiscountPreview);
+
+            discountValue.addEventListener(
+                "input",
+                updateDiscountPreview);
+
+            promotionName.addEventListener(
+                "input",
+                updatePromotionName);
+
+            promotionStatus.addEventListener(
+                "change",
+                function () {
+                    statusPreview.textContent =
+                        promotionStatus.value;
+                });
+
+            productSearch.addEventListener(
+                "input",
+                filterProducts);
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener(
+                    "change",
+                    updateProductCount);
+            });
+
+            selectAllButton.addEventListener(
+                "click",
+                function () {
+                    productCards.forEach(function (card) {
+                        if (card.style.display !== "none") {
+                            card.querySelector(
+                                ".fbpromo-product-checkbox")
+                                .checked = true;
+                        }
+                    });
+
+                    updateProductCount();
+                });
+
+            clearAllButton.addEventListener(
+                "click",
+                function () {
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.checked = false;
+                    });
+
+                    updateProductCount();
+                });
+
+            updateDiscountPreview();
+            updatePromotionName();
+            updateProductCount();
+        });
+    </script>
 }

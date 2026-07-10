@@ -1,50 +1,153 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Http
+
+@{
+    var userName = Context.Session.GetString("UserName");
+    var fullName = Context.Session.GetString("FullName");
+    var role = Context.Session.GetString("Role");
+}
+
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FastBite_PRO231</title>
-    <script type="importmap"></script>
+
+    <title>@ViewData["Title"] - FastBite</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FastBite_PRO231.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FastBite_PRO231</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+<body class="fb-public-body">
+    <div class="fb-public-topbar">
+        <div class="container fb-public-topbar-inner">
+            <span>⚡ FastBite — Đặt món nhanh, nhận món nóng</span>
+            <strong>Miễn phí giao hàng cho đơn từ 149.000đ</strong>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FastBite_PRO231 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <header class="fb-public-header">
+        <div class="container fb-public-header-inner">
+            <a class="fb-public-brand-link"
+               asp-controller="Home"
+               asp-action="Index">
+
+                <img src="~/images/fastbite-logo.jpg"
+                     alt="FastBite"
+                     class="fb-public-logo" />
+
+                <div>
+                    <div class="fb-public-brand-name">FASTBITE</div>
+                    <div class="fb-public-brand-subtitle">FAST FOOD STUDIO</div>
+                </div>
+            </a>
+
+            <nav class="fb-public-nav">
+                <a class="active" href="/">Trang chủ</a>
+                <a href="/#danh-muc">Danh mục</a>
+                <a href="/#thuc-don">Thực đơn</a>
+                <a href="/#uu-dai">Ưu đãi</a>
+            </nav>
+
+            <div class="fb-public-actions">
+                @if (string.IsNullOrWhiteSpace(userName))
+                {
+                    <a asp-controller="Login"
+                       asp-action="Login"
+                       class="fb-login-button">
+
+                        👤 Đăng nhập
+                    </a>
+
+                    <a asp-controller="Login"
+                       asp-action="Register"
+                       class="fb-register-button">
+
+                        Đăng ký ngay
+                        <span>➜</span>
+                    </a>
+
+                    <a asp-controller="Cart"
+                       asp-action="Index"
+                       class="fb-public-cart">
+
+                        🛒 Giỏ hàng
+
+                        <span class="fb-cart-number">
+                            @await Component.InvokeAsync("CartCount")
+                        </span>
+                    </a>
+                }
+                else
+                {
+                    @if (role == "Admin")
+                    {
+                        <a class="fb-public-login"
+                           asp-controller="AdminDashboard"
+                           asp-action="Index">
+                            ⚙️ Quản trị
+                        </a>
+                    }
+                    else if (role == "Employee" || role == "Empolyee")
+                    {
+                        <a class="fb-public-login"
+                           asp-controller="EmployeeHome"
+                           asp-action="Index">
+                            👨‍🍳 Nhân viên
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="fb-public-login"
+                           asp-controller="CustomerHome"
+                           asp-action="Index">
+                            👤 @(fullName ?? userName)
+                        </a>
+                    }
+
+                    <a class="fb-public-cart"
+                       asp-controller="Login"
+                       asp-action="Logout">
+                        Đăng xuất
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @if (TempData["Success"] != null)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-success">
+                    @TempData["Success"]
+                </div>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="fb-public-footer">
+        <div class="container fb-public-footer-inner">
+            <strong>FASTBITE — FAST FOOD STUDIO</strong>
+            <span>© 2026 FastBite. PRO231.</span>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

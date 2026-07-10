@@ -1,59 +1,333 @@
-@model IEnumerable<FastBite_PRO231.Models.Promotion>
+@model FastBite_PRO231.ViewModels.PromotionManagementIndexViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý khuyến mãi";
+
+    string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Đang hoạt động" => "fbpromo-status-active",
+            "Tạm ngưng" => "fbpromo-status-paused",
+            "Sắp diễn ra" => "fbpromo-status-upcoming",
+            _ => "fbpromo-status-paused"
+        };
+    }
+
+    string GetDiscountText(
+        string discountType,
+        decimal discountValue)
+    {
+        if (discountType == "Percent")
+        {
+            return $"{discountValue:N0}%";
+        }
+
+        return $"{discountValue:N0}đ";
+    }
 }
 
-<h1>Index</h1>
+<section class="fbpromo-page">
+    <div class="fbpromo-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.PromotionName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DiscountType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DiscountValue)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PromotionDetails)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.PromotionName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.DiscountType)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.DiscountValue)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PromotionDetails)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.PromotionId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.PromotionId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.PromotionId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <h1>Khuyến mãi</h1>
+
+            <span>
+                Tạo chương trình giảm giá và lựa chọn sản phẩm áp dụng.
+            </span>
+        </div>
+
+        <a asp-controller="Promotions"
+           asp-action="Create"
+           class="fbpromo-create-button">
+
+            + Tạo khuyến mãi
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbpromo-stat-card">
+                <span>Tổng khuyến mãi</span>
+
+                <strong>
+                    @Model.TotalPromotions
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbpromo-stat-card">
+                <span>Đang hoạt động</span>
+
+                <strong class="fbpromo-green">
+                    @Model.ActivePromotions
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbpromo-stat-card">
+                <span>Tạm ngưng</span>
+
+                <strong class="fbpromo-red">
+                    @Model.PausedPromotions
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbpromo-stat-card">
+                <span>Sắp diễn ra</span>
+
+                <strong class="fbpromo-orange">
+                    @Model.UpcomingPromotions
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Promotions"
+          asp-action="Index"
+          method="get"
+          class="fbpromo-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Tên khuyến mãi hoặc tên sản phẩm..." />
+
+        <select name="status"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+            {
+                <option value="" selected>
+                    Tất cả trạng thái
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+            }
+
+            @if (Model.StatusFilter == "active")
+            {
+                <option value="active" selected>
+                    Đang hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="active">
+                    Đang hoạt động
+                </option>
+            }
+
+            @if (Model.StatusFilter == "paused")
+            {
+                <option value="paused" selected>
+                    Tạm ngưng
+                </option>
+            }
+            else
+            {
+                <option value="paused">
+                    Tạm ngưng
+                </option>
+            }
+
+            @if (Model.StatusFilter == "upcoming")
+            {
+                <option value="upcoming" selected>
+                    Sắp diễn ra
+                </option>
+            }
+            else
+            {
+                <option value="upcoming">
+                    Sắp diễn ra
+                </option>
+            }
+        </select>
+
+        <button type="submit"
+                class="fbpromo-search-button">
+
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Promotions"
+           asp-action="Index"
+           class="fbpromo-reset-button">
+
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Promotions.Count == 0)
+    {
+        <div class="fbpromo-empty">
+            <div>🏷️</div>
+
+            <h2>Chưa có chương trình khuyến mãi</h2>
+
+            <p>
+                Hãy tạo chương trình giảm giá đầu tiên cho sản phẩm.
+            </p>
+
+            <a asp-controller="Promotions"
+               asp-action="Create"
+               class="fbpromo-create-button">
+
+                + Tạo khuyến mãi
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="fbpromo-card-list">
+            @foreach (var promotion in Model.Promotions)
+            {
+                <article class="fbpromo-card">
+                    <div class="fbpromo-card-top">
+                        <div class="fbpromo-discount-box">
+                            <span>GIẢM</span>
+
+                            <strong>
+                                @GetDiscountText(
+                                    promotion.DiscountType,
+                                    promotion.DiscountValue)
+                            </strong>
+                        </div>
+
+                        <span class="fbpromo-status @GetStatusClass(promotion.Status)">
+                            @promotion.Status
+                        </span>
+                    </div>
+
+                    <div class="fbpromo-card-body">
+                        <span class="fbpromo-code">
+                            Mã khuyến mãi: #@promotion.PromotionId
+                        </span>
+
+                        <h2>
+                            @promotion.PromotionName
+                        </h2>
+
+                        <div class="fbpromo-info-row">
+                            <span>Loại giảm giá</span>
+
+                            <strong>
+                                @(promotion.DiscountType == "Percent"
+                                    ? "Giảm theo phần trăm"
+                                    : "Giảm số tiền cố định")
+                            </strong>
+                        </div>
+
+                        <div class="fbpromo-info-row">
+                            <span>Số sản phẩm áp dụng</span>
+
+                            <strong>
+                                @promotion.ProductCount sản phẩm
+                            </strong>
+                        </div>
+
+                        <div class="fbpromo-product-summary">
+                            <span>Sản phẩm:</span>
+
+                            <p>
+                                @promotion.ProductNames
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fbpromo-card-actions">
+                        <a asp-controller="Promotions"
+                           asp-action="Details"
+                           asp-route-id="@promotion.PromotionId"
+                           class="fbpromo-details-button">
+
+                            Chi tiết
+                        </a>
+
+                        <a asp-controller="Promotions"
+                           asp-action="Edit"
+                           asp-route-id="@promotion.PromotionId"
+                           class="fbpromo-edit-button">
+
+                            Chỉnh sửa
+                        </a>
+
+                        <form asp-controller="Promotions"
+                              asp-action="ToggleStatus"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@promotion.PromotionId" />
+
+                            @if (promotion.Status == "Đang hoạt động")
+                            {
+                                <button type="submit"
+                                        class="fbpromo-pause-button"
+                                        onclick="return confirm('Tạm ngưng khuyến mãi này?')">
+
+                                    Tạm ngưng
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit"
+                                        class="fbpromo-activate-button"
+                                        onclick="return confirm('Bật khuyến mãi này?')">
+
+                                    Kích hoạt
+                                </button>
+                            }
+                        </form>
+
+                        <form asp-controller="Promotions"
+                              asp-action="Delete"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@promotion.PromotionId" />
+
+                            <button type="submit"
+                                    class="fbpromo-delete-button"
+                                    onclick="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?')">
+
+                                Xóa
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

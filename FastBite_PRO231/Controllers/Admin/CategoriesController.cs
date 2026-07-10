@@ -21,6 +21,8 @@ public class CategoriesController : Controller
 
         if (!string.IsNullOrEmpty(searchString))
         {
+            searchString = searchString.Trim();
+
             categories = categories.Where(c =>
                 c.CategoryName.Contains(searchString));
         }
@@ -58,8 +60,12 @@ public class CategoriesController : Controller
     {
         if (ModelState.IsValid)
         {
+            category.Status = true;
+
             _context.Add(category);
             await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Thêm danh mục thành công.";
             return RedirectToAction(nameof(Index));
         }
         return View(category);
@@ -83,7 +89,7 @@ public class CategoriesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryName,Description")] Category category)
+    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description,Status")] Category category)
     {
         if (categoryid != category.CategoryId)
         {
@@ -96,6 +102,8 @@ public class CategoriesController : Controller
             {
                 _context.Update(category);
                 await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Cập nhật danh mục thành công.";
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -103,10 +111,7 @@ public class CategoriesController : Controller
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
             return RedirectToAction(nameof(Index));
         }
@@ -136,12 +141,64 @@ public class CategoriesController : Controller
     public async Task<IActionResult> DeleteConfirmed(int? categoryid)
     {
         var category = await _context.Categories.FindAsync(categoryid);
-        if (category != null)
+        if (category == null)
         {
-            _context.Categories.Remove(category);
+            return NotFound();
+        }
+
+        if (category.Products.Any())
+        {
+            ModelState.AddModelError("", "Danh mục đã có sản phẩm, không thể xóa.");
+            return View(category);
+        }
+
+        _context.Categories.Remove(category);
+        TempData["Success"] = "Xóa danh mục thành công.";
+
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Ngừng
+    public async Task<IActionResult> Stop(int? categoryid)
+    {
+        if (categoryid == null)
+        {
+            return NotFound();
+        }
+
+        var category = await _context.Categories
+            .FirstOrDefaultAsync(m => m.CategoryId == categoryid);
+        if (category == null)
+        {
+            return NotFound();
+        }
+
+        return View(category);
+    }
+
+    [HttpPost, ActionName("Stop")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> StopConfirmed(int? categoryid)
+    {
+        var category = await _context.Categories
+            .Include(c => c.Products)
+            .FirstOrDefaultAsync(c => c.CategoryId == categoryid);
+
+        if (category == null)
+        {
+            return NotFound();
+        }
+
+        category.Status = false;
+        foreach (var product in category.Products)
+        {
+            product.Status = false;
         }
 
         await _context.SaveChangesAsync();
+        TempData["Success"] = "Đã ngừng sử dụng danh mục.";
+
         return RedirectToAction(nameof(Index));
     }
 

@@ -1,55 +1,298 @@
-@model FastBite_PRO231.Models.EmployeeCreateVM
+@model FastBite_PRO231.ViewModels.EmployeeManagementFormViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Thêm nhân viên";
 }
 
-<h2>Create Employee</h2>
+<section class="fbemployee-page">
+    <div class="fbemployee-header">
+        <div>
+            <p>THÊM NHÂN VIÊN</p>
 
-<form asp-action="Create">
+            <h1>Tạo hồ sơ nhân viên</h1>
 
-    <div>
-        <label>UserName</label>
-        <input asp-for="UserName" class="form-control" />
+            <span>
+                Hệ thống sẽ tạo đồng thời tài khoản Employee
+                và hồ sơ nhân viên.
+            </span>
+        </div>
+
+        <a asp-controller="Employees"
+           asp-action="Index"
+           class="fbemployee-reset-button">
+
+            ← Quay lại danh sách
+        </a>
     </div>
 
-    <div>
-        <label>Password</label>
-        <input asp-for="Password" type="password" class="form-control" />
+    <div class="fbemployee-form-grid">
+        <section class="fbemployee-form-card">
+            <div class="fbemployee-panel-heading">
+                <div>
+                    <p>THÔNG TIN NHÂN VIÊN</p>
+                    <h2>Hồ sơ mới</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Employees"
+                  asp-action="Create"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control"
+                               placeholder="Ví dụ: Nguyễn Văn Nhân Viên" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="UserName"
+                               class="form-control"
+                               autocomplete="off"
+                               placeholder="Ví dụ: nhanvien01" />
+
+                        <span asp-validation-for="UserName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="nhanvien@fastbite.vn" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Phone"
+                               class="form-control"
+                               placeholder="0901234567" />
+
+                        <span asp-validation-for="Phone"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Position"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Position"
+                               class="form-control"
+                               placeholder="Ví dụ: Thu ngân, Bếp, Phục vụ..." />
+
+                        <span asp-validation-for="Position"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="HireDate"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="HireDate"
+                               type="date"
+                               class="form-control"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+
+                        <span asp-validation-for="HireDate"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Status"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <select asp-for="Status"
+                                class="form-select">
+
+                            <option value="Đang làm việc">
+                                Đang làm việc
+                            </option>
+
+                            <option value="Đã nghỉ việc">
+                                Đã nghỉ việc
+                            </option>
+                        </select>
+
+                        <span asp-validation-for="Status"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Password"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <div class="fbemployee-password-wrap">
+                            <input asp-for="Password"
+                                   class="form-control"
+                                   id="employeePassword"
+                                   autocomplete="new-password" />
+
+                            <button type="button"
+                                    class="fbemployee-show-password"
+                                    data-target="employeePassword">
+
+                                Hiện
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="Password"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <div class="fbemployee-password-wrap">
+                            <input asp-for="ConfirmPassword"
+                                   class="form-control"
+                                   id="employeeConfirmPassword"
+                                   autocomplete="new-password" />
+
+                            <button type="button"
+                                    class="fbemployee-show-password"
+                                    data-target="employeeConfirmPassword">
+
+                                Hiện
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="ConfirmPassword"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="fbemployee-warning">
+                    Nhân viên ở trạng thái “Đang làm việc” sẽ có
+                    tài khoản hoạt động. Nhân viên “Đã nghỉ việc”
+                    sẽ có tài khoản bị khóa.
+                </div>
+
+                <div class="fbemployee-form-actions">
+                    <button type="submit"
+                            class="fbemployee-save-button"
+                            onclick="return confirm('Xác nhận tạo nhân viên mới?')">
+
+                        Tạo nhân viên
+                    </button>
+
+                    <a asp-controller="Employees"
+                       asp-action="Index"
+                       class="fbemployee-reset-button">
+
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbemployee-guide-card">
+            <div class="fbemployee-guide-icon">
+                👨‍🍳
+            </div>
+
+            <h2>Tài khoản nhân viên</h2>
+
+            <p>
+                Nhân viên sẽ sử dụng tên đăng nhập và mật khẩu này
+                để truy cập hệ thống.
+            </p>
+
+            <div class="fbemployee-guide-item">
+                <span>✓</span>
+                Mật khẩu tối thiểu 6 ký tự
+            </div>
+
+            <div class="fbemployee-guide-item">
+                <span>✓</span>
+                Tên đăng nhập không được trùng
+            </div>
+
+            <div class="fbemployee-guide-item">
+                <span>✓</span>
+                Email và số điện thoại không được trùng
+            </div>
+
+            <div class="fbemployee-guide-item">
+                <span>✓</span>
+                Mật khẩu được mã hóa trước khi lưu
+            </div>
+        </aside>
     </div>
+</section>
 
-    <div>
-        <label>Email</label>
-        <input asp-for="Email" class="form-control" />
-    </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 
-    <div>
-        <label>Phone</label>
-        <input asp-for="Phone" class="form-control" />
-    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons =
+                document.querySelectorAll(
+                    ".fbemployee-show-password");
 
-    <hr />
+            buttons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    const targetId =
+                        button.dataset.target;
 
-    <div>
-        <label>FullName</label>
-        <input asp-for="FullName" class="form-control" />
-    </div>
+                    const input =
+                        document.getElementById(targetId);
 
-    <div>
-        <label>Position</label>
-        <input asp-for="Position" class="form-control" />
-    </div>
+                    if (!input) {
+                        return;
+                    }
 
-    <div>
-        <label>Status</label>
-        <input asp-for="Status" class="form-control" />
-    </div>
+                    const isPassword =
+                        input.type === "password";
 
-    <div>
-        <label>HireDate</label>
-        <input asp-for="HireDate" type="date" class="form-control" />
-    </div>
+                    input.type =
+                        isPassword ? "text" : "password";
 
-    <button type="submit" class="btn btn-primary">Create</button>
-
-</form>
+                    button.textContent =
+                        isPassword ? "Ẩn" : "Hiện";
+                });
+            });
+        });
+    </script>
+}

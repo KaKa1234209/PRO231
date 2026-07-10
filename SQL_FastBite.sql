@@ -69,7 +69,8 @@ CREATE TABLE Categories
     CategoryName NVARCHAR(100) NOT NULL,
     Description NVARCHAR(255) NULL
 );
-
+ALTER TABLE Categories
+ADD Status BIT NOT NULL DEFAULT 1;
 /* =========================
    PRODUCTS
 ========================= */

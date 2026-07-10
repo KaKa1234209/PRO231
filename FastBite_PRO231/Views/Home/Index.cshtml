@@ -1,9 +1,237 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
-<h1>Hi</h1>
+﻿@using Microsoft.AspNetCore.Http
+@model FastBite_PRO231.ViewModels.HomeIndexViewModel
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@{
+    ViewData["Title"] = "Trang chủ";
+
+    var role = Context.Session.GetString("Role") ?? "";
+    var isCustomer = role.Equals(
+        "Customer",
+        StringComparison.OrdinalIgnoreCase);
+}
+
+<section class="fbh-hero">
+    <div class="container fbh-hero-inner">
+        <div class="fbh-hero-content">
+            <p class="fbh-overline">
+                ⚡ FASTBITE FOOD STUDIO
+            </p>
+
+            <h1 class="fbh-title">
+                ĂN NGON
+                <span>THEO CÁCH</span>
+                CỦA BẠN
+            </h1>
+
+            <p class="fbh-description">
+                Burger thơm, gà giòn, combo đầy đặn và đồ uống
+                mát lạnh. Một bữa ăn ngon hơn cho mọi cuộc hẹn.
+            </p>
+
+            <div class="fbh-actions">
+                <a href="#menu"
+                   class="fbh-primary-button">
+                    Đặt món ngay
+                    <span>➜</span>
+                </a>
+
+                <a href="#promotion"
+                   class="fbh-outline-button">
+                    Xem ưu đãi
+                </a>
+            </div>
+
+            <div class="fbh-stat-list">
+                <div>
+                    <strong>15'</strong>
+                    <span>Giao nhanh</span>
+                </div>
+
+                <div>
+                    <strong>@Model.ProductCount+</strong>
+                    <span>Món ăn</span>
+                </div>
+
+                <div>
+                    <strong>@Model.CategoryCount+</strong>
+                    <span>Danh mục</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="fbh-hero-image-frame">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200"
+                 alt="Burger FastBite"
+                 class="fbh-hero-image" />
+
+            <div class="fbh-image-badge">
+                <strong>4.9 ★</strong>
+                <span>Khách hàng yêu thích</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="fbh-category-section">
+    <div class="container">
+        <div class="fbh-category-list">
+            <a asp-controller="Home"
+               asp-action="Index"
+               asp-fragment="menu"
+               class="fbh-category-item @(Model.SelectedCategoryId == null ? "active" : "")">
+                Tất cả
+            </a>
+
+            @foreach (var category in Model.Categories)
+            {
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-route-categoryId="@category.CategoryId"
+                   asp-fragment="menu"
+                   class="fbh-category-item @(Model.SelectedCategoryId == category.CategoryId ? "active" : "")">
+                    @category.CategoryName
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+<section id="menu"
+         class="fbh-menu-section">
+
+    <div class="container">
+        <div class="fbh-section-heading">
+            <p>MÓN ĐƯỢC YÊU THÍCH</p>
+
+            <h2>Thực đơn FastBite</h2>
+
+            <span>
+                Chọn danh mục và khám phá các món đang được bán.
+            </span>
+        </div>
+
+        @if (Model.Products.Count == 0)
+        {
+            <div class="fbh-empty">
+                <div>🍔</div>
+
+                <h3>Chưa có sản phẩm</h3>
+
+                <p>
+                    Danh mục này chưa có món ăn đang hoạt động.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="menu"
+                   class="fbh-primary-button">
+                    Xem tất cả món
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="fbh-product-grid">
+                @foreach (var product in Model.Products)
+                {
+                    <article class="fbh-product-card">
+                        <div class="fbh-product-image-wrap">
+                            @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl"
+                                     alt="@product.ProductName"
+                                     class="fbh-product-image" />
+                            }
+                            else
+                            {
+                                <div class="fbh-product-placeholder">
+                                    🍔
+                                </div>
+                            }
+
+                            <span class="fbh-product-category">
+                                @product.CategoryName
+                            </span>
+                        </div>
+
+                        <div class="fbh-product-content">
+                            <h3>@product.ProductName</h3>
+
+                            <p>@product.Description</p>
+
+                            <div class="fbh-product-bottom">
+                                <strong>
+                                    @product.Price.ToString("N0")đ
+                                </strong>
+
+                                <span>Còn bán</span>
+                            </div>
+                            @if (isCustomer)
+                            {
+                                <form asp-controller="Cart"
+                                      asp-action="Add"
+                                      method="post"
+                                      class="fbh-add-form">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="productId"
+                                           value="@product.ProductId" />
+
+                                    <input type="hidden"
+                                           name="quantity"
+                                           value="1" />
+
+                                    <button type="submit"
+                                            class="fbh-add-button">
+                                        🛒 Thêm vào giỏ
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-controller="Login"
+                                   asp-action="Login"
+                                   class="fbh-add-button">
+                                    👤 Đăng nhập để đặt món
+                                </a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section id="promotion"
+         class="fbh-promotion-section">
+
+    <div class="container fbh-promotion-inner">
+        <div>
+            <p>ƯU ĐÃI FASTBITE</p>
+
+            <h2>
+                Đăng nhập để theo dõi đơn hàng và nhận nhiều ưu đãi.
+            </h2>
+        </div>
+
+        @if (string.IsNullOrWhiteSpace(role))
+        {
+            <a asp-controller="Login"
+               asp-action="Register"
+               class="fbh-promotion-button">
+                Đăng ký ngay
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Login"
+               asp-action="ChangePassword"
+               class="fbh-promotion-button">
+                Quản lý tài khoản
+            </a>
+        }
+    </div>
+</section>

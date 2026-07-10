@@ -1,5 +1,60 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model FastBite_PRO231.Models.Customer
+
 @{
+    ViewData["Title"] = "Xóa khách hàng";
 }
+
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Xóa khách hàng</h1>
+                <p>Bạn có chắc chắn muốn xóa khách hàng này không?</p>
+            </div>
+
+            <div class="alert alert-danger fb-alert">
+                Lưu ý: khách hàng đã có đơn hàng sẽ không thể xóa.
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Mã khách hàng</div>
+                <div class="fb-detail-value">#@Model.CustomerId</div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Họ tên</div>
+                <div class="fb-detail-value">@(Model.User?.FullName ?? "Chưa có tên")</div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Tài khoản</div>
+                <div class="fb-detail-value">@(Model.User?.UserName ?? "Không có")</div>
+            </div>
+
+            <div class="fb-detail-row">
+                <div class="fb-detail-label">Địa chỉ</div>
+                <div class="fb-detail-value">
+                    @(string.IsNullOrWhiteSpace(Model.Address)
+                        ? "Chưa cập nhật"
+                        : Model.Address)
+                </div>
+            </div>
+
+            <form asp-controller="Customers"
+                  asp-action="Delete"
+                  asp-route-customerid="@Model.CustomerId"
+                  method="post"
+                  class="d-flex gap-2 justify-content-center mt-4">
+                @Html.AntiForgeryToken()
+
+                <button type="submit" class="btn fb-btn-danger">
+                    Xác nhận xóa
+                </button>
+
+                <a class="btn fb-btn-outline" asp-controller="Customers" asp-action="Index">
+                    Hủy
+                </a>
+            </form>
+        </div>
+    </div>
+</section>

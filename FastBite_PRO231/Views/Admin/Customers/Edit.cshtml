@@ -1,5 +1,265 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model FastBite_PRO231.ViewModels.CustomerManagementEditViewModel
+
 @{
+    ViewData["Title"] = "Chỉnh sửa khách hàng";
+}
+
+<section class="fbcustomer-page">
+    <div class="fbcustomer-header">
+        <div>
+            <p>CHỈNH SỬA KHÁCH HÀNG</p>
+
+            <h1>@Model.FullName</h1>
+
+            <span>
+                Cập nhật thông tin liên hệ, địa chỉ và điểm tích lũy.
+            </span>
+        </div>
+
+        <a asp-controller="Customers"
+           asp-action="Details"
+           asp-route-id="@Model.CustomerId"
+           class="fbcustomer-reset-button">
+
+            ← Quay lại chi tiết
+        </a>
+    </div>
+
+    <div class="fbcustomer-edit-grid">
+        <section class="fbcustomer-form-card">
+            <div class="fbcustomer-panel-heading">
+                <div>
+                    <p>THÔNG TIN KHÁCH HÀNG</p>
+                    <h2>Cập nhật hồ sơ</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Customers"
+                  asp-action="Edit"
+                  asp-route-id="@Model.CustomerId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="CustomerId"
+                       type="hidden" />
+
+                <input asp-for="UserId"
+                       type="hidden" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control"
+                               placeholder="Nhập họ và tên" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="UserName"
+                               class="form-control"
+                               placeholder="Nhập tên đăng nhập" />
+
+                        <span asp-validation-for="UserName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="example@gmail.com" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Phone"
+                               class="form-control"
+                               placeholder="0901234567" />
+
+                        <span asp-validation-for="Phone"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Address"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <textarea asp-for="Address"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Nhập địa chỉ nhận hàng">
+                        </textarea>
+
+                        <span asp-validation-for="Address"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Point"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Point"
+                               type="number"
+                               min="0"
+                               class="form-control" />
+
+                        <span asp-validation-for="Point"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Status"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <select asp-for="Status"
+                                class="form-select">
+
+                            @if (Model.Status == "Hoạt động")
+                            {
+                                <option value="Hoạt động" selected>
+                                    Hoạt động
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="Hoạt động">
+                                    Hoạt động
+                                </option>
+                            }
+
+                            @if (Model.Status == "Ngừng hoạt động")
+                            {
+                                <option value="Ngừng hoạt động" selected>
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="Ngừng hoạt động">
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                        </select>
+
+                        <span asp-validation-for="Status"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="fbcustomer-warning-box">
+                    Thay đổi điểm tích lũy sẽ ảnh hưởng trực tiếp đến
+                    số điểm khách hàng đang có. Không nhập số âm.
+                </div>
+
+                <div class="fbcustomer-form-actions">
+                    <button type="submit"
+                            class="fbcustomer-save-button"
+                            onclick="return confirm('Xác nhận lưu thay đổi khách hàng?')">
+
+                        Lưu thay đổi
+                    </button>
+
+                    <a asp-controller="Users"
+                       asp-action="ResetPassword"
+                       asp-route-id="@Model.UserId"
+                       class="fbcustomer-password-button">
+
+                        Đặt lại mật khẩu
+                    </a>
+
+                    <a asp-controller="Customers"
+                       asp-action="Details"
+                       asp-route-id="@Model.CustomerId"
+                       class="fbcustomer-reset-button">
+
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbcustomer-guide-card">
+            <div class="fbcustomer-guide-icon">
+                👤
+            </div>
+
+            <h2>@Model.FullName</h2>
+
+            <div class="fbcustomer-guide-row">
+                <span>Mã khách hàng</span>
+
+                <strong>
+                    #@Model.CustomerId
+                </strong>
+            </div>
+
+            <div class="fbcustomer-guide-row">
+                <span>Mã tài khoản</span>
+
+                <strong>
+                    #@Model.UserId
+                </strong>
+            </div>
+
+            <div class="fbcustomer-guide-row">
+                <span>Tên đăng nhập</span>
+
+                <strong>
+                    @("@")@Model.UserName
+                </strong>
+            </div>
+
+            <div class="fbcustomer-guide-row">
+                <span>Điểm hiện tại</span>
+
+                <strong class="fbcustomer-orange">
+                    @Model.Point điểm
+                </strong>
+            </div>
+
+            <p>
+                Không xóa khách hàng để tránh mất liên kết với đơn hàng,
+                hóa đơn và lịch sử thanh toán.
+            </p>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

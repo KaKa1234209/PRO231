@@ -1,101 +1,153 @@
-@model IEnumerable<FastBite_PRO231.Models.Product>
+@model IEnumerable<Product>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý sản phẩm";
 }
 
-<h1>Index</h1>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-admin-header">
+            <div>
+                <h1>Quản lý sản phẩm</h1>
+                <p>Quản lý món ăn nhanh, giá bán, danh mục, hình ảnh và trạng thái kinh doanh.</p>
+            </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ProductName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Image)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CartItems)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Inventory)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.InvoiceDetails)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDetails)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PromotionDetails)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.CategoryId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ProductName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Image)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CartItems)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Category)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Inventory)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.InvoiceDetails)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.OrderDetails)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PromotionDetails)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <a class="btn fb-btn-primary" asp-controller="Products" asp-action="Create">
+                + Thêm sản phẩm
+            </a>
+        </div>
+
+        <div class="fb-admin-card">
+            <div class="fb-admin-toolbar">
+                <form asp-controller="Products" asp-action="Index" method="get" class="fb-search-box">
+                    <input type="text"
+                           name="searchString"
+                           value="@ViewBag.SearchString"
+                           class="form-control fb-form-control"
+                           placeholder="Tìm tên sản phẩm, mô tả hoặc danh mục..." />
+
+                    <button type="submit" class="btn fb-btn-primary">
+                        Tìm kiếm
+                    </button>
+
+                    <a class="btn fb-btn-outline" asp-controller="Products" asp-action="Index">
+                        Làm mới
+                    </a>
+                </form>
+            </div>
+
+            <div class="fb-table-wrap">
+                <table class="fb-table">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Hình</th>
+                            <th>Sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 250px;">Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fb-badge">#@item.ProductId</span>
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(item.Image))
+                                        {
+                                            <img src="@item.Image"
+                                                 class="fb-product-thumb"
+                                                 alt="@item.ProductName" />
+                                        }
+                                        else
+                                        {
+                                            <div class="fb-product-placeholder">🍔</div>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <strong>@item.ProductName</strong>
+
+                                        <div class="text-muted small mt-1">
+                                            @(string.IsNullOrWhiteSpace(item.Description)
+                                                ? "Chưa có mô tả"
+                                                : item.Description)
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @(item.Category == null
+                                            ? "Chưa có danh mục"
+                                            : item.Category.CategoryName)
+                                    </td>
+
+                                    <td>
+                                        <span class="fb-price">
+                                            @String.Format("{0:N0}đ", item.Price)
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (item.Status)
+                                        {
+                                            <span class="fb-badge fb-status-active">
+                                                Đang bán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fb-badge fb-status-inactive">
+                                                Ngừng bán
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="fb-action-group">
+                                            <a class="btn fb-btn-outline fb-btn-small"
+                                               asp-controller="Products"
+                                               asp-action="Details"
+                                               asp-route-productid="@item.ProductId">
+                                                Xem
+                                            </a>
+
+                                            <a class="btn fb-btn-primary fb-btn-small"
+                                               asp-controller="Products"
+                                               asp-action="Edit"
+                                               asp-route-productid="@item.ProductId">
+                                                Sửa
+                                            </a>
+
+                                            <a class="btn fb-btn-danger fb-btn-small"
+                                               asp-controller="Products"
+                                               asp-action="Delete"
+                                               asp-route-productid="@item.ProductId">
+                                                Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    Chưa có sản phẩm nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

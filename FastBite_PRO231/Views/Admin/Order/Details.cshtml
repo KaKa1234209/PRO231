@@ -1,66 +1,356 @@
-@model FastBite_PRO231.Models.Order
+@model FastBite_PRO231.ViewModels.OrderManagementDetailsViewModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết đơn hàng";
+
+    var statusClass = Model.Status switch
+    {
+        "Hoàn thành" => "fbom-status-success",
+        "Đã hủy" => "fbom-status-cancelled",
+        "Đang giao" => "fbom-status-delivering",
+        "Đang chuẩn bị" => "fbom-status-processing",
+        "Đang xử lý" => "fbom-status-processing",
+        _ => "fbom-status-pending"
+    };
+
+    var statuses = new[]
+    {
+        "Đang chờ xử lý",
+        "Đang xử lý",
+        "Đang chuẩn bị",
+        "Đang giao",
+        "Hoàn thành",
+        "Đã hủy"
+    };
+
+    var isCompleted =
+        Model.Status == "Hoàn thành" ||
+        Model.Status == "Completed";
+
+    var isCancelled =
+        Model.Status == "Đã hủy";
 }
 
-<h1>Details</h1>
+<section class="fbom-page">
+    <div class="fbom-header">
+        <div>
+            <p>CHI TIẾT ĐƠN HÀNG</p>
 
-<div>
-    <h4>Order</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CustomerId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CustomerId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalAmount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Customer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Customer)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Invoices)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Invoices)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderDetails)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderDetails)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.OrderId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+            <h1>
+                Đơn hàng #@Model.OrderId
+            </h1>
+
+            <span>
+                Kiểm tra thông tin khách hàng và cập nhật trạng thái.
+            </span>
+        </div>
+
+        <a asp-controller="Orders"
+           asp-action="Index"
+           class="fbom-reset-button">
+
+            ← Quay lại danh sách
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="fbom-details-grid">
+        <div class="fbom-details-left">
+
+            <!-- THÔNG TIN ĐƠN HÀNG -->
+            <section class="fbom-panel">
+                <div class="fbom-panel-heading">
+                    <h2>
+                        Thông tin đơn hàng
+                    </h2>
+
+                    <span class="fbom-status @statusClass">
+                        @Model.Status
+                    </span>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Mã đơn hàng</span>
+
+                    <strong>
+                        #@Model.OrderId
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Ngày đặt</span>
+
+                    <strong>
+                        @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Nhân viên xử lý</span>
+
+                    <strong>
+                        @Model.EmployeeName
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Hóa đơn</span>
+
+                    <strong>
+                        @(Model.HasInvoice
+                            ? "Đã tạo hóa đơn"
+                            : "Chưa tạo hóa đơn")
+                    </strong>
+                </div>
+            </section>
+
+            <!-- THÔNG TIN KHÁCH HÀNG -->
+            <section class="fbom-panel">
+                <h2>
+                    Thông tin khách hàng
+                </h2>
+
+                <div class="fbom-info-row">
+                    <span>Họ và tên</span>
+
+                    <strong>
+                        @Model.CustomerName
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Tên đăng nhập</span>
+
+                    <strong>
+                        @Model.UserName
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Số điện thoại</span>
+
+                    <strong>
+                        @Model.Phone
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Email</span>
+
+                    <strong>
+                        @Model.Email
+                    </strong>
+                </div>
+
+                <div class="fbom-info-row">
+                    <span>Địa chỉ</span>
+
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Model.Address)
+                            ? "Chưa cập nhật"
+                            : Model.Address)
+                    </strong>
+                </div>
+            </section>
+
+            <!-- MÓN TRONG ĐƠN HÀNG -->
+            <section class="fbom-panel">
+                <h2>
+                    Món trong đơn hàng
+                </h2>
+
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="alert alert-warning">
+                        Đơn hàng chưa có sản phẩm.
+                    </div>
+                }
+                else
+                {
+                    <div class="fbom-product-list">
+                        @foreach (var item in Model.Items)
+                        {
+                            <article class="fbom-product-item">
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         alt="@item.ProductName"
+                                         class="fbom-product-image" />
+                                }
+                                else
+                                {
+                                    <div class="fbom-product-placeholder">
+                                        🍔
+                                    </div>
+                                }
+
+                                <div class="fbom-product-info">
+                                    <strong>
+                                        @item.ProductName
+                                    </strong>
+
+                                    <span>
+                                        @item.Quantity ×
+                                        @item.UnitPrice.ToString("N0")đ
+                                    </span>
+                                </div>
+
+                                <strong class="fbom-product-total">
+                                    @item.SubTotal.ToString("N0")đ
+                                </strong>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+
+        <!-- CỘT XỬ LÝ ĐƠN HÀNG -->
+        <aside class="fbom-summary">
+            <h2>
+                Xử lý đơn hàng
+            </h2>
+
+            <div class="fbom-info-row">
+                <span>Tổng số lượng</span>
+
+                <strong>
+                    @Model.TotalQuantity phần
+                </strong>
+            </div>
+
+            <div class="fbom-total">
+                <span>Tổng thanh toán</span>
+
+                <strong>
+                    @Model.TotalAmount.ToString("N0")đ
+                </strong>
+            </div>
+
+            <!-- NÚT TẠO HÓA ĐƠN -->
+            @if (isCompleted)
+            {
+                if (!Model.HasInvoice)
+                {
+                    <a asp-controller="Invoices"
+                       asp-action="Create"
+                       asp-route-orderId="@Model.OrderId"
+                       class="fbom-invoice-button">
+
+                        💳 Tạo hóa đơn
+                    </a>
+
+                    <div class="fbom-invoice-help">
+                        Đơn hàng đã hoàn thành và đủ điều kiện tạo hóa đơn.
+                    </div>
+                }
+                else
+                {
+                    <div class="fbom-invoice-created">
+                        <span>✓</span>
+
+                        <div>
+                            <strong>
+                                Đã tạo hóa đơn
+                            </strong>
+
+                            <small>
+                                Có thể xem trong mục Hóa đơn.
+                            </small>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Invoices"
+                       asp-action="Index"
+                       asp-route-search="@Model.OrderId"
+                       class="fbom-view-invoice-button">
+
+                        Xem hóa đơn
+                    </a>
+                }
+            }
+
+            <!-- FORM CẬP NHẬT TRẠNG THÁI -->
+            @if (!isCompleted && !isCancelled)
+            {
+                <form asp-controller="Orders"
+                      asp-action="UpdateStatus"
+                      method="post"
+                      class="fbom-status-form">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.OrderId" />
+
+                    <label class="form-label fw-bold">
+                        Trạng thái mới
+                    </label>
+
+                    <select name="status"
+                            class="form-select mb-3">
+
+                        @foreach (var status in statuses)
+                        {
+                            if (Model.Status == status)
+                            {
+                                <option value="@status"
+                                        selected>
+                                    @status
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@status">
+                                    @status
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    <button type="submit"
+                            class="fbom-update-button"
+                            onclick="return confirm('Xác nhận cập nhật trạng thái đơn hàng?')">
+
+                        Cập nhật trạng thái
+                    </button>
+                </form>
+            }
+
+            <!-- THÔNG BÁO TRẠNG THÁI -->
+            @if (isCancelled)
+            {
+                <div class="fbom-note cancelled">
+                    Đơn đã hủy và số lượng món đã được hoàn lại kho.
+                </div>
+            }
+            else if (isCompleted)
+            {
+                <div class="fbom-note completed">
+                    Đơn hàng đã hoàn thành và không thể đổi lại trạng thái.
+                </div>
+            }
+            else
+            {
+                <div class="fbom-note">
+                    Khi nhân viên cập nhật đơn, hệ thống sẽ tự ghi nhận
+                    nhân viên đang xử lý.
+                </div>
+            }
+        </aside>
+    </div>
+</section>

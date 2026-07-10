@@ -1,47 +1,104 @@
-@model IEnumerable<FastBite_PRO231.Models.Category>
+@model IEnumerable<Category>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý danh mục";
 }
 
-<h1>Index</h1>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-admin-header">
+            <div>
+                <h1>Quản lý danh mục</h1>
+                <p>Thêm, sửa, xóa và tìm kiếm danh mục sản phẩm của FastBite.</p>
+            </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Products)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.CategoryName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Products)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CategoryId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CategoryId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <a class="btn fb-btn-primary" asp-controller="Categories" asp-action="Create">
+                + Thêm danh mục
+            </a>
+        </div>
+
+        <div class="fb-admin-card">
+            <div class="fb-admin-toolbar">
+                <form asp-controller="Categories" asp-action="Index" method="get" class="fb-search-box">
+                    <input type="text"
+                           name="searchString"
+                           value="@ViewBag.SearchString"
+                           class="form-control fb-form-control"
+                           placeholder="Tìm tên hoặc mô tả danh mục..." />
+
+                    <button type="submit" class="btn fb-btn-primary">Tìm kiếm</button>
+
+                    <a class="btn fb-btn-outline" asp-controller="Categories" asp-action="Index">
+                        Làm mới
+                    </a>
+                </form>
+            </div>
+
+            <div class="fb-table-wrap">
+                <table class="fb-table">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th style="width: 240px;">Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><span class="fb-badge">#@item.CategoryId</span></td>
+
+                                    <td><strong>@item.CategoryName</strong></td>
+
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(item.Description)
+                                            ? "Chưa có mô tả"
+                                            : item.Description)
+                                    </td>
+
+                                    <td>
+                                        <div class="fb-action-group">
+                                            <a class="btn fb-btn-outline fb-btn-small"
+                                               asp-controller="Categories"
+                                               asp-action="Details"
+                                               asp-route-categoryid="@item.CategoryId">
+                                                Xem
+                                            </a>
+
+                                            <a class="btn fb-btn-primary fb-btn-small"
+                                               asp-controller="Categories"
+                                               asp-action="Edit"
+                                               asp-route-categoryid="@item.CategoryId">
+                                                Sửa
+                                            </a>
+
+                                            <a class="btn fb-btn-danger fb-btn-small"
+                                               asp-controller="Categories"
+                                               asp-action="Delete"
+                                               asp-route-categoryid="@item.CategoryId">
+                                                Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    Chưa có danh mục nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

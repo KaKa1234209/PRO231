@@ -1,89 +1,432 @@
-@model IEnumerable<FastBite_PRO231.Models.User>
+@model FastBite_PRO231.ViewModels.UserManagementIndexViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý tài khoản";
+
+    string GetRoleClass(string roleName)
+    {
+        return roleName switch
+        {
+            "Admin" => "fbuser-role-admin",
+            "Employee" => "fbuser-role-employee",
+            "Customer" => "fbuser-role-customer",
+            _ => "fbuser-role-other"
+        };
+    }
+
+    string GetRoleText(string roleName)
+    {
+        return roleName switch
+        {
+            "Admin" => "Quản trị viên",
+            "Employee" => "Nhân viên",
+            "Customer" => "Khách hàng",
+            _ => roleName
+        };
+    }
+
+    bool IsActive(string status)
+    {
+        return string.Equals(
+            status,
+            "Hoạt động",
+            StringComparison.OrdinalIgnoreCase);
+    }
 }
 
-<h1>Index</h1>
+<section class="fbuser-page">
+    <div class="fbuser-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Password)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.RoleId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Customer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Employee)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Role)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Password)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.RoleId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Customer)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Employee)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Role)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UserId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UserId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UserId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <h1>Tài khoản người dùng</h1>
+
+            <span>
+                Quản lý tài khoản Admin, nhân viên và khách hàng.
+            </span>
+        </div>
+
+        <a asp-controller="Users"
+           asp-action="Create"
+           class="fbuser-create-button">
+
+            + Tạo tài khoản Admin
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbuser-stat-card">
+                <span>Tổng tài khoản</span>
+
+                <strong>
+                    @Model.TotalUsers
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbuser-stat-card">
+                <span>Đang hoạt động</span>
+
+                <strong class="fbuser-green">
+                    @Model.ActiveUsers
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbuser-stat-card">
+                <span>Ngừng hoạt động</span>
+
+                <strong class="fbuser-red">
+                    @Model.InactiveUsers
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbuser-stat-card">
+                <span>Tài khoản Admin</span>
+
+                <strong class="fbuser-purple">
+                    @Model.AdminUsers
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="fbuser-role-summary">
+        <div>
+            <span>Admin</span>
+            <strong>@Model.AdminUsers</strong>
+        </div>
+
+        <div>
+            <span>Nhân viên</span>
+            <strong>@Model.EmployeeUsers</strong>
+        </div>
+
+        <div>
+            <span>Khách hàng</span>
+            <strong>@Model.CustomerUsers</strong>
+        </div>
+    </div>
+
+    <form asp-controller="Users"
+          asp-action="Index"
+          method="get"
+          class="fbuser-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Tên đăng nhập, họ tên, email hoặc số điện thoại..." />
+
+        <select name="role"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.RoleFilter))
+            {
+                <option value="" selected>
+                    Tất cả quyền
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả quyền
+                </option>
+            }
+
+            @if (Model.RoleFilter == "admin")
+            {
+                <option value="admin" selected>
+                    Admin
+                </option>
+            }
+            else
+            {
+                <option value="admin">
+                    Admin
+                </option>
+            }
+
+            @if (Model.RoleFilter == "employee")
+            {
+                <option value="employee" selected>
+                    Nhân viên
+                </option>
+            }
+            else
+            {
+                <option value="employee">
+                    Nhân viên
+                </option>
+            }
+
+            @if (Model.RoleFilter == "customer")
+            {
+                <option value="customer" selected>
+                    Khách hàng
+                </option>
+            }
+            else
+            {
+                <option value="customer">
+                    Khách hàng
+                </option>
+            }
+        </select>
+
+        <select name="status"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+            {
+                <option value="" selected>
+                    Tất cả trạng thái
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+            }
+
+            @if (Model.StatusFilter == "active")
+            {
+                <option value="active" selected>
+                    Hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="active">
+                    Hoạt động
+                </option>
+            }
+
+            @if (Model.StatusFilter == "inactive")
+            {
+                <option value="inactive" selected>
+                    Ngừng hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="inactive">
+                    Ngừng hoạt động
+                </option>
+            }
+        </select>
+
+        <button type="submit"
+                class="fbuser-search-button">
+
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Users"
+           asp-action="Index"
+           class="fbuser-reset-button">
+
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Users.Count == 0)
+    {
+        <div class="fbuser-empty">
+            <div>👤</div>
+
+            <h2>Không tìm thấy tài khoản</h2>
+
+            <p>
+                Hãy thử thay đổi từ khóa hoặc bộ lọc tìm kiếm.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="fbuser-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Tài khoản</th>
+                            <th>Liên hệ</th>
+                            <th>Quyền</th>
+                            <th>Hồ sơ</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fbuser-account">
+                                        <div class="fbuser-avatar">
+                                            @{
+                                                var firstCharacter =
+                                                    string.IsNullOrWhiteSpace(user.FullName)
+                                                        ? "U"
+                                                        : user.FullName
+                                                            .Substring(0, 1)
+                                                            .ToUpper();
+                                            }
+
+                                            @firstCharacter
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                @user.FullName
+                                            </strong>
+
+                                            <span>
+                                                @@u.UserName
+                                            </span>
+
+                                            <small>
+                                                Mã tài khoản: #@user.UserId
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbuser-contact">
+                                        <span>
+                                            ✉ @user.Email
+                                        </span>
+
+                                        <span>
+                                            ☎ @user.Phone
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="fbuser-role @GetRoleClass(user.RoleName)">
+                                        @GetRoleText(user.RoleName)
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @if (user.HasCustomerProfile)
+                                    {
+                                        <span class="fbuser-profile-badge customer">
+                                            Hồ sơ khách hàng
+                                        </span>
+                                    }
+                                    else if (user.HasEmployeeProfile)
+                                    {
+                                        <span class="fbuser-profile-badge employee">
+                                            Hồ sơ nhân viên
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbuser-profile-badge admin">
+                                            Tài khoản quản trị
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @user.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    @if (IsActive(user.Status))
+                                    {
+                                        <span class="fbuser-status active">
+                                            Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbuser-status inactive">
+                                            Ngừng hoạt động
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="fbuser-actions">
+                                        <a asp-controller="Users"
+                                           asp-action="Details"
+                                           asp-route-id="@user.UserId"
+                                           class="fbuser-details-button">
+
+                                            Chi tiết
+                                        </a>
+
+                                        <a asp-controller="Users"
+                                           asp-action="Edit"
+                                           asp-route-id="@user.UserId"
+                                           class="fbuser-edit-button">
+
+                                            Sửa
+                                        </a>
+
+                                        <form asp-controller="Users"
+                                              asp-action="ToggleStatus"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@user.UserId" />
+
+                                            @if (IsActive(user.Status))
+                                            {
+                                                <button type="submit"
+                                                        class="fbuser-lock-button"
+                                                        onclick="return confirm('Xác nhận khóa tài khoản này?')">
+
+                                                    Khóa
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="fbuser-unlock-button"
+                                                        onclick="return confirm('Xác nhận mở lại tài khoản này?')">
+
+                                                    Mở
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

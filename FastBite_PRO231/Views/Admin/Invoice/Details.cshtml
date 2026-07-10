@@ -1,80 +1,254 @@
-@model FastBite_PRO231.Models.Invoice
+@model FastBite_PRO231.ViewModels.InvoiceDetailsViewModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết hóa đơn";
+
+    var paymentName = Model.PaymentMethod switch
+    {
+        "Cash" => "Tiền mặt",
+        "Banking" => "Chuyển khoản ngân hàng",
+        "Momo" => "Ví MoMo",
+        _ => Model.PaymentMethod
+    };
 }
 
-<h1>Details</h1>
+<section class="fbi-page">
+    <div class="fbi-details-actions no-print">
+        <a asp-controller="Invoices"
+           asp-action="Index"
+           class="fbi-reset-button">
 
-<div>
-    <h4>Invoice</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EmployeeId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EmployeeId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalAmount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PaymentMethod)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PaymentMethod)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Employee)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceDetails)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceDetails)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Order)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Order)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.InvoiceId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+            ← Danh sách hóa đơn
+        </a>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-controller="Orders"
+               asp-action="Details"
+               asp-route-id="@Model.OrderId"
+               class="fbi-order-button">
+
+                Xem đơn hàng
+            </a>
+
+            <button type="button"
+                    class="fbi-print-button"
+                    onclick="window.print()">
+
+                🖨️ In hóa đơn
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success no-print">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger no-print">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="fbi-receipt">
+        <header class="fbi-receipt-header">
+            <img src="~/images/fastbite-logo.jpg"
+                 alt="FastBite"
+                 class="fbi-receipt-logo" />
+
+            <div>
+                <h1>FASTBITE FOOD STUDIO</h1>
+
+                <p>HÓA ĐƠN THANH TOÁN</p>
+            </div>
+        </header>
+
+        <div class="fbi-receipt-status">
+            @if (Model.Status)
+            {
+                <span class="fbi-status active">
+                    Hóa đơn hoạt động
+                </span>
+            }
+            else
+            {
+                <span class="fbi-status cancelled">
+                    Hóa đơn đã hủy
+                </span>
+            }
+        </div>
+
+        <section class="fbi-receipt-info">
+            <div>
+                <span>Mã hóa đơn</span>
+
+                <strong>
+                    #@Model.InvoiceId
+                </strong>
+            </div>
+
+            <div>
+                <span>Mã đơn hàng</span>
+
+                <strong>
+                    #@Model.OrderId
+                </strong>
+            </div>
+
+            <div>
+                <span>Ngày lập</span>
+
+                <strong>
+                    @Model.InvoiceDate.ToString("dd/MM/yyyy HH:mm")
+                </strong>
+            </div>
+
+            <div>
+                <span>Nhân viên</span>
+
+                <strong>
+                    @Model.EmployeeName
+                </strong>
+            </div>
+        </section>
+
+        <section class="fbi-receipt-customer">
+            <h2>Thông tin khách hàng</h2>
+
+            <div class="fbi-info-row">
+                <span>Họ và tên</span>
+
+                <strong>
+                    @Model.CustomerName
+                </strong>
+            </div>
+
+            <div class="fbi-info-row">
+                <span>Số điện thoại</span>
+
+                <strong>
+                    @Model.Phone
+                </strong>
+            </div>
+
+            <div class="fbi-info-row">
+                <span>Email</span>
+
+                <strong>
+                    @Model.Email
+                </strong>
+            </div>
+
+            <div class="fbi-info-row">
+                <span>Địa chỉ</span>
+
+                <strong>
+                    @(string.IsNullOrWhiteSpace(Model.Address)
+                        ? "Chưa cập nhật"
+                        : Model.Address)
+                </strong>
+            </div>
+        </section>
+
+        <section class="fbi-receipt-products">
+            <h2>Chi tiết sản phẩm</h2>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    @item.ProductName
+                                </td>
+
+                                <td class="text-center">
+                                    @item.Quantity
+                                </td>
+
+                                <td class="text-end">
+                                    @item.UnitPrice.ToString("N0")đ
+                                </td>
+
+                                <td class="text-end fw-bold">
+                                    @item.SubTotal.ToString("N0")đ
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="fbi-receipt-summary">
+            <div class="fbi-info-row">
+                <span>Tổng số lượng</span>
+
+                <strong>
+                    @Model.TotalQuantity phần
+                </strong>
+            </div>
+
+            <div class="fbi-info-row">
+                <span>Phương thức thanh toán</span>
+
+                <strong>
+                    @paymentName
+                </strong>
+            </div>
+
+            <div class="fbi-receipt-total">
+                <span>TỔNG THANH TOÁN</span>
+
+                <strong>
+                    @Model.TotalAmount.ToString("N0")đ
+                </strong>
+            </div>
+        </section>
+
+        <footer class="fbi-receipt-footer">
+            <p>
+                Cảm ơn quý khách đã sử dụng dịch vụ của FastBite!
+            </p>
+
+            <span>
+                Hóa đơn được tạo tự động bởi hệ thống FastBite.
+            </span>
+        </footer>
+
+        @if (Model.Status)
+        {
+            <form asp-controller="Invoices"
+                  asp-action="Cancel"
+                  method="post"
+                  class="fbi-cancel-form no-print">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       value="@Model.InvoiceId" />
+
+                <button type="submit"
+                        class="fbi-cancel-button"
+                        onclick="return confirm('Bạn chắc chắn muốn hủy hóa đơn này?')">
+
+                    Hủy hóa đơn
+                </button>
+            </form>
+        }
+    </div>
+</section>

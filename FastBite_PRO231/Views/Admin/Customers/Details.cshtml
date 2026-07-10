@@ -1,5 +1,342 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model FastBite_PRO231.ViewModels.CustomerManagementIndexViewModel
+
 @{
+    ViewData["Title"] = "Quản lý khách hàng";
+
+    bool IsActive(string status)
+    {
+        return string.Equals(
+            status,
+            "Hoạt động",
+            StringComparison.OrdinalIgnoreCase);
+    }
 }
+
+<section class="fbcustomer-page">
+    <div class="fbcustomer-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
+
+            <h1>Khách hàng</h1>
+
+            <span>
+                Quản lý thông tin, điểm tích lũy và lịch sử mua hàng.
+            </span>
+        </div>
+
+        <a asp-controller="Users"
+           asp-action="Index"
+           asp-route-role="customer"
+           class="fbcustomer-header-button">
+
+            Quản lý tài khoản
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbcustomer-stat-card">
+                <span>Tổng khách hàng</span>
+
+                <strong>
+                    @Model.TotalCustomers
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbcustomer-stat-card">
+                <span>Đang hoạt động</span>
+
+                <strong class="fbcustomer-green">
+                    @Model.ActiveCustomers
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbcustomer-stat-card">
+                <span>Đã có đơn hàng</span>
+
+                <strong class="fbcustomer-blue">
+                    @Model.CustomersWithOrders
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbcustomer-stat-card">
+                <span>Tổng điểm tích lũy</span>
+
+                <strong class="fbcustomer-orange">
+                    @Model.TotalPoints
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Customers"
+          asp-action="Index"
+          method="get"
+          class="fbcustomer-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Tên, tài khoản, email, số điện thoại hoặc địa chỉ..." />
+
+        <select name="status"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+            {
+                <option value="" selected>
+                    Tất cả trạng thái
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+            }
+
+            @if (Model.StatusFilter == "active")
+            {
+                <option value="active" selected>
+                    Đang hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="active">
+                    Đang hoạt động
+                </option>
+            }
+
+            @if (Model.StatusFilter == "inactive")
+            {
+                <option value="inactive" selected>
+                    Ngừng hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="inactive">
+                    Ngừng hoạt động
+                </option>
+            }
+        </select>
+
+        <button type="submit"
+                class="fbcustomer-search-button">
+
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Customers"
+           asp-action="Index"
+           class="fbcustomer-reset-button">
+
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Customers.Count == 0)
+    {
+        <div class="fbcustomer-empty">
+            <div>👥</div>
+
+            <h2>Không tìm thấy khách hàng</h2>
+
+            <p>
+                Hãy thử thay đổi từ khóa hoặc bộ lọc trạng thái.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="fbcustomer-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>Liên hệ</th>
+                            <th>Địa chỉ</th>
+                            <th>Điểm</th>
+                            <th>Đơn hàng</th>
+                            <th>Chi tiêu</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fbcustomer-profile">
+                                        <div class="fbcustomer-avatar">
+                                            @{
+                                                var firstCharacter =
+                                                    string.IsNullOrWhiteSpace(
+                                                        customer.FullName)
+                                                        ? "K"
+                                                        : customer.FullName
+                                                            .Substring(0, 1)
+                                                            .ToUpper();
+                                            }
+
+                                            @firstCharacter
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                @customer.FullName
+                                            </strong>
+
+                                            <span>
+                                                @("@")@customer.UserName
+                                            </span>
+
+                                            <small>
+                                                Mã KH: #@customer.CustomerId
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbcustomer-contact">
+                                        <span>
+                                            ✉ @customer.Email
+                                        </span>
+
+                                        <span>
+                                            ☎ @customer.Phone
+                                        </span>
+
+                                        <small>
+                                            Tạo ngày
+                                            @customer.CreatedAt.ToString("dd/MM/yyyy")
+                                        </small>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="fbcustomer-address">
+                                        @(string.IsNullOrWhiteSpace(customer.Address)
+                                            ? "Chưa cập nhật"
+                                            : customer.Address)
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="fbcustomer-point-badge">
+                                        ⭐ @customer.Point điểm
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong class="fbcustomer-order-count">
+                                        @customer.OrderCount
+                                    </strong>
+
+                                    <span> đơn</span>
+                                </td>
+
+                                <td>
+                                    <strong class="fbcustomer-money">
+                                        @customer.TotalSpent.ToString("N0")đ
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @if (IsActive(customer.Status))
+                                    {
+                                        <span class="fbcustomer-status active">
+                                            Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbcustomer-status inactive">
+                                            Ngừng hoạt động
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="fbcustomer-actions">
+                                        <a asp-controller="Customers"
+                                           asp-action="Details"
+                                           asp-route-id="@customer.CustomerId"
+                                           class="fbcustomer-details-button">
+
+                                            Chi tiết
+                                        </a>
+
+                                        <a asp-controller="Customers"
+                                           asp-action="Edit"
+                                           asp-route-id="@customer.CustomerId"
+                                           class="fbcustomer-edit-button">
+
+                                            Sửa
+                                        </a>
+
+                                        <form asp-controller="Customers"
+                                              asp-action="ToggleStatus"
+                                              method="post">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@customer.CustomerId" />
+
+                                            @if (IsActive(customer.Status))
+                                            {
+                                                <button type="submit"
+                                                        class="fbcustomer-lock-button"
+                                                        onclick="return confirm('Xác nhận khóa tài khoản khách hàng này?')">
+
+                                                    Khóa
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="fbcustomer-unlock-button"
+                                                        onclick="return confirm('Xác nhận mở lại tài khoản khách hàng này?')">
+
+                                                    Mở
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

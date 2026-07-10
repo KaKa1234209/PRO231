@@ -1,79 +1,225 @@
-@model FastBite_PRO231.Models.User
+@model FastBite_PRO231.ViewModels.UserManagementEditViewModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa tài khoản";
+
+    var roleText = Model.RoleName switch
+    {
+        "Admin" => "Quản trị viên",
+        "Employee" => "Nhân viên",
+        "Customer" => "Khách hàng",
+        _ => Model.RoleName
+    };
 }
 
-<h1>Edit</h1>
+<section class="fbuser-page">
+    <div class="fbuser-header">
+        <div>
+            <p>CHỈNH SỬA TÀI KHOẢN</p>
 
-<h4>User</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="UserId" />
-            <div class="form-group">
-                <label asp-for="UserName" class="control-label"></label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="RoleId" class="control-label"></label>
-                <input asp-for="RoleId" class="form-control" />
-                <span asp-validation-for="RoleId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Customer" class="control-label"></label>
-                <input asp-for="Customer" class="form-control" />
-                <span asp-validation-for="Customer" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <input asp-for="Role" class="form-control" />
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <h1>@Model.FullName</h1>
+
+            <span>
+                Cập nhật thông tin liên hệ và trạng thái tài khoản.
+            </span>
+        </div>
+
+        <a asp-controller="Users"
+           asp-action="Details"
+           asp-route-id="@Model.UserId"
+           class="fbuser-reset-button">
+
+            ← Quay lại chi tiết
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div class="fbuser-form-layout">
+        <section class="fbuser-form-card">
+            <div class="fbuser-panel-heading">
+                <div>
+                    <p>THÔNG TIN TÀI KHOẢN</p>
+                    <h2>Cập nhật dữ liệu</h2>
+                </div>
+
+                <span class="fbuser-role fbuser-role-other">
+                    @roleText
+                </span>
+            </div>
+
+            <form asp-controller="Users"
+                  asp-action="Edit"
+                  asp-route-id="@Model.UserId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="UserId"
+                       type="hidden" />
+
+                <input asp-for="RoleName"
+                       type="hidden" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="UserName"
+                               class="form-control" />
+
+                        <span asp-validation-for="UserName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Phone"
+                               class="form-control" />
+
+                        <span asp-validation-for="Phone"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Status"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <select asp-for="Status"
+                                class="form-select">
+
+                            @if (Model.Status == "Hoạt động")
+                            {
+                                <option value="Hoạt động" selected>
+                                    Hoạt động
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="Hoạt động">
+                                    Hoạt động
+                                </option>
+                            }
+
+                            @if (Model.Status == "Ngừng hoạt động")
+                            {
+                                <option value="Ngừng hoạt động" selected>
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="Ngừng hoạt động">
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                        </select>
+
+                        <span asp-validation-for="Status"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="fbuser-warning-box">
+                    Vai trò <strong>@roleText</strong> không được thay đổi
+                    tại trang này để tránh sai dữ liệu hồ sơ liên kết.
+                </div>
+
+                <div class="fbuser-form-actions">
+                    <button type="submit"
+                            class="fbuser-save-button"
+                            onclick="return confirm('Xác nhận lưu thay đổi tài khoản?')">
+
+                        Lưu thay đổi
+                    </button>
+
+                    <a asp-controller="Users"
+                       asp-action="ResetPassword"
+                       asp-route-id="@Model.UserId"
+                       class="fbuser-password-button">
+
+                        Đặt lại mật khẩu
+                    </a>
+
+                    <a asp-controller="Users"
+                       asp-action="Details"
+                       asp-route-id="@Model.UserId"
+                       class="fbuser-reset-button">
+
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbuser-guide-card">
+            <div class="fbuser-guide-icon">
+                👤
+            </div>
+
+            <h2>@Model.FullName</h2>
+
+            <div class="fbuser-guide-info">
+                <span>Mã tài khoản</span>
+                <strong>#@Model.UserId</strong>
+            </div>
+
+            <div class="fbuser-guide-info">
+                <span>Vai trò</span>
+                <strong>@roleText</strong>
+            </div>
+
+            <div class="fbuser-guide-info">
+                <span>Trạng thái</span>
+                <strong>@Model.Status</strong>
+            </div>
+
+            <p>
+                Không thể tự khóa tài khoản Admin đang đăng nhập và không
+                thể khóa Admin hoạt động cuối cùng.
+            </p>
+        </aside>
+    </div>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -1,74 +1,79 @@
 @model FastBite_PRO231.Models.Invoice
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Sửa hóa đơn";
 }
 
-<h1>Edit</h1>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Sửa hóa đơn #@Model.InvoiceId</h1>
+                <p>Cập nhật nhân viên, phương thức và trạng thái thanh toán.</p>
+            </div>
 
-<h4>Invoice</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="InvoiceId" />
-            <div class="form-group">
-                <label asp-for="OrderId" class="control-label"></label>
-                <input asp-for="OrderId" class="form-control" />
-                <span asp-validation-for="OrderId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
-                <input asp-for="EmployeeId" class="form-control" />
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InvoiceDate" class="control-label"></label>
-                <input asp-for="InvoiceDate" class="form-control" />
-                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TotalAmount" class="control-label"></label>
-                <input asp-for="TotalAmount" class="form-control" />
-                <span asp-validation-for="TotalAmount" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PaymentMethod" class="control-label"></label>
-                <input asp-for="PaymentMethod" class="form-control" />
-                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-check-input" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InvoiceDetails" class="control-label"></label>
-                <input asp-for="InvoiceDetails" class="form-control" />
-                <span asp-validation-for="InvoiceDetails" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Order" class="control-label"></label>
-                <input asp-for="Order" class="form-control" />
-                <span asp-validation-for="Order" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <form asp-controller="Invoices"
+                  asp-action="Edit"
+                  asp-route-invoiceid="@Model.InvoiceId"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="InvoiceId" />
+                <input type="hidden" asp-for="OrderId" />
+                <input type="hidden" asp-for="InvoiceDate" />
+                <input type="hidden" asp-for="TotalAmount" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+                <div class="fb-detail-row mb-3">
+                    <div class="fb-detail-label">Đơn hàng</div>
+                    <div class="fb-detail-value">#@Model.OrderId</div>
+                </div>
+
+                <div class="fb-detail-row mb-3">
+                    <div class="fb-detail-label">Tổng tiền</div>
+                    <div class="fb-detail-value fb-price">@Model.TotalAmount.ToString("N0") VNĐ</div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="EmployeeId" class="fb-form-label">Nhân viên lập hóa đơn</label>
+
+                    <select asp-for="EmployeeId" asp-items="ViewBag.EmployeeId" class="form-select fb-form-control">
+                        <option value="">-- Chọn nhân viên --</option>
+                    </select>
+
+                    <span asp-validation-for="EmployeeId" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PaymentMethod" class="fb-form-label">Phương thức thanh toán</label>
+
+                    <select asp-for="PaymentMethod" asp-items="ViewBag.PaymentMethodList" class="form-select fb-form-control"></select>
+
+                    <span asp-validation-for="PaymentMethod" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="Status" class="form-check-input" />
+                    <label asp-for="Status" class="form-check-label">
+                        Đã thanh toán
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="submit" class="btn fb-btn-primary">
+                        Cập nhật
+                    </button>
+
+                    <a class="btn fb-btn-outline" asp-controller="Invoices" asp-action="Index">
+                        Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
 }

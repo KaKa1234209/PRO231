@@ -1,71 +1,213 @@
-@model IEnumerable<FastBite_PRO231.Models.Order>
+@model FastBite_PRO231.ViewModels.OrderManagementIndexViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý đơn hàng";
+
+    string StatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbom-status-success",
+            "Đã hủy" => "fbom-status-cancelled",
+            "Đang giao" => "fbom-status-delivering",
+            "Đang chuẩn bị" => "fbom-status-processing",
+            "Đang xử lý" => "fbom-status-processing",
+            _ => "fbom-status-pending"
+        };
+    }
 }
 
-<h1>Index</h1>
+<section class="fbom-page">
+    <div class="fbom-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
+            <h1>Đơn hàng</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CustomerId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Customer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Invoices)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDetails)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.CustomerId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.OrderDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TotalAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Customer)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Invoices)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.OrderDetails)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.OrderId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.OrderId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.OrderId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <span>
+                Theo dõi và cập nhật trạng thái đơn hàng khách đã đặt.
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbom-stat">
+                <span>Tổng đơn hàng</span>
+                <strong>@Model.TotalOrders</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbom-stat">
+                <span>Chờ xử lý</span>
+                <strong>@Model.PendingOrders</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbom-stat">
+                <span>Đang xử lý</span>
+                <strong>@Model.ProcessingOrders</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbom-stat">
+                <span>Hoàn thành</span>
+                <strong>@Model.CompletedOrders</strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Orders"
+          asp-action="Index"
+          method="get"
+          class="fbom-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               placeholder="Mã đơn, tên khách hàng, số điện thoại..."
+               class="form-control" />
+
+        <select name="status"
+                class="form-select">
+
+            <option value="">
+                Tất cả trạng thái
+            </option>
+
+            <option value="Đang chờ xử lý"
+                    selected="@(Model.StatusFilter == "Đang chờ xử lý")">
+                Đang chờ xử lý
+            </option>
+
+            <option value="Đang xử lý"
+                    selected="@(Model.StatusFilter == "Đang xử lý")">
+                Đang xử lý
+            </option>
+
+            <option value="Đang chuẩn bị"
+                    selected="@(Model.StatusFilter == "Đang chuẩn bị")">
+                Đang chuẩn bị
+            </option>
+
+            <option value="Đang giao"
+                    selected="@(Model.StatusFilter == "Đang giao")">
+                Đang giao
+            </option>
+
+            <option value="Hoàn thành"
+                    selected="@(Model.StatusFilter == "Hoàn thành")">
+                Hoàn thành
+            </option>
+
+            <option value="Đã hủy"
+                    selected="@(Model.StatusFilter == "Đã hủy")">
+                Đã hủy
+            </option>
+        </select>
+
+        <button type="submit"
+                class="fbom-search-button">
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Orders"
+           asp-action="Index"
+           class="fbom-reset-button">
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Orders.Count == 0)
+    {
+        <div class="fbom-empty">
+            <div>🧾</div>
+            <h2>Không tìm thấy đơn hàng</h2>
+            <p>Hãy thay đổi từ khóa hoặc trạng thái tìm kiếm.</p>
+        </div>
+    }
+    else
+    {
+        <div class="fbom-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Nhân viên</th>
+                            <th>Ngày đặt</th>
+                            <th>Số lượng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>#@order.OrderId</strong>
+                                </td>
+
+                                <td>
+                                    <strong>@order.CustomerName</strong>
+                                    <small>@order.Phone</small>
+                                </td>
+
+                                <td>
+                                    @order.EmployeeName
+                                </td>
+
+                                <td>
+                                    @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    @order.TotalQuantity phần
+                                </td>
+
+                                <td class="fbom-money">
+                                    @order.TotalAmount.ToString("N0")đ
+                                </td>
+
+                                <td>
+                                    <span class="fbom-status @StatusClass(order.Status)">
+                                        @order.Status
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <a asp-controller="Orders"
+                                       asp-action="Details"
+                                       asp-route-id="@order.OrderId"
+                                       class="fbom-details-button">
+                                        Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

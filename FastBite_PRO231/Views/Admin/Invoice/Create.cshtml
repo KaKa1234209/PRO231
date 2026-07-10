@@ -1,78 +1,262 @@
-@model FastBite_PRO231.Models.Invoice
+@model FastBite_PRO231.ViewModels.InvoiceCreateViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo hóa đơn";
 }
 
-<h1>Create</h1>
+<section class="fbi-page">
+    <div class="fbi-header">
+        <div>
+            <p>LẬP HÓA ĐƠN FASTBITE</p>
 
-<h4>Invoice</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <h1>
+                Tạo hóa đơn cho đơn #@Model.OrderId
+            </h1>
 
-            <div class="form-group">
-                <label asp-for="OrderId" class="control-label"></label>
-                <input asp-for="OrderId" class="form-control" />
-                <span asp-validation-for="OrderId" class="text-danger"></span>
-            </div>
+            <span>
+                Kiểm tra đơn hàng, chọn nhân viên và phương thức thanh toán.
+            </span>
+        </div>
 
-            <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
-                <input asp-for="EmployeeId" class="form-control" />
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
-            </div>
+        <a asp-controller="Orders"
+           asp-action="Details"
+           asp-route-id="@Model.OrderId"
+           class="fbi-reset-button">
 
-            <div class="form-group">
-                <label asp-for="InvoiceDate" class="control-label"></label>
-                <input asp-for="InvoiceDate" class="form-control" />
-                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TotalAmount" class="control-label"></label>
-                <input asp-for="TotalAmount" class="form-control" />
-                <span asp-validation-for="TotalAmount" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PaymentMethod" class="control-label"></label>
-                <input asp-for="PaymentMethod" class="form-control" />
-                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-check-input" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="InvoiceDetails" class="control-label"></label>
-                <input asp-for="InvoiceDetails" class="form-control" />
-                <span asp-validation-for="InvoiceDetails" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Order" class="control-label"></label>
-                <input asp-for="Order" class="form-control" />
-                <span asp-validation-for="Order" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+            ← Quay lại đơn hàng
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div asp-validation-summary="ModelOnly"
+         class="alert alert-danger">
+    </div>
+
+    <div class="fbi-create-grid">
+        <div class="fbi-create-left">
+            <section class="fbi-panel">
+                <h2>Thông tin khách hàng</h2>
+
+                <div class="fbi-info-row">
+                    <span>Họ và tên</span>
+
+                    <strong>
+                        @Model.CustomerName
+                    </strong>
+                </div>
+
+                <div class="fbi-info-row">
+                    <span>Số điện thoại</span>
+
+                    <strong>
+                        @Model.Phone
+                    </strong>
+                </div>
+
+                <div class="fbi-info-row">
+                    <span>Địa chỉ</span>
+
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Model.Address)
+                            ? "Chưa cập nhật"
+                            : Model.Address)
+                    </strong>
+                </div>
+
+                <div class="fbi-info-row">
+                    <span>Ngày đặt hàng</span>
+
+                    <strong>
+                        @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+            </section>
+
+            <section class="fbi-panel">
+                <h2>Sản phẩm trong hóa đơn</h2>
+
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="alert alert-warning">
+                        Đơn hàng không có sản phẩm.
+                    </div>
+                }
+                else
+                {
+                    <div class="fbi-product-list">
+                        @foreach (var item in Model.Items)
+                        {
+                            <article class="fbi-product-item">
+                                <div class="fbi-product-number">
+                                    @item.Quantity
+                                </div>
+
+                                <div class="fbi-product-info">
+                                    <strong>
+                                        @item.ProductName
+                                    </strong>
+
+                                    <span>
+                                        @item.Quantity ×
+                                        @item.UnitPrice.ToString("N0")đ
+                                    </span>
+                                </div>
+
+                                <strong class="fbi-product-total">
+                                    @item.SubTotal.ToString("N0")đ
+                                </strong>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+
+        <aside class="fbi-create-summary">
+            <h2>Thông tin thanh toán</h2>
+
+            <div class="fbi-summary-order">
+                <span>Mã đơn hàng</span>
+
+                <strong>
+                    #@Model.OrderId
+                </strong>
+            </div>
+
+            <div class="fbi-summary-total">
+                <span>Tổng thanh toán</span>
+
+                <strong>
+                    @Model.TotalAmount.ToString("N0")đ
+                </strong>
+            </div>
+
+            @if (Model.Employees.Count == 0)
+            {
+                <div class="alert alert-warning">
+                    Chưa có nhân viên đang làm việc.
+                    Hãy tạo hoặc kích hoạt nhân viên trước.
+                </div>
+            }
+
+            <form asp-controller="Invoices"
+                  asp-action="Create"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="OrderId"
+                       type="hidden" />
+
+                <div class="mb-3">
+                    <label asp-for="EmployeeId"
+                           class="form-label fw-bold">
+
+                        Nhân viên lập hóa đơn
+                    </label>
+
+                    <select asp-for="EmployeeId"
+                            class="form-select">
+
+                        <option value="">
+                            -- Chọn nhân viên --
+                        </option>
+
+                        @foreach (var employee in Model.Employees)
+                        {
+                            if (Model.EmployeeId == employee.EmployeeId)
+                            {
+                                <option value="@employee.EmployeeId"
+                                        selected>
+
+                                    @employee.FullName
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@employee.EmployeeId">
+                                    @employee.FullName
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    <span asp-validation-for="EmployeeId"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PaymentMethod"
+                           class="form-label fw-bold">
+
+                        Phương thức thanh toán
+                    </label>
+
+                    <select asp-for="PaymentMethod"
+                            class="form-select">
+
+                        @if (Model.PaymentMethod == "Cash")
+                        {
+                            <option value="Cash" selected>
+                                Tiền mặt
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="Cash">
+                                Tiền mặt
+                            </option>
+                        }
+
+                        @if (Model.PaymentMethod == "Banking")
+                        {
+                            <option value="Banking" selected>
+                                Chuyển khoản ngân hàng
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="Banking">
+                                Chuyển khoản ngân hàng
+                            </option>
+                        }
+
+                        @if (Model.PaymentMethod == "Momo")
+                        {
+                            <option value="Momo" selected>
+                                Ví MoMo
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="Momo">
+                                Ví MoMo
+                            </option>
+                        }
+                    </select>
+
+                    <span asp-validation-for="PaymentMethod"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <button type="submit"
+                        class="fbi-create-button"
+                        disabled="@(Model.Employees.Count == 0)"
+                        onclick="return confirm('Xác nhận tạo hóa đơn cho đơn hàng này?')">
+
+                    💳 Xác nhận tạo hóa đơn
+                </button>
+            </form>
+
+            <div class="fbi-create-note">
+                Sau khi tạo thành công, hệ thống sẽ lưu hóa đơn
+                và toàn bộ sản phẩm trong đơn hàng.
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

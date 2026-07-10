@@ -1,42 +1,46 @@
-@model FastBite_PRO231.Models.Category
+@model Category
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Thêm danh mục";
 }
 
-<h1>Create</h1>
-
-<h4>Category</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="CategoryName" class="control-label"></label>
-                <input asp-for="CategoryName" class="form-control" />
-                <span asp-validation-for="CategoryName" class="text-danger"></span>
+<section class="fb-admin-page">
+    <div class="container">
+        <div class="fb-form-card">
+            <div class="fb-form-title">
+                <h1>Thêm danh mục</h1>
+                <p>Tạo danh mục mới cho sản phẩm thức ăn nhanh.</p>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
+            <form asp-controller="Categories" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
 
-            <div class="form-group">
-                <label asp-for="Products" class="control-label"></label>
-                <input asp-for="Products" class="form-control" />
-                <span asp-validation-for="Products" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+
+                <div class="mb-3">
+                    <label asp-for="CategoryName" class="fb-form-label">Tên danh mục</label>
+                    <input asp-for="CategoryName" class="form-control fb-form-control" placeholder="Ví dụ: Burger" />
+                    <span asp-validation-for="CategoryName" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="fb-form-label">Mô tả</label>
+                    <textarea asp-for="Description" rows="4" class="form-control fb-form-control"></textarea>
+                    <span asp-validation-for="Description" class="text-danger fb-validation"></span>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="submit" class="btn fb-btn-primary">Lưu danh mục</button>
+
+                    <a class="btn fb-btn-outline" asp-controller="Categories" asp-action="Index">
+                        Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+</section>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

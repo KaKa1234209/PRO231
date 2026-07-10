@@ -1,83 +1,271 @@
-@model IEnumerable<FastBite_PRO231.Models.Invoice>
+@model FastBite_PRO231.ViewModels.InvoiceManagementIndexViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý hóa đơn";
 }
 
-<h1>Index</h1>
+<section class="fbi-page">
+    <div class="fbi-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EmployeeId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.InvoiceDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PaymentMethod)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Employee)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.InvoiceDetails)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Order)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.OrderId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.EmployeeId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.InvoiceDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TotalAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PaymentMethod)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Employee)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.InvoiceDetails)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Order)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.InvoiceId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.InvoiceId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.InvoiceId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+            <h1>Hóa đơn</h1>
+
+            <span>
+                Theo dõi hóa đơn đã lập, doanh thu và trạng thái thanh toán.
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbi-stat-card">
+                <span>Tổng hóa đơn</span>
+
+                <strong>
+                    @Model.TotalInvoices
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbi-stat-card">
+                <span>Đang hoạt động</span>
+
+                <strong class="fbi-green">
+                    @Model.ActiveInvoices
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbi-stat-card">
+                <span>Đã hủy</span>
+
+                <strong class="fbi-red">
+                    @Model.CancelledInvoices
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbi-stat-card">
+                <span>Doanh thu hóa đơn</span>
+
+                <strong class="fbi-money">
+                    @Model.TotalRevenue.ToString("N0")đ
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Invoices"
+          asp-action="Index"
+          method="get"
+          class="fbi-filter-form">
+
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Mã hóa đơn, mã đơn, tên khách hàng..." />
+
+        <select name="status"
+                class="form-select">
+
+            @if (string.IsNullOrWhiteSpace(Model.StatusFilter))
+            {
+                <option value="" selected>
+                    Tất cả trạng thái
+                </option>
+            }
+            else
+            {
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+            }
+
+            @if (Model.StatusFilter == "active")
+            {
+                <option value="active" selected>
+                    Đang hoạt động
+                </option>
+            }
+            else
+            {
+                <option value="active">
+                    Đang hoạt động
+                </option>
+            }
+
+            @if (Model.StatusFilter == "cancelled")
+            {
+                <option value="cancelled" selected>
+                    Đã hủy
+                </option>
+            }
+            else
+            {
+                <option value="cancelled">
+                    Đã hủy
+                </option>
+            }
+        </select>
+
+        <button type="submit"
+                class="fbi-search-button">
+
+            Tìm kiếm
+        </button>
+
+        <a asp-controller="Invoices"
+           asp-action="Index"
+           class="fbi-reset-button">
+
+            Đặt lại
+        </a>
+    </form>
+
+    @if (Model.Invoices.Count == 0)
+    {
+        <div class="fbi-empty">
+            <div>💳</div>
+
+            <h2>Chưa có hóa đơn</h2>
+
+            <p>
+                Hóa đơn sẽ xuất hiện sau khi đơn hàng hoàn thành
+                và được nhân viên lập hóa đơn.
+            </p>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               class="fbi-primary-link">
+
+                Xem đơn hàng
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="fbi-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Mã hóa đơn</th>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Nhân viên</th>
+                            <th>Ngày lập</th>
+                            <th>Thanh toán</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var invoice in Model.Invoices)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>
+                                        #@invoice.InvoiceId
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <a asp-controller="Orders"
+                                       asp-action="Details"
+                                       asp-route-id="@invoice.OrderId"
+                                       class="fbi-order-link">
+
+                                        #@invoice.OrderId
+                                    </a>
+                                </td>
+
+                                <td>
+                                    @invoice.CustomerName
+                                </td>
+
+                                <td>
+                                    @invoice.EmployeeName
+                                </td>
+
+                                <td>
+                                    @invoice.InvoiceDate.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    @switch (invoice.PaymentMethod)
+                                    {
+                                        case "Cash":
+                                            <span>Tiền mặt</span>
+                                            break;
+
+                                        case "Banking":
+                                            <span>Chuyển khoản</span>
+                                            break;
+
+                                        case "Momo":
+                                            <span>Ví MoMo</span>
+                                            break;
+
+                                        default:
+                                            <span>@invoice.PaymentMethod</span>
+                                            break;
+                                    }
+                                </td>
+
+                                <td class="fbi-money">
+                                    @invoice.TotalAmount.ToString("N0")đ
+                                </td>
+
+                                <td>
+                                    @if (invoice.Status)
+                                    {
+                                        <span class="fbi-status active">
+                                            Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbi-status cancelled">
+                                            Đã hủy
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <a asp-controller="Invoices"
+                                       asp-action="Details"
+                                       asp-route-id="@invoice.InvoiceId"
+                                       class="fbi-details-button">
+
+                                        Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

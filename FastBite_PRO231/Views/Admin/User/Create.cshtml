@@ -1,84 +1,245 @@
-@model FastBite_PRO231.Models.User
+@model FastBite_PRO231.ViewModels.AdminAccountCreateViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo tài khoản Admin";
 }
 
-<h1>Create</h1>
+<section class="fbuser-page">
+    <div class="fbuser-header">
+        <div>
+            <p>TẠO TÀI KHOẢN QUẢN TRỊ</p>
 
-<h4>User</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <h1>Tạo tài khoản Admin</h1>
 
-            <div class="form-group">
-                <label asp-for="UserName" class="control-label"></label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
+            <span>
+                Tài khoản mới sẽ có toàn quyền quản trị hệ thống FastBite.
+            </span>
+        </div>
 
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
+        <a asp-controller="Users"
+           asp-action="Index"
+           class="fbuser-reset-button">
 
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="RoleId" class="control-label"></label>
-                <input asp-for="RoleId" class="form-control" />
-                <span asp-validation-for="RoleId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Customer" class="control-label"></label>
-                <input asp-for="Customer" class="form-control" />
-                <span asp-validation-for="Customer" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <input asp-for="Role" class="form-control" />
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+            ← Quay lại danh sách
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div class="fbuser-form-layout">
+        <section class="fbuser-form-card">
+            <div class="fbuser-panel-heading">
+                <div>
+                    <p>THÔNG TIN TÀI KHOẢN</p>
+                    <h2>Admin mới</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Users"
+                  asp-action="Create"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control"
+                               placeholder="Ví dụ: Nguyễn Văn Quản Trị" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="UserName"
+                               class="form-control"
+                               autocomplete="off"
+                               placeholder="Ví dụ: admin2" />
+
+                        <span asp-validation-for="UserName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="admin2@fastbite.vn" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Phone"
+                               class="form-control"
+                               placeholder="0901234567" />
+
+                        <span asp-validation-for="Phone"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Password"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <div class="fbuser-password-wrap">
+                            <input asp-for="Password"
+                                   class="form-control"
+                                   id="adminPassword"
+                                   autocomplete="new-password" />
+
+                            <button type="button"
+                                    class="fbuser-show-password"
+                                    data-target="adminPassword">
+
+                                Hiện
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="Password"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <div class="fbuser-password-wrap">
+                            <input asp-for="ConfirmPassword"
+                                   class="form-control"
+                                   id="adminConfirmPassword"
+                                   autocomplete="new-password" />
+
+                            <button type="button"
+                                    class="fbuser-show-password"
+                                    data-target="adminConfirmPassword">
+
+                                Hiện
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="ConfirmPassword"
+                              class="text-danger">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="fbuser-warning-box">
+                    Tài khoản được tạo tại đây sẽ có vai trò
+                    <strong>Admin</strong> và trạng thái
+                    <strong>Hoạt động</strong>.
+                </div>
+
+                <div class="fbuser-form-actions">
+                    <button type="submit"
+                            class="fbuser-save-button"
+                            onclick="return confirm('Xác nhận tạo tài khoản Admin mới?')">
+
+                        Tạo tài khoản Admin
+                    </button>
+
+                    <a asp-controller="Users"
+                       asp-action="Index"
+                       class="fbuser-reset-button">
+
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbuser-guide-card">
+            <div class="fbuser-guide-icon">
+                🔐
+            </div>
+
+            <h2>Lưu ý bảo mật</h2>
+
+            <p>
+                Chỉ tạo tài khoản Admin cho người có trách nhiệm quản lý
+                toàn bộ cửa hàng.
+            </p>
+
+            <div class="fbuser-guide-item">
+                <span>✓</span>
+                Mật khẩu tối thiểu 6 ký tự
+            </div>
+
+            <div class="fbuser-guide-item">
+                <span>✓</span>
+                Email và số điện thoại không được trùng
+            </div>
+
+            <div class="fbuser-guide-item">
+                <span>✓</span>
+                Tên đăng nhập không được trùng
+            </div>
+
+            <div class="fbuser-guide-item">
+                <span>✓</span>
+                Mật khẩu được mã hóa trước khi lưu
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons =
+                document.querySelectorAll(".fbuser-show-password");
+
+            buttons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    const targetId =
+                        button.dataset.target;
+
+                    const input =
+                        document.getElementById(targetId);
+
+                    if (!input) {
+                        return;
+                    }
+
+                    const isPassword =
+                        input.type === "password";
+
+                    input.type =
+                        isPassword ? "text" : "password";
+
+                    button.textContent =
+                        isPassword ? "Ẩn" : "Hiện";
+                });
+            });
+        });
+    </script>
+}
