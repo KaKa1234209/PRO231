@@ -24,7 +24,7 @@ namespace FastBite_PRO231.ViewModels
         public string Address { get; set; }
 
         [Required(ErrorMessage = "Mật khẩu không được để trống")]
-        [MinLength(50, ErrorMessage = "Mật khẩu tối thiểu 20 ký tự")]
+        [MinLength(8, ErrorMessage = "Mật khẩu tối thiểu 8 ký tự")]
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu")]

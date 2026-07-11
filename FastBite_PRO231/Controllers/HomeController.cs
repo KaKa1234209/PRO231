@@ -18,6 +18,7 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(int? categoryId)
     {
+        //Lấy danh sách danh mục
         var categories = await _context.Categories
             .AsNoTracking()
             .OrderBy(category => category.CategoryName)
@@ -28,9 +29,9 @@ public class HomeController : Controller
                 Description = category.Description ?? ""
             })
             .ToListAsync();
-
+        //Lấy danh sách sản phẩm
         var productQuery = _context.Products
-            .AsNoTracking()
+            .AsNoTracking() //chỉ đọc dữ liệu, không theo dõi thay đổi
             .Include(product => product.Category)
             .Where(product => product.Status);
 
@@ -40,6 +41,7 @@ public class HomeController : Controller
                 product.CategoryId == categoryId.Value);
         }
 
+        //Sắp xếp 12 sản phẩm mới nhất lên đầu theo Id giảm
         var productEntities = await productQuery
             .OrderByDescending(product => product.ProductId)
             .Take(12)
@@ -54,7 +56,7 @@ public class HomeController : Controller
                     ?? "FastBite",
 
                 ProductName = product.ProductName,
-
+                //Ko có mô tả thì dung mặc định
                 Description = string.IsNullOrWhiteSpace(
                     product.Description)
                     ? "Món ăn thơm ngon được chuẩn bị tại FastBite."
@@ -64,7 +66,7 @@ public class HomeController : Controller
                 ImageUrl = NormalizeImageUrl(product.Image)
             })
             .ToList();
-
+        //Đếm tổng số sản phẩm đang bán (không giới hạn 12, không lọc theo category) — dùng để hiển thị số liệu thống kê ở hero section.
         var model = new HomeIndexViewModel
         {
             SelectedCategoryId = categoryId,
@@ -82,6 +84,7 @@ public class HomeController : Controller
         return View(model);
     }
 
+    //Chuẩn hóa đường dẫn ảnh từ database thành URL dùng được trên web
     private static string NormalizeImageUrl(string? image)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -112,23 +115,5 @@ public class HomeController : Controller
         }
 
         return $"/images/products/{image}";
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [ResponseCache(
-        Duration = 0,
-        Location = ResponseCacheLocation.None,
-        NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel
-        {
-            RequestId = Activity.Current?.Id
-                ?? HttpContext.TraceIdentifier
-        });
     }
 }

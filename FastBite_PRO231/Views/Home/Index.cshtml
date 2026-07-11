@@ -3,11 +3,9 @@
 
 @{
     ViewData["Title"] = "Trang chủ";
-
+    <!-- Kiểm đã đăng nhập? khách hàng?  -->
     var role = Context.Session.GetString("Role") ?? "";
-    var isCustomer = role.Equals(
-        "Customer",
-        StringComparison.OrdinalIgnoreCase);
+    var isCustomer = role.Equals("Customer", StringComparison.OrdinalIgnoreCase);
 }
 
 <section class="fbh-hero">
