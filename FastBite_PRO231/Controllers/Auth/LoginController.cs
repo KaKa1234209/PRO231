@@ -383,92 +383,92 @@ public class LoginController : Controller
 
 
     //Đổi mật khẩu
-    //[HttpGet]
-    //public IActionResult ChangePassword()
-    //{
-    //    var userId = HttpContext.Session.GetInt32("UserId");
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
 
-    //    if (userId == null)
-    //    {
-    //        TempData["Error"] =
-    //            "Vui lòng đăng nhập trước khi đổi mật khẩu.";
+        if (userId == null)
+        {
+            TempData["Error"] =
+                "Vui lòng đăng nhập trước khi đổi mật khẩu.";
 
-    //        return RedirectToAction(nameof(Login));
-    //    }
+            return RedirectToAction(nameof(Login));
+        }
 
-    //    return View(
-    //        "~/Views/Login/ChangePassword.cshtml",
-    //        new ChangePasswordViewModel());
-    //}
+        return View(
+            "~/Views/Login/ChangePassword.cshtml",
+            new ChangePasswordViewModel());
+    }
 
-    //[HttpPost]
-    //[ValidateAntiForgeryToken]
-    //public async Task<IActionResult> ChangePassword(
-    //    ChangePasswordViewModel model)
-    //{
-    //    var userId = HttpContext.Session.GetInt32("UserId");
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(
+        ChangePasswordViewModel model)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
 
-    //    if (userId == null)
-    //    {
-    //        TempData["Error"] =
-    //            "Phiên đăng nhập đã hết hạn.";
+        if (userId == null)
+        {
+            TempData["Error"] =
+                "Phiên đăng nhập đã hết hạn.";
 
-    //        return RedirectToAction(nameof(Login));
-    //    }
+            return RedirectToAction(nameof(Login));
+        }
 
-    //    model.OldPassword ??= "";
-    //    model.NewPassword ??= "";
-    //    model.ConfirmPassword ??= "";
+        model.OldPassword ??= "";
+        model.NewPassword ??= "";
+        model.ConfirmPassword ??= "";
 
-    //    if (!ModelState.IsValid)
-    //    {
-    //        return View(
-    //            "~/Views/Login/ChangePassword.cshtml",
-    //            model);
-    //    }
+        if (!ModelState.IsValid)
+        {
+            return View(
+                "~/Views/Login/ChangePassword.cshtml",
+                model);
+        }
 
-    //    var user = await _context.Users
-    //        .FirstOrDefaultAsync(item =>
-    //            item.UserId == userId.Value);
+        var user = await _context.Users
+            .FirstOrDefaultAsync(item =>
+                item.UserId == userId.Value);
 
-    //    if (user == null)
-    //    {
-    //        HttpContext.Session.Clear();
+        if (user == null)
+        {
+            HttpContext.Session.Clear();
 
-    //        TempData["Error"] =
-    //            "Không tìm thấy tài khoản.";
+            TempData["Error"] =
+                "Không tìm thấy tài khoản.";
 
-    //        return RedirectToAction(nameof(Login));
-    //    }
+            return RedirectToAction(nameof(Login));
+        }
 
-    //    var passwordResult = VerifyPassword(
-    //        user,
-    //        model.OldPassword);
+        var passwordResult = VerifyPassword(
+            user,
+            model.OldPassword);
 
-    //    if (passwordResult == PasswordVerificationResult.Failed)
-    //    {
-    //        ModelState.AddModelError(
-    //            nameof(model.OldPassword),
-    //            "Mật khẩu hiện tại không chính xác.");
+        if (passwordResult == PasswordVerificationResult.Failed)
+        {
+            ModelState.AddModelError(
+                nameof(model.OldPassword),
+                "Mật khẩu hiện tại không chính xác.");
 
-    //        return View(
-    //            "~/Views/Login/ChangePassword.cshtml",
-    //            model);
-    //    }
+            return View(
+                "~/Views/Login/ChangePassword.cshtml",
+                model);
+        }
 
-    //    user.Password = _passwordHasher.HashPassword(
-    //        user,
-    //        model.NewPassword);
+        user.Password = _passwordHasher.HashPassword(
+            user,
+            model.NewPassword);
 
-    //    await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-    //    TempData["Success"] =
-    //        "Đổi mật khẩu thành công.";
+        TempData["Success"] =
+            "Đổi mật khẩu thành công.";
 
-    //    var role = HttpContext.Session.GetString("Role");
+        var role = HttpContext.Session.GetString("Role");
 
-    //    return RedirectByRole(role);
-    //}
+        return RedirectByRole(role);
+    }
 
     // ĐĂNG XUẤT BẰNG LINK GET
     [HttpGet]
