@@ -13,21 +13,28 @@ public class CategoriesController : Controller
     }
 
     // Trang chủ: Danh sách + tìm kiếm
-    public async Task<IActionResult> Index(string searchString)
+    public async Task<IActionResult> Index(string? searchString)
     {
-        var categories = _context.Categories
-            .Include(c => c.Products)
+        var query = _context.Categories
+            .AsNoTracking()
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(searchString))
+        if (!string.IsNullOrWhiteSpace(searchString))
         {
             searchString = searchString.Trim();
 
-            categories = categories.Where(c =>
-                c.CategoryName.Contains(searchString));
+            query = query.Where(category =>
+                category.CategoryName.Contains(searchString) ||
+                (category.Description ?? "").Contains(searchString));
         }
 
-        return View(await categories.ToListAsync());
+        var categories = await query
+            .OrderBy(category => category.CategoryId)
+            .ToListAsync();
+
+        ViewBag.SearchString = searchString;
+
+        return View("~/Views/Admin/Category/Index.cshtml", categories);
     }
 
     // Xem chi tiết
@@ -45,33 +52,60 @@ public class CategoriesController : Controller
             return NotFound();
         }
 
-        return View(category);
+        return View("~/Views/Admin/Category/Details.cshtml", category);
     }
 
     // Thêm
+    [HttpGet]
     public IActionResult Create()
     {
-        return View();
+        var category = new Category
+        {
+            CategoryName = "",
+            Description = ""
+        };
+
+        return View("~/Views/Admin/Category/Create.cshtml", category);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CategoryName,Description")] Category category)
+    public async Task<IActionResult> Create(
+        [Bind("CategoryName,Description")] Category category)
     {
-        if (ModelState.IsValid)
+        category.CategoryName = category.CategoryName?.Trim() ?? "";
+        category.Description = category.Description?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(category.CategoryName))
         {
-            category.Status = true;
-
-            _context.Add(category);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Thêm danh mục thành công.";
-            return RedirectToAction(nameof(Index));
+            ModelState.AddModelError(nameof(category.CategoryName), "Vui lòng nhập tên danh mục.");
         }
-        return View(category);
+
+        var nameExists = await _context.Categories
+            .AnyAsync(item => item.CategoryName == category.CategoryName);
+
+        if (nameExists)
+        {
+            ModelState.AddModelError(nameof(category.CategoryName), "Tên danh mục đã tồn tại.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Admin/Category/Create.cshtml", category);
+        }
+
+        category.Status = true;
+
+        _context.Categories.Add(category);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Đã thêm danh mục thành công.";
+
+        return RedirectToAction(nameof(Index));
     }
 
     // Sửa
+    [HttpGet]
     public async Task<IActionResult> Edit(int? categoryid)
     {
         if (categoryid == null)
@@ -80,45 +114,69 @@ public class CategoriesController : Controller
         }
 
         var category = await _context.Categories.FindAsync(categoryid);
+
         if (category == null)
         {
             return NotFound();
         }
-        return View(category);
+
+        return View("~/Views/Admin/Category/Edit.cshtml", category);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? categoryid, [Bind("CategoryId,CategoryName,Description,Status")] Category category)
+    public async Task<IActionResult> Edit(
+        int? categoryid,
+        [Bind("CategoryId,CategoryName,Description,Status")] Category category)
     {
-        if (categoryid != category.CategoryId)
+        if (categoryid == null || categoryid.Value != category.CategoryId)
         {
             return NotFound();
         }
 
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(category);
-                await _context.SaveChangesAsync();
+        category.CategoryName = category.CategoryName?.Trim() ?? "";
+        category.Description = category.Description?.Trim() ?? "";
 
-                TempData["Success"] = "Cập nhật danh mục thành công.";
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoryExists(category.CategoryId))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-            return RedirectToAction(nameof(Index));
+        if (string.IsNullOrWhiteSpace(category.CategoryName))
+        {
+            ModelState.AddModelError(nameof(category.CategoryName), "Vui lòng nhập tên danh mục.");
         }
-        return View(category);
+
+        var nameExists = await _context.Categories
+            .AnyAsync(item =>
+                item.CategoryName == category.CategoryName &&
+                item.CategoryId != category.CategoryId);
+
+        if (nameExists)
+        {
+            ModelState.AddModelError(nameof(category.CategoryName), "Tên danh mục đã tồn tại.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Admin/Category/Edit.cshtml", category);
+        }
+
+        try
+        {
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Đã cập nhật danh mục.";
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!await _context.Categories.AnyAsync(item => item.CategoryId == category.CategoryId))
+            {
+                return NotFound();
+            }
+            throw;
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
-    // Xóa
+    [HttpGet]
     public async Task<IActionResult> Delete(int? categoryid)
     {
         if (categoryid == null)
@@ -127,39 +185,48 @@ public class CategoriesController : Controller
         }
 
         var category = await _context.Categories
-            .FirstOrDefaultAsync(m => m.CategoryId == categoryid);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.CategoryId == categoryid.Value);
+
         if (category == null)
         {
             return NotFound();
         }
 
-        return View(category);
+        return View("~/Views/Admin/Category/Delete.cshtml", category);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? categoryid)
+    public async Task<IActionResult> DeleteConfirmed(int categoryid)
     {
-        var category = await _context.Categories.FindAsync(categoryid);
+        var category = await _context.Categories
+            .FirstOrDefaultAsync(item => item.CategoryId == categoryid);
+
         if (category == null)
         {
             return NotFound();
         }
 
-        if (category.Products.Any())
+        var hasProducts = await _context.Products
+            .AnyAsync(product => product.CategoryId == categoryid);
+
+        if (hasProducts)
         {
-            ModelState.AddModelError("", "Danh mục đã có sản phẩm, không thể xóa.");
-            return View(category);
+            TempData["Error"] = "Danh mục đang có sản phẩm nên không thể xóa.";
+            return RedirectToAction(nameof(Index));
         }
 
         _context.Categories.Remove(category);
-        TempData["Success"] = "Xóa danh mục thành công.";
-
         await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Đã xóa danh mục.";
+
         return RedirectToAction(nameof(Index));
     }
 
-    // Ngừng
+    [HttpGet]
     public async Task<IActionResult> Stop(int? categoryid)
     {
         if (categoryid == null)
@@ -168,22 +235,24 @@ public class CategoriesController : Controller
         }
 
         var category = await _context.Categories
-            .FirstOrDefaultAsync(m => m.CategoryId == categoryid);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.CategoryId == categoryid.Value);
+
         if (category == null)
         {
             return NotFound();
         }
 
-        return View(category);
+        return View("~/Views/Admin/Category/Stop.cshtml", category);
     }
 
     [HttpPost, ActionName("Stop")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> StopConfirmed(int? categoryid)
+    public async Task<IActionResult> StopConfirmed(int categoryid)
     {
         var category = await _context.Categories
-            .Include(c => c.Products)
-            .FirstOrDefaultAsync(c => c.CategoryId == categoryid);
+            .Include(item => item.Products)
+            .FirstOrDefaultAsync(item => item.CategoryId == categoryid);
 
         if (category == null)
         {
@@ -197,9 +266,15 @@ public class CategoriesController : Controller
         }
 
         await _context.SaveChangesAsync();
+
         TempData["Success"] = "Đã ngừng sử dụng danh mục.";
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<bool> CategoryExists(int categoryId)
+    {
+        return await _context.Categories.AnyAsync(item => item.CategoryId == categoryId);
     }
 
     private bool CategoryExists(int? categoryid)

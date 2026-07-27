@@ -1,6 +1,56 @@
 USE FastBiteDB;
 GO
 
+-- Xóa khóa ngoại ở Orders
+ALTER TABLE Orders
+DROP CONSTRAINT FK_Orders_Shippers;
+
+-- Xóa bảng Shippers
+DROP TABLE Shippers;
+
+-- Tạo lại bảng Shippers
+CREATE TABLE Shippers (
+    ShipperId INT IDENTITY(1,1) PRIMARY KEY,
+    UserId INT NOT NULL UNIQUE
+        CONSTRAINT FK_Shippers_Users
+        FOREIGN KEY REFERENCES Users(UserId),
+    Status NVARCHAR(20) NOT NULL DEFAULT N'Đang làm việc'
+);
+
+-- Thêm lại khóa ngoại cho Orders
+ALTER TABLE Orders
+ADD CONSTRAINT FK_Orders_Shippers
+FOREIGN KEY (ShipperId)
+REFERENCES Shippers(ShipperId);
+
+ALTER TABLE Orders
+ADD ShipperId INT NULL
+        CONSTRAINT FK_Orders_Shippers FOREIGN KEY REFERENCES Shippers(ShipperId),
+    SettlementStatus NVARCHAR(30) NOT NULL 
+        CONSTRAINT DF_Orders_SettlementStatus DEFAULT N'Chưa đối soát',
+    SettledAt DATETIME NULL;
+
+CREATE TABLE Shippers (
+    ShipperId INT IDENTITY(1,1) PRIMARY KEY,
+    FullName NVARCHAR(100) NOT NULL,
+    Phone NVARCHAR(20) NOT NULL,
+    Email NVARCHAR(100) NULL,
+    Username NVARCHAR(50) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    Status NVARCHAR(20) NOT NULL DEFAULT N'Đang làm việc' -- "Đang làm việc" / "Ngừng làm việc"
+);
+
+SELECT TOP 5 OrderId, PaymentMethod, PaymentStatus, TransactionId, PaidAt
+FROM Orders;
+
+ALTER TABLE Orders
+ADD PaymentMethod NVARCHAR(20) NOT NULL 
+        CONSTRAINT DF_Orders_PaymentMethod DEFAULT 'COD',
+    PaymentStatus NVARCHAR(30) NOT NULL 
+        CONSTRAINT DF_Orders_PaymentStatus DEFAULT N'Chưa thanh toán',
+    TransactionId NVARCHAR(100) NULL,
+    PaidAt DATETIME NULL;
+
 CREATE TABLE Roles
 (
     RoleId INT IDENTITY(1,1) PRIMARY KEY,

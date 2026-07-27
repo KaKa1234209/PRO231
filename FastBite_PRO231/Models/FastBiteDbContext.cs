@@ -43,6 +43,8 @@ public partial class FastBiteDbContext : DbContext
 
     public virtual DbSet<Role> Roles { get; set; }
 
+    public virtual DbSet<Shipper> Shippers { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -200,10 +202,22 @@ public partial class FastBiteDbContext : DbContext
             entity.Property(e => e.OrderDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.PaidAt).HasColumnType("datetime");
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(20)
+                .HasDefaultValue("COD", "DF_Orders_PaymentMethod");
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(30)
+                .HasDefaultValue("Chưa thanh toán", "DF_Orders_PaymentStatus");
+            entity.Property(e => e.SettledAt).HasColumnType("datetime");
+            entity.Property(e => e.SettlementStatus)
+                .HasMaxLength(30)
+                .HasDefaultValue("Chưa đối soát", "DF_Orders_SettlementStatus");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("Đang chờ xử lý");
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TransactionId).HasMaxLength(100);
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
@@ -213,6 +227,10 @@ public partial class FastBiteDbContext : DbContext
             entity.HasOne(d => d.Employee).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.EmployeeId)
                 .HasConstraintName("FK_Orders_Employees");
+
+            entity.HasOne(d => d.Shipper).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.ShipperId)
+                .HasConstraintName("FK_Orders_Shippers");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
@@ -291,6 +309,22 @@ public partial class FastBiteDbContext : DbContext
 
             entity.Property(e => e.Description).HasMaxLength(250);
             entity.Property(e => e.RoleName).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Shipper>(entity =>
+        {
+            entity.HasKey(e => e.ShipperId).HasName("PK__Shippers__1F8AFE5944E92A8F");
+
+            entity.HasIndex(e => e.UserId, "UQ__Shippers__1788CC4DA81491B0").IsUnique();
+
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("Đang làm việc");
+
+            entity.HasOne(d => d.User).WithOne(p => p.Shipper)
+                .HasForeignKey<Shipper>(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Shippers_Users");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -16,9 +16,6 @@ namespace FastBite_PRO231.Models
 
         [StringLength(255, ErrorMessage = "Mô tả tối đa 255 ký tự")]
         public string? Description { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng chọn hình ảnh sản phẩm")]
-        public string Image { get; set; }
     }
 
     [ModelMetadataType(typeof(ProductMetadata))]

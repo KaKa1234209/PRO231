@@ -4,212 +4,499 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FastBite_PRO231.Controllers.Auth
+namespace FastBite_PRO231.Controllers.Auth;
+
+public class LoginController : Controller
+{
+    private readonly FastBiteDbContext _context;
+    private readonly PasswordHasher<User> _passwordHasher = new();
+
+    public LoginController(FastBiteDbContext context)
     {
-        public class LoginController : Controller
+        _context = context;
+    }
+
+    // Chuẩn hóa tên quyền
+    private static string NormalizeRole(string roleName)
+    {
+        return roleName.Trim() switch
         {
-            private readonly FastBiteDbContext _context;
+            "Khách hàng" => "Customer",
+            "Nhân viên" => "Employee",
+            _ => roleName.Trim()
+        };
+    }
 
-            public LoginController(FastBiteDbContext context)
-            {
-                _context = context;
-            }
+    //Chuyển trang theo quyền
+    private IActionResult RedirectByRole(string? roleName)
+    {
+        var normalizedRole = NormalizeRole(roleName ?? "");
 
-            // ================= ĐĂNG NHẬP =================
-
-            [HttpGet]
-            public IActionResult Login()
-            {
-                return View();
-            }
-
-        [HttpPost]
-        public IActionResult Login(LoginViewModel model)
+        return normalizedRole switch
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            "Admin" => RedirectToAction("Index", "AdminDashboard"),
+            "Employee" => RedirectToAction("Index", "EmployeeHome"),
+            "Shipper" => RedirectToAction("Index", "ShipperHome"),
+            _ => RedirectToAction("Index", "CustomerHome")
+        };
+    }
 
-            var user = _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefault(u => u.UserName == model.UserName);
+    //Ktra tài khoản bị khóa
+    private static bool IsDisabledUser(string status)
+    {
+        string[] disabledStatuses =
+        {
+            "Ngừng hoạt động",
+            "Không hoạt động",
+            "Đã khóa",
+            "Inactive",
+            "Locked"
+        };
 
-            if (user == null)
-            {
-                ModelState.AddModelError("", "Sai tài khoản hoặc mật khẩu");
-                return View(model);
-            }
+        return disabledStatuses.Any(item =>
+            item.Equals(
+                status,
+                StringComparison.OrdinalIgnoreCase));
+    }
 
-            var hasher = new PasswordHasher<object>();
-
-            var result = hasher.VerifyHashedPassword(
-                null,
+    // KIỂM TRA MẬT KHẨU
+    // Hỗ trợ cả mật khẩu cũ dạng chữ thường và mật khẩu hash.
+    private PasswordVerificationResult VerifyPassword(
+        User user,
+        string enteredPassword)
+    {
+        try
+        {
+            var result = _passwordHasher.VerifyHashedPassword(
+                user,
                 user.Password,
-                model.Password
-            );
+                enteredPassword);
 
-            if (result == PasswordVerificationResult.Failed)
+            if (result != PasswordVerificationResult.Failed)
             {
-                ModelState.AddModelError("", "Sai tài khoản hoặc mật khẩu");
-                return View(model);
+                return result;
             }
-
-            if (user.Status != "Hoạt động")
-            {
-                ModelState.AddModelError("", $"Tài khoản: {user.Status}");
-                return View(model);
-            }
-
-            HttpContext.Session.SetInt32("UserId", user.UserId);
-            HttpContext.Session.SetString("UserName", user.UserName);
-            HttpContext.Session.SetString("Role", user.Role.RoleName);
-
-            return user.Role.RoleName switch
-            {
-                "Admin" => RedirectToAction("Index", "AdminDashboard"),
-                "Employee" => RedirectToAction("Index", "EmployeeDashboard"),
-                "Customer" => RedirectToAction("Index", "CustomerDashboard"),
-                _ => RedirectToAction("Login")
-            };
+        }
+        catch (FormatException)
+        {
+            // Mật khẩu cũ chưa được hash.
         }
 
-        // ================= ĐĂNG KÝ =================
+        return user.Password == enteredPassword
+            ? PasswordVerificationResult.SuccessRehashNeeded
+            : PasswordVerificationResult.Failed;
+    }
 
-        [HttpGet]
-            public IActionResult Register()
-            {
-                return View();
-            }
+    //Đăng nhập
+    [HttpGet]
+    public IActionResult Login()
+    {
+        var sessionRole = HttpContext.Session.GetString("Role");
 
-        [HttpPost]
-        public IActionResult Register(RegisterViewModel model)
+        if (!string.IsNullOrWhiteSpace(sessionRole))
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            return RedirectByRole(sessionRole);
+        }
 
-            if (_context.Users.Any(x => x.UserName == model.UserName))
-                ModelState.AddModelError("UserName", "Tên đăng nhập đã tồn tại");
+        return View(
+            "~/Views/Login/Login.cshtml",
+            new LoginViewModel());
+    }
 
-            if (!ModelState.IsValid)
-                return View(model);
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginViewModel model)
+    {
+        model.UserName = model.UserName?.Trim() ?? "";
+        model.Password = model.Password?.Trim() ?? "";
 
-            var hasher = new PasswordHasher<object>();
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Login/Login.cshtml", model);
+        }
 
+        var user = await _context.Users
+            .Include(item => item.Role)
+            .FirstOrDefaultAsync(item =>
+                item.UserName == model.UserName);
+
+        if (user == null)
+        {
+            Console.WriteLine("❌ Không tìm thấy user với UserName = '" + model.UserName + "'");
+            ModelState.AddModelError( "", "Tên đăng nhập hoặc mật khẩu không chính xác."); 
+            return View("~/Views/Login/Login.cshtml", model);
+        }
+
+        if (IsDisabledUser(user.Status))
+        {
+            ModelState.AddModelError("", "Tài khoản này đang bị khóa hoặc ngừng hoạt động.");
+            return View("~/Views/Login/Login.cshtml", model);
+        }
+
+        if (user.Role == null)
+        {
+            ModelState.AddModelError("", "Tài khoản chưa được phân quyền.");
+            return View("~/Views/Login/Login.cshtml", model);
+        }
+
+        var passwordResult = VerifyPassword(user, model.Password);
+
+        if (passwordResult == PasswordVerificationResult.Failed)
+        {
+            Console.WriteLine("❌ Password nhập = '" + model.Password + "', Password DB = '" + user.Password + "'");
+            ModelState.AddModelError(
+                "",
+                "Tên đăng nhập hoặc mật khẩu không chính xác.");
+
+            return View("~/Views/Login/Login.cshtml", model);
+        }
+
+        // Tự động nâng cấp mật khẩu cũ sang mật khẩu hash.
+        if (passwordResult == PasswordVerificationResult.SuccessRehashNeeded)
+        {
+            user.Password = _passwordHasher.HashPassword(user, model.Password);
+
+            await _context.SaveChangesAsync();
+        }
+
+        var normalizedRole = NormalizeRole(
+            user.Role.RoleName);
+
+        HttpContext.Session.Clear();
+
+        HttpContext.Session.SetInt32("UserId", user.UserId);
+
+        HttpContext.Session.SetString("UserName", user.UserName);
+
+        HttpContext.Session.SetString(
+            "FullName",
+            string.IsNullOrWhiteSpace(user.FullName)
+                ? user.UserName
+                : user.FullName);
+
+        HttpContext.Session.SetString(
+            "Role",
+            normalizedRole);
+
+        TempData["Success"] =
+            $"Đăng nhập thành công. Xin chào {user.FullName}!";
+
+        return RedirectByRole(normalizedRole);
+    }
+
+    //Đăng ký
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View(
+            "~/Views/Login/Register.cshtml",
+            new RegisterViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(
+        RegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        model.UserName = model.UserName.Trim();
+        model.FullName = model.FullName.Trim();
+        model.Email = model.Email.Trim();
+        model.Phone = model.Phone.Trim();
+        model.Address = model.Address.Trim();
+
+        var userNameExists = await _context.Users
+            .AnyAsync(user =>
+                user.UserName == model.UserName);
+
+        if (userNameExists)
+        {
+            ModelState.AddModelError(
+                nameof(model.UserName),
+                "Tên đăng nhập đã tồn tại.");
+
+            return View(model);
+        }
+
+        var emailExists = await _context.Users
+            .AnyAsync(user =>
+                user.Email == model.Email);
+
+        if (emailExists)
+        {
+            ModelState.AddModelError(
+                nameof(model.Email),
+                "Email đã được sử dụng.");
+
+            return View(model);
+        }
+
+        var phoneExists = await _context.Users
+            .AnyAsync(user =>
+                user.Phone == model.Phone);
+
+        if (phoneExists)
+        {
+            ModelState.AddModelError(
+                nameof(model.Phone),
+                "Số điện thoại đã được sử dụng.");
+
+            return View(model);
+        }
+
+        var customerRole = await _context.Roles
+            .FirstOrDefaultAsync(role =>
+                role.RoleName == "Customer");
+
+        if (customerRole == null)
+        {
+            ModelState.AddModelError(
+                "",
+                "Không tìm thấy vai trò Customer trong database.");
+
+            return View(model);
+        }
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync();
+
+        try
+        {
             var user = new User
             {
                 UserName = model.UserName,
-                Password = hasher.HashPassword(null, model.Password),
+                Password = "",
+                FullName = model.FullName,
                 Email = model.Email,
                 Phone = model.Phone,
-                FullName = model.FullName,
                 Status = "Hoạt động",
                 CreatedAt = DateTime.Now,
-                RoleId = 3
+                RoleId = customerRole.RoleId
             };
 
+            user.Password = _passwordHasher.HashPassword(
+                user,
+                model.Password);
+
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             var customer = new Customer
             {
                 UserId = user.UserId,
-                Address = "",
+                Address = model.Address,
                 Point = 0
             };
 
             _context.Customers.Add(customer);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Đăng ký thành công";
-            return RedirectToAction("Login");
+            var cart = new Cart
+            {
+                CustomerId = customer.CustomerId,
+                CreatedAt = DateTime.Now,
+                TotalPrice = 0
+            };
+
+            _context.Carts.Add(cart);
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            TempData["Success"] =
+                "Đăng ký thành công. Bạn hãy đăng nhập.";
+
+            return RedirectToAction(nameof(Login));
         }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
 
-        // ================= ĐỔI MẬT KHẨU =================
+            ModelState.AddModelError(
+                "",
+                "Không thể tạo tài khoản. " +
+                "Vui lòng kiểm tra lại dữ liệu.");
 
-        [HttpGet]
-            public IActionResult ChangePassword()
-            {
-                return View();
-            }
+            Console.WriteLine(ex.Message);
 
-            [HttpPost]
-            public IActionResult ChangePassword(ChangePasswordViewModel model)
-            {
-                if (!ModelState.IsValid)
-                    return View(model);
-
-                int? userId = HttpContext.Session.GetInt32("UserId");
-
-                if (userId == null)
-                    return RedirectToAction("Login");
-
-                var user = _context.Users.Find(userId);
-
-                if (user == null)
-                    return RedirectToAction("Login");
-
-                if (user.Password != model.OldPassword)
-                {
-                    ModelState.AddModelError("OldPassword", "Mật khẩu cũ không đúng");
-                    return View(model);
-                }
-
-                if (model.NewPassword != model.ConfirmPassword)
-                {
-                    ModelState.AddModelError("ConfirmPassword", "Xác nhận mật khẩu không khớp");
-                    return View(model);
-                }
-
-                user.Password = model.NewPassword;
-                _context.SaveChanges();
-
-                TempData["Success"] = "Đổi mật khẩu thành công";
-
-                return RedirectToAction("Login");
-            }
-
-            // ================= QUÊN MẬT KHẨU =================
-
-            [HttpGet]
-            public IActionResult ForgotPassword()
-            {
-                return View();
-            }
-
-            [HttpPost]
-            public IActionResult ForgotPassword(ForgotPasswordViewModel model)
-            {
-                if (!ModelState.IsValid)
-                    return View(model);
-
-                var user = _context.Users.FirstOrDefault(x => x.Email == model.Email);
-
-                if (user == null)
-                {
-                    ModelState.AddModelError("Email", "Email không tồn tại");
-                    return View(model);
-                }
-
-                if (model.NewPassword != model.ConfirmPassword)
-                {
-                    ModelState.AddModelError("ConfirmPassword", "Mật khẩu không khớp");
-                    return View(model);
-                }
-
-                // KHÔNG nên set thẳng
-                user.Password = model.NewPassword;
-                _context.SaveChanges();
-
-                TempData["Success"] = "Đặt lại mật khẩu thành công";
-
-                return RedirectToAction("Login");
-            }
-
-            // ================= ĐĂNG XUẤT =================
-
-            public IActionResult Logout()
-            {
-                HttpContext.Session.Clear();
-                return RedirectToAction("Login");
-            }
+            return View(model);
         }
     }
+
+    //Quên mật khẩu
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View(
+            "~/Views/Login/ForgotPassword.cshtml",
+            new ForgotPasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(
+        ForgotPasswordViewModel model)
+    {
+        model.Email = model.Email?.Trim().ToLower() ?? "";
+        model.Phone = model.Phone?.Trim() ?? "";
+        model.NewPassword ??= "";
+        model.ConfirmPassword ??= "";
+
+        if (!ModelState.IsValid)
+        {
+            return View(
+                "~/Views/Login/ForgotPassword.cshtml",
+                model);
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(item =>
+                item.Email == model.Email &&
+                item.Phone == model.Phone);
+
+        if (user == null)
+        {
+            ModelState.AddModelError(
+                "",
+                "Email và số điện thoại không khớp với tài khoản.");
+
+            return View(
+                "~/Views/Login/ForgotPassword.cshtml",
+                model);
+        }
+
+        user.Password = _passwordHasher.HashPassword(
+            user,
+            model.NewPassword);
+
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] =
+            "Đổi mật khẩu thành công. Vui lòng đăng nhập.";
+
+        return RedirectToAction(nameof(Login));
+    }
+
+
+    //Đổi mật khẩu
+    //[HttpGet]
+    //public IActionResult ChangePassword()
+    //{
+    //    var userId = HttpContext.Session.GetInt32("UserId");
+
+    //    if (userId == null)
+    //    {
+    //        TempData["Error"] =
+    //            "Vui lòng đăng nhập trước khi đổi mật khẩu.";
+
+    //        return RedirectToAction(nameof(Login));
+    //    }
+
+    //    return View(
+    //        "~/Views/Login/ChangePassword.cshtml",
+    //        new ChangePasswordViewModel());
+    //}
+
+    //[HttpPost]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> ChangePassword(
+    //    ChangePasswordViewModel model)
+    //{
+    //    var userId = HttpContext.Session.GetInt32("UserId");
+
+    //    if (userId == null)
+    //    {
+    //        TempData["Error"] =
+    //            "Phiên đăng nhập đã hết hạn.";
+
+    //        return RedirectToAction(nameof(Login));
+    //    }
+
+    //    model.OldPassword ??= "";
+    //    model.NewPassword ??= "";
+    //    model.ConfirmPassword ??= "";
+
+    //    if (!ModelState.IsValid)
+    //    {
+    //        return View(
+    //            "~/Views/Login/ChangePassword.cshtml",
+    //            model);
+    //    }
+
+    //    var user = await _context.Users
+    //        .FirstOrDefaultAsync(item =>
+    //            item.UserId == userId.Value);
+
+    //    if (user == null)
+    //    {
+    //        HttpContext.Session.Clear();
+
+    //        TempData["Error"] =
+    //            "Không tìm thấy tài khoản.";
+
+    //        return RedirectToAction(nameof(Login));
+    //    }
+
+    //    var passwordResult = VerifyPassword(
+    //        user,
+    //        model.OldPassword);
+
+    //    if (passwordResult == PasswordVerificationResult.Failed)
+    //    {
+    //        ModelState.AddModelError(
+    //            nameof(model.OldPassword),
+    //            "Mật khẩu hiện tại không chính xác.");
+
+    //        return View(
+    //            "~/Views/Login/ChangePassword.cshtml",
+    //            model);
+    //    }
+
+    //    user.Password = _passwordHasher.HashPassword(
+    //        user,
+    //        model.NewPassword);
+
+    //    await _context.SaveChangesAsync();
+
+    //    TempData["Success"] =
+    //        "Đổi mật khẩu thành công.";
+
+    //    var role = HttpContext.Session.GetString("Role");
+
+    //    return RedirectByRole(role);
+    //}
+
+    // ĐĂNG XUẤT BẰNG LINK GET
+    [HttpGet]
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear();
+
+        TempData["Success"] =
+            "Bạn đã đăng xuất.";
+
+        return RedirectToAction(
+            "Index",
+            "Home");
+    }
+
+    // ĐĂNG XUẤT BẰNG FORM POST TRONG ADMIN
+    [HttpPost]
+    [ActionName("Logout")]
+    [ValidateAntiForgeryToken]
+    public IActionResult LogoutPost()
+    {
+        HttpContext.Session.Clear();
+
+        TempData["Success"] =
+            "Bạn đã đăng xuất.";
+
+        return RedirectToAction(
+            "Index",
+            "Home");
+    }
+}

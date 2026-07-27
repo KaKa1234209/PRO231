@@ -258,6 +258,36 @@
                     </a>
                 </div>
             </form>
+
+            <form asp-controller="Employees"
+      asp-action="ToggleStatus"
+      method="post"
+      class="fbemployee-edit-toggle-form">
+
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="id" value="@Model.EmployeeId" />
+
+    @if (Model.Status == "Đang làm việc")
+    {
+        <button type="submit"
+                class="fbemployee-resign-full-button"
+                onclick="return confirm('Xác nhận chuyển nhân viên sang trạng thái đã nghỉ việc?')">
+
+            Chuyển sang nghỉ việc
+        </button>
+    }
+    else
+    {
+        <button type="submit"
+                class="fbemployee-return-full-button"
+                onclick="return confirm('Xác nhận cho nhân viên làm việc lại?')">
+
+            Cho làm việc lại
+        </button>
+    }
+</form>
+
         </section>
 
         <aside class="fbemployee-guide-card">

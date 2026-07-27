@@ -1,149 +1,871 @@
-
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using FastBite_PRO231.Models;
+using FastBite_PRO231.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FastBite_PRO231.Models;
+
+namespace FastBite_PRO231.Controllers.Admin;
 
 public class PromotionsController : Controller
 {
     private readonly FastBiteDbContext _context;
+
+    private static readonly string[] ValidDiscountTypes =
+    {
+        "Percent",
+        "Fixed"
+    };
+
+    private static readonly string[] ValidStatuses =
+    {
+        "Đang hoạt động",
+        "Tạm ngưng",
+        "Sắp diễn ra"
+    };
 
     public PromotionsController(FastBiteDbContext context)
     {
         _context = context;
     }
 
-    // GET: PROMOTIONS
-    public async Task<IActionResult> Index()    
+    // =========================================
+    // KIỂM TRA QUYỀN ADMIN
+    // =========================================
+
+    private bool IsAdmin()
     {
-        return View(await _context.Promotions.ToListAsync());
+        var role = HttpContext.Session.GetString("Role");
+
+        return string.Equals(
+            role,
+            "Admin",
+            StringComparison.OrdinalIgnoreCase);
     }
 
-    // GET: PROMOTIONS/Details/5
-    public async Task<IActionResult> Details(int? promotionid)
+    private IActionResult RedirectUnauthorized()
     {
-        if (promotionid == null)
+        var userId =
+            HttpContext.Session.GetInt32("UserId");
+
+        if (!userId.HasValue)
         {
-            return NotFound();
+            TempData["Error"] =
+                "Vui lòng đăng nhập trước.";
+
+            return RedirectToAction(
+                "Login",
+                "Login");
         }
 
-        var promotion = await _context.Promotions
-            .FirstOrDefaultAsync(m => m.PromotionId == promotionid);
+        TempData["Error"] =
+            "Chỉ tài khoản Admin mới được quản lý khuyến mãi.";
+
+        return RedirectToAction(
+            "Index",
+            "Home");
+    }
+
+    // =========================================
+    // XỬ LÝ ĐƯỜNG DẪN ẢNH
+    // =========================================
+
+    private static string NormalizeImageUrl(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return "";
+        }
+
+        image = image.Trim();
+
+        if (image.StartsWith(
+                "http://",
+                StringComparison.OrdinalIgnoreCase) ||
+            image.StartsWith(
+                "https://",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+
+        if (image.StartsWith("~/"))
+        {
+            return image[1..];
+        }
+
+        if (image.StartsWith("/"))
+        {
+            return image;
+        }
+
+        return $"/images/products/{image}";
+    }
+
+    // =========================================
+    // NẠP DANH SÁCH SẢN PHẨM CHO FORM
+    // =========================================
+
+    private async Task LoadProductsAsync(
+        PromotionManagementFormViewModel model)
+    {
+        model.Products = await _context.Products
+            .AsNoTracking()
+            .Include(product => product.Category)
+            .OrderBy(product =>
+                product.Category.CategoryName)
+            .ThenBy(product =>
+                product.ProductName)
+            .Select(product =>
+                new PromotionProductChoiceViewModel
+                {
+                    ProductId =
+                        product.ProductId,
+
+                    ProductName =
+                        product.ProductName,
+
+                    CategoryName =
+                        product.Category == null
+                            ? "Chưa phân loại"
+                            : product.Category.CategoryName,
+
+                    Price =
+                        product.Price,
+
+                    ImageUrl =
+                        NormalizeImageUrl(product.Image),
+
+                    Status =
+                        product.Status
+                })
+            .ToListAsync();
+    }
+
+    // =========================================
+    // KIỂM TRA DỮ LIỆU FORM
+    // =========================================
+
+    private async Task ValidateFormAsync(
+        PromotionManagementFormViewModel model,
+        int? currentPromotionId = null)
+    {
+        model.PromotionName =
+            model.PromotionName?.Trim() ?? "";
+
+        model.DiscountType =
+            model.DiscountType?.Trim() ?? "";
+
+        model.Status =
+            model.Status?.Trim() ?? "";
+
+        model.SelectedProductIds =
+            (model.SelectedProductIds ?? new())
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        if (!ValidDiscountTypes.Contains(
+                model.DiscountType,
+                StringComparer.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(
+                nameof(model.DiscountType),
+                "Loại giảm giá không hợp lệ.");
+        }
+
+        if (!ValidStatuses.Contains(
+                model.Status,
+                StringComparer.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(
+                nameof(model.Status),
+                "Trạng thái khuyến mãi không hợp lệ.");
+        }
+
+        if (string.Equals(
+                model.DiscountType,
+                "Percent",
+                StringComparison.OrdinalIgnoreCase) &&
+            model.DiscountValue > 100)
+        {
+            ModelState.AddModelError(
+                nameof(model.DiscountValue),
+                "Giảm theo phần trăm không được vượt quá 100%.");
+        }
+
+        if (model.SelectedProductIds.Count == 0)
+        {
+            ModelState.AddModelError(
+                nameof(model.SelectedProductIds),
+                "Vui lòng chọn ít nhất một sản phẩm.");
+        }
+
+        var duplicateName =
+            await _context.Promotions
+                .AsNoTracking()
+                .AnyAsync(promotion =>
+                    promotion.PromotionName ==
+                        model.PromotionName &&
+                    (!currentPromotionId.HasValue ||
+                     promotion.PromotionId !=
+                        currentPromotionId.Value));
+
+        if (duplicateName)
+        {
+            ModelState.AddModelError(
+                nameof(model.PromotionName),
+                "Tên khuyến mãi này đã tồn tại.");
+        }
+
+        if (model.SelectedProductIds.Count > 0)
+        {
+            var validProductIds =
+                await _context.Products
+                    .AsNoTracking()
+                    .Where(product =>
+                        model.SelectedProductIds.Contains(
+                            product.ProductId))
+                    .Select(product =>
+                        product.ProductId)
+                    .ToListAsync();
+
+            if (validProductIds.Count !=
+                model.SelectedProductIds.Count)
+            {
+                ModelState.AddModelError(
+                    nameof(model.SelectedProductIds),
+                    "Có sản phẩm được chọn không tồn tại.");
+            }
+        }
+    }
+
+    // =========================================
+    // DANH SÁCH KHUYẾN MÃI
+    // GET: /Promotions
+    // =========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        string? search,
+        string? status)
+    {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
+        search = search?.Trim() ?? "";
+        status = status?.Trim().ToLowerInvariant() ?? "";
+
+        var query = _context.Promotions
+            .AsNoTracking()
+            .Include(promotion =>
+                promotion.PromotionDetails)
+                .ThenInclude(detail =>
+                    detail.Product)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(promotion =>
+                promotion.PromotionName.Contains(search) ||
+                promotion.PromotionDetails.Any(detail =>
+                    detail.Product.ProductName.Contains(search)));
+        }
+
+        if (status == "active")
+        {
+            query = query.Where(promotion =>
+                promotion.Status == "Đang hoạt động");
+        }
+        else if (status == "paused")
+        {
+            query = query.Where(promotion =>
+                promotion.Status == "Tạm ngưng");
+        }
+        else if (status == "upcoming")
+        {
+            query = query.Where(promotion =>
+                promotion.Status == "Sắp diễn ra");
+        }
+
+        var promotionEntities = await query
+            .OrderByDescending(promotion =>
+                promotion.PromotionId)
+            .ToListAsync();
+
+        var model =
+            new PromotionManagementIndexViewModel
+            {
+                Search =
+                    search,
+
+                StatusFilter =
+                    status,
+
+                TotalPromotions =
+                    await _context.Promotions
+                        .CountAsync(),
+
+                ActivePromotions =
+                    await _context.Promotions
+                        .CountAsync(promotion =>
+                            promotion.Status ==
+                            "Đang hoạt động"),
+
+                PausedPromotions =
+                    await _context.Promotions
+                        .CountAsync(promotion =>
+                            promotion.Status ==
+                            "Tạm ngưng"),
+
+                UpcomingPromotions =
+                    await _context.Promotions
+                        .CountAsync(promotion =>
+                            promotion.Status ==
+                            "Sắp diễn ra"),
+
+                Promotions = promotionEntities
+                    .Select(promotion =>
+                    {
+                        var productNames =
+                            promotion.PromotionDetails
+                                .Select(detail =>
+                                    detail.Product.ProductName)
+                                .Take(3)
+                                .ToList();
+
+                        var remaining =
+                            promotion.PromotionDetails.Count -
+                            productNames.Count;
+
+                        if (remaining > 0)
+                        {
+                            productNames.Add(
+                                $"+{remaining} sản phẩm khác");
+                        }
+
+                        return new
+                            PromotionManagementItemViewModel
+                        {
+                            PromotionId =
+                                promotion.PromotionId,
+
+                            PromotionName =
+                                promotion.PromotionName,
+
+                            DiscountType =
+                                promotion.DiscountType,
+
+                            DiscountValue =
+                                promotion.DiscountValue,
+
+                            Status =
+                                promotion.Status,
+
+                            ProductCount =
+                                promotion.PromotionDetails.Count,
+
+                            ProductNames =
+                                productNames.Count == 0
+                                    ? "Chưa áp dụng sản phẩm"
+                                    : string.Join(
+                                        ", ",
+                                        productNames)
+                        };
+                    })
+                    .ToList()
+            };
+
+        return View(
+            "~/Views/Admin/Promotion/Index.cshtml",
+            model);
+    }
+
+    // =========================================
+    // CHI TIẾT KHUYẾN MÃI
+    // GET: /Promotions/Details/5
+    // =========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
+        var promotion =
+            await _context.Promotions
+                .AsNoTracking()
+                .Include(item =>
+                    item.PromotionDetails)
+                    .ThenInclude(detail =>
+                        detail.Product)
+                        .ThenInclude(product =>
+                            product.Category)
+                .FirstOrDefaultAsync(item =>
+                    item.PromotionId == id);
+
         if (promotion == null)
         {
             return NotFound();
         }
 
-        return View(promotion);
+        var model =
+            new PromotionManagementDetailsViewModel
+            {
+                PromotionId =
+                    promotion.PromotionId,
+
+                PromotionName =
+                    promotion.PromotionName,
+
+                DiscountType =
+                    promotion.DiscountType,
+
+                DiscountValue =
+                    promotion.DiscountValue,
+
+                Status =
+                    promotion.Status,
+
+                Products =
+                    promotion.PromotionDetails
+                        .Select(detail =>
+                            new PromotionProductChoiceViewModel
+                            {
+                                ProductId =
+                                    detail.ProductId,
+
+                                ProductName =
+                                    detail.Product.ProductName,
+
+                                CategoryName =
+                                    detail.Product.Category == null
+                                        ? "Chưa phân loại"
+                                        : detail.Product.Category
+                                            .CategoryName,
+
+                                Price =
+                                    detail.Product.Price,
+
+                                ImageUrl =
+                                    NormalizeImageUrl(
+                                        detail.Product.Image),
+
+                                Status =
+                                    detail.Product.Status
+                            })
+                        .OrderBy(product =>
+                            product.ProductName)
+                        .ToList()
+            };
+
+        return View(
+            "~/Views/Admin/Promotion/Details.cshtml",
+            model);
     }
 
-    // GET: PROMOTIONS/Create
-    public IActionResult Create()
+    // =========================================
+    // FORM TẠO KHUYẾN MÃI
+    // GET: /Promotions/Create
+    // =========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
     {
-        return View();
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
+        var model =
+            new PromotionManagementFormViewModel
+            {
+                DiscountType =
+                    "Percent",
+
+                DiscountValue =
+                    10,
+
+                Status =
+                    "Đang hoạt động"
+            };
+
+        await LoadProductsAsync(model);
+
+        return View(
+            "~/Views/Admin/Promotion/Create.cshtml",
+            model);
     }
 
-    // POST: PROMOTIONS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    // =========================================
+    // LƯU KHUYẾN MÃI MỚI
+    // POST: /Promotions/Create
+    // =========================================
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("PromotionId,PromotionName,DiscountType,DiscountValue,Status,PromotionDetails")] Promotion promotion)
+    public async Task<IActionResult> Create(
+        PromotionManagementFormViewModel model)
     {
-        if (ModelState.IsValid)
+        if (!IsAdmin())
         {
-            _context.Add(promotion);
+            return RedirectUnauthorized();
+        }
+
+        await ValidateFormAsync(model);
+
+        if (!ModelState.IsValid)
+        {
+            await LoadProductsAsync(model);
+
+            return View(
+                "~/Views/Admin/Promotion/Create.cshtml",
+                model);
+        }
+
+        await using var transaction =
+            await _context.Database
+                .BeginTransactionAsync();
+
+        try
+        {
+            var promotion = new Promotion
+            {
+                PromotionName =
+                    model.PromotionName,
+
+                DiscountType =
+                    model.DiscountType,
+
+                DiscountValue =
+                    model.DiscountValue,
+
+                Status =
+                    model.Status
+            };
+
+            _context.Promotions.Add(promotion);
+
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            var details =
+                model.SelectedProductIds
+                    .Select(productId =>
+                        new PromotionDetail
+                        {
+                            PromotionId =
+                                promotion.PromotionId,
+
+                            ProductId =
+                                productId
+                        })
+                    .ToList();
+
+            _context.PromotionDetails
+                .AddRange(details);
+
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            TempData["Success"] =
+                $"Đã tạo khuyến mãi " +
+                $"“{promotion.PromotionName}” thành công.";
+
+            return RedirectToAction(
+                nameof(Index));
         }
-        return View(promotion);
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+
+            ModelState.AddModelError(
+                "",
+                "Không thể tạo khuyến mãi. Vui lòng thử lại.");
+
+            await LoadProductsAsync(model);
+
+            return View(
+                "~/Views/Admin/Promotion/Create.cshtml",
+                model);
+        }
     }
 
-    // GET: PROMOTIONS/Edit/5
-    public async Task<IActionResult> Edit(int? promotionid)
+    // =========================================
+    // FORM CHỈNH SỬA
+    // GET: /Promotions/Edit/5
+    // =========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
     {
-        if (promotionid == null)
+        if (!IsAdmin())
         {
-            return NotFound();
+            return RedirectUnauthorized();
         }
 
-        var promotion = await _context.Promotions.FindAsync(promotionid);
+        var promotion =
+            await _context.Promotions
+                .AsNoTracking()
+                .Include(item =>
+                    item.PromotionDetails)
+                .FirstOrDefaultAsync(item =>
+                    item.PromotionId == id);
+
         if (promotion == null)
         {
             return NotFound();
         }
-        return View(promotion);
+
+        var model =
+            new PromotionManagementFormViewModel
+            {
+                PromotionId =
+                    promotion.PromotionId,
+
+                PromotionName =
+                    promotion.PromotionName,
+
+                DiscountType =
+                    promotion.DiscountType,
+
+                DiscountValue =
+                    promotion.DiscountValue,
+
+                Status =
+                    promotion.Status,
+
+                SelectedProductIds =
+                    promotion.PromotionDetails
+                        .Select(detail =>
+                            detail.ProductId)
+                        .ToList()
+            };
+
+        await LoadProductsAsync(model);
+
+        return View(
+            "~/Views/Admin/Promotion/Edit.cshtml",
+            model);
     }
 
-    // POST: PROMOTIONS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    // =========================================
+    // LƯU CHỈNH SỬA
+    // POST: /Promotions/Edit/5
+    // =========================================
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? promotionid, [Bind("PromotionId,PromotionName,DiscountType,DiscountValue,Status,PromotionDetails")] Promotion promotion)
+    public async Task<IActionResult> Edit(
+        int id,
+        PromotionManagementFormViewModel model)
     {
-        if (promotionid != promotion.PromotionId)
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
+        if (id != model.PromotionId)
         {
             return NotFound();
         }
 
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(promotion);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PromotionExists(promotion.PromotionId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(promotion);
-    }
+        await ValidateFormAsync(
+            model,
+            id);
 
-    // GET: PROMOTIONS/Delete/5
-    public async Task<IActionResult> Delete(int? promotionid)
-    {
-        if (promotionid == null)
+        if (!ModelState.IsValid)
         {
-            return NotFound();
+            await LoadProductsAsync(model);
+
+            return View(
+                "~/Views/Admin/Promotion/Edit.cshtml",
+                model);
         }
 
-        var promotion = await _context.Promotions
-            .FirstOrDefaultAsync(m => m.PromotionId == promotionid);
+        var promotion =
+            await _context.Promotions
+                .Include(item =>
+                    item.PromotionDetails)
+                .FirstOrDefaultAsync(item =>
+                    item.PromotionId == id);
+
         if (promotion == null)
         {
             return NotFound();
         }
 
-        return View(promotion);
+        await using var transaction =
+            await _context.Database
+                .BeginTransactionAsync();
+
+        try
+        {
+            promotion.PromotionName =
+                model.PromotionName;
+
+            promotion.DiscountType =
+                model.DiscountType;
+
+            promotion.DiscountValue =
+                model.DiscountValue;
+
+            promotion.Status =
+                model.Status;
+
+            _context.PromotionDetails.RemoveRange(
+                promotion.PromotionDetails);
+
+            var newDetails =
+                model.SelectedProductIds
+                    .Select(productId =>
+                        new PromotionDetail
+                        {
+                            PromotionId =
+                                promotion.PromotionId,
+
+                            ProductId =
+                                productId
+                        })
+                    .ToList();
+
+            _context.PromotionDetails
+                .AddRange(newDetails);
+
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            TempData["Success"] =
+                $"Đã cập nhật khuyến mãi " +
+                $"“{promotion.PromotionName}”.";
+
+            return RedirectToAction(
+                nameof(Index));
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+
+            ModelState.AddModelError(
+                "",
+                "Không thể cập nhật khuyến mãi.");
+
+            await LoadProductsAsync(model);
+
+            return View(
+                "~/Views/Admin/Promotion/Edit.cshtml",
+                model);
+        }
     }
 
-    // POST: PROMOTIONS/Delete/5
-    [HttpPost, ActionName("Delete")]
+    // =========================================
+    // BẬT HOẶC TẠM NGƯNG
+    // POST: /Promotions/ToggleStatus
+    // =========================================
+
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? promotionid)
+    public async Task<IActionResult> ToggleStatus(int id)
     {
-        var promotion = await _context.Promotions.FindAsync(promotionid);
-        if (promotion != null)
+        if (!IsAdmin())
         {
-            _context.Promotions.Remove(promotion);
+            return RedirectUnauthorized();
         }
+
+        var promotion =
+            await _context.Promotions
+                .FirstOrDefaultAsync(item =>
+                    item.PromotionId == id);
+
+        if (promotion == null)
+        {
+            return NotFound();
+        }
+
+        promotion.Status =
+            string.Equals(
+                promotion.Status,
+                "Đang hoạt động",
+                StringComparison.OrdinalIgnoreCase)
+                ? "Tạm ngưng"
+                : "Đang hoạt động";
 
         await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+
+        TempData["Success"] =
+            promotion.Status == "Đang hoạt động"
+                ? $"Đã bật khuyến mãi “{promotion.PromotionName}”."
+                : $"Đã tạm ngưng khuyến mãi “{promotion.PromotionName}”.";
+
+        return RedirectToAction(
+            nameof(Index));
     }
 
-    private bool PromotionExists(int? promotionid)
+    // =========================================
+    // XÓA KHUYẾN MÃI
+    // POST: /Promotions/Delete
+    // =========================================
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
     {
-        return _context.Promotions.Any(e => e.PromotionId == promotionid);
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
+        var promotion =
+            await _context.Promotions
+                .Include(item =>
+                    item.PromotionDetails)
+                .FirstOrDefaultAsync(item =>
+                    item.PromotionId == id);
+
+        if (promotion == null)
+        {
+            return NotFound();
+        }
+
+        await using var transaction =
+            await _context.Database
+                .BeginTransactionAsync();
+
+        try
+        {
+            _context.PromotionDetails.RemoveRange(
+                promotion.PromotionDetails);
+
+            _context.Promotions.Remove(
+                promotion);
+
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            TempData["Success"] =
+                $"Đã xóa khuyến mãi " +
+                $"“{promotion.PromotionName}”.";
+
+            return RedirectToAction(
+                nameof(Index));
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+
+            TempData["Error"] =
+                "Không thể xóa khuyến mãi này.";
+
+            return RedirectToAction(
+                nameof(Index));
+        }
     }
 }

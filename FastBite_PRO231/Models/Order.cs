@@ -21,6 +21,20 @@ public partial class Order
 
     public string? Note { get; set; }
 
+    public string PaymentMethod { get; set; } = null!;
+
+    public string PaymentStatus { get; set; } = null!;
+
+    public string? TransactionId { get; set; }
+
+    public DateTime? PaidAt { get; set; }
+
+    public int? ShipperId { get; set; }
+
+    public string SettlementStatus { get; set; } = null!;
+
+    public DateTime? SettledAt { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual Employee? Employee { get; set; }
@@ -28,4 +42,6 @@ public partial class Order
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+    public virtual Shipper? Shipper { get; set; }
 }
