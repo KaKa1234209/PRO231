@@ -2,6 +2,16 @@
 
 @{
     ViewData["Title"] = "Chi tiết sản phẩm";
+
+    string? imageSrc = null;
+
+    if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        imageSrc = (Model.Image.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    Model.Image.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            ? Model.Image
+            : "/images/products/" + Model.Image;
+    }
 }
 
 <section class="fb-admin-page">
@@ -13,9 +23,9 @@
             </div>
 
             <div class="text-center mb-4">
-                @if (!string.IsNullOrWhiteSpace(Model.Image))
+                @if (imageSrc != null)
                 {
-                    <img src="@Model.Image"
+                    <img src="@imageSrc"
                          class="fb-product-thumb"
                          style="width: 130px; height: 130px;"
                          alt="@Model.ProductName" />

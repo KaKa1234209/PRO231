@@ -2,6 +2,22 @@
 
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
+
+    string? ResolveImageSrc(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return null;
+        }
+
+        if (image.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            image.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+
+        return "/images/products/" + image;
+    }
 }
 
 <section class="fb-admin-page">
@@ -55,15 +71,17 @@
                         {
                             foreach (var item in Model)
                             {
+                                var imageSrc = ResolveImageSrc(item.Image);
+
                                 <tr>
                                     <td>
                                         <span class="fb-badge">#@item.ProductId</span>
                                     </td>
 
                                     <td>
-                                        @if (!string.IsNullOrWhiteSpace(item.Image))
+                                        @if (imageSrc != null)
                                         {
-                                            <img src="@item.Image"
+                                            <img src="@imageSrc"
                                                  class="fb-product-thumb"
                                                  alt="@item.ProductName" />
                                         }

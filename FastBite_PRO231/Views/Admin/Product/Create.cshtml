@@ -64,11 +64,29 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Image" class="fb-form-label">
+                    <label class="fb-form-label">
                         Hình ảnh
                     </label>
 
-                    <input type="file" name="imageFile" accept="image/*" />
+                    <div class="mb-2">
+                        <label class="fb-form-label small text-muted">
+                            Chọn 1 trong 2 cách — không chọn cả hai
+                        </label>
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="file" name="imageFile" accept="image/*" class="form-control fb-form-control" />
+                        <div class="small text-muted mt-1">Tải ảnh từ máy (JPG, PNG, WEBP, tối đa 5MB)</div>
+                    </div>
+
+                    <div class="text-center text-muted my-2">— hoặc —</div>
+
+                    <div class="mb-2">
+                        <input type="text"
+                               name="imageUrl"
+                               class="form-control fb-form-control"
+                               placeholder="Dán link ảnh (bắt đầu bằng http:// hoặc https://)" />
+                    </div>
 
                     <span asp-validation-for="Image"
                           class="text-danger fb-validation">

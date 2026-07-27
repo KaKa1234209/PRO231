@@ -2,6 +2,16 @@
 
 @{
     ViewData["Title"] = "Sửa sản phẩm";
+
+    string? currentImageSrc = null;
+
+    if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        currentImageSrc = (Model.Image.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                            Model.Image.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            ? Model.Image
+            : "/images/products/" + Model.Image;
+    }
 }
 
 <section class="fb-admin-page">
@@ -15,7 +25,8 @@
             <form asp-controller="Products"
                   asp-action="Edit"
                   asp-route-productid="@Model.ProductId"
-                  method="post">
+                  method="post"
+                  enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
                 <input type="hidden" asp-for="ProductId" />
@@ -67,12 +78,44 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Image" class="fb-form-label">
-                        Đường dẫn hình ảnh
+                    <label class="fb-form-label">
+                        Hình ảnh hiện tại
                     </label>
 
-                    <input asp-for="Image"
-                           class="form-control fb-form-control" />
+                    <div class="mb-2">
+                        @if (currentImageSrc != null)
+                        {
+                            <img src="@currentImageSrc"
+                                 class="fb-product-thumb"
+                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;"
+                                 alt="@Model.ProductName" />
+                        }
+                        else
+                        {
+                            <div class="fb-product-placeholder"
+                                 style="width: 100px; height: 100px; font-size: 40px;">
+                                🍔
+                            </div>
+                        }
+                    </div>
+
+                    <label class="fb-form-label small text-muted">
+                        Bỏ trống cả hai ô dưới nếu muốn giữ ảnh hiện tại — chỉ chọn 1 trong 2 nếu muốn đổi ảnh
+                    </label>
+
+                    <div class="mb-2">
+                        <input type="file" name="imageFile" accept="image/*" class="form-control fb-form-control" />
+                        <div class="small text-muted mt-1">Tải ảnh mới từ máy (JPG, PNG, WEBP, tối đa 5MB)</div>
+                    </div>
+
+                    <div class="text-center text-muted my-2">— hoặc —</div>
+
+                    <div class="mb-2">
+                        <input type="text"
+                               name="imageUrl"
+                               class="form-control fb-form-control"
+                               placeholder="Dán link ảnh mới (bắt đầu bằng http:// hoặc https://)" />
+                    </div>
 
                     <span asp-validation-for="Image"
                           class="text-danger fb-validation">
