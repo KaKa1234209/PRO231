@@ -1,4 +1,5 @@
 using FastBite_PRO231.Models;
+using FastBite_PRO231.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,8 @@ builder.Services.AddSession();
 builder.Services.AddDbContext<FastBiteDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailService, EmailService>();
 var app = builder.Build();
 app.UseSession();
 

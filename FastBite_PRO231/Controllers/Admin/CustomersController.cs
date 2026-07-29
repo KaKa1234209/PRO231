@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FastBite_PRO231.Models;
-using FastBite_PRO231.ViewModels;
+using FastBite_PRO231.ViewModels.Customer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

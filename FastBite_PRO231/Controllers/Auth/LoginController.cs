@@ -1,8 +1,11 @@
 ﻿using FastBite_PRO231.Models;
+using FastBite_PRO231.Services;
 using FastBite_PRO231.ViewModels;
+using FastBite_PRO231.ViewModels.Login;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FastBite_PRO231.Controllers.Auth;
 
@@ -85,6 +88,19 @@ public class LoginController : Controller
         return user.Password == enteredPassword
             ? PasswordVerificationResult.SuccessRehashNeeded
             : PasswordVerificationResult.Failed;
+    }
+
+    private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
+
+    public LoginController(
+        FastBiteDbContext context,
+        IMemoryCache cache,
+        IEmailService emailService)
+    {
+        _context = context;
+        _cache = cache;
+        _emailService = emailService;
     }
 
     //Đăng nhập
@@ -327,57 +343,140 @@ public class LoginController : Controller
         }
     }
 
-    //Quên mật khẩu
+    // =========================================
+    // BƯỚC 1: NHẬP EMAIL, GỬI OTP
+    // =========================================
     [HttpGet]
     public IActionResult ForgotPassword()
     {
-        return View(
-            "~/Views/Login/ForgotPassword.cshtml",
-            new ForgotPasswordViewModel());
+        return View("~/Views/Login/ForgotPassword.cshtml", new ForgotPasswordViewModel());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForgotPassword(
-        ForgotPasswordViewModel model)
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
     {
         model.Email = model.Email?.Trim().ToLower() ?? "";
-        model.Phone = model.Phone?.Trim() ?? "";
-        model.NewPassword ??= "";
-        model.ConfirmPassword ??= "";
 
         if (!ModelState.IsValid)
         {
-            return View(
-                "~/Views/Login/ForgotPassword.cshtml",
-                model);
+            return View("~/Views/Login/ForgotPassword.cshtml", model);
         }
 
         var user = await _context.Users
-            .FirstOrDefaultAsync(item =>
-                item.Email == model.Email &&
-                item.Phone == model.Phone);
+            .FirstOrDefaultAsync(u => u.Email == model.Email);
 
         if (user == null)
         {
-            ModelState.AddModelError(
-                "",
-                "Email và số điện thoại không khớp với tài khoản.");
-
-            return View(
-                "~/Views/Login/ForgotPassword.cshtml",
-                model);
+            // Không tiết lộ email có tồn tại hay không, tránh lộ thông tin tài khoản
+            ModelState.AddModelError("", "Không tìm thấy tài khoản với email này.");
+            return View("~/Views/Login/ForgotPassword.cshtml", model);
         }
 
-        user.Password = _passwordHasher.HashPassword(
-            user,
-            model.NewPassword);
+        var otp = new Random().Next(100000, 999999).ToString();
 
+        _cache.Set($"otp:{model.Email}", otp, TimeSpan.FromMinutes(5));
+
+        try
+        {
+            await _emailService.SendOtpEmailAsync(model.Email, otp);
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError("", "Không thể gửi email. Vui lòng thử lại sau.");
+            return View("~/Views/Login/ForgotPassword.cshtml", model);
+        }
+
+        TempData["Success"] = $"Đã gửi mã OTP tới {model.Email}.";
+
+        return RedirectToAction(nameof(VerifyOtp), new { email = model.Email });
+    }
+
+    // =========================================
+    // BƯỚC 2: NHẬP OTP
+    // =========================================
+    [HttpGet]
+    public IActionResult VerifyOtp(string email)
+    {
+        return View("~/Views/Login/VerifyOtp.cshtml", new VerifyOtpViewModel { Email = email });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult VerifyOtp(VerifyOtpViewModel model)
+    {
+        model.Email = model.Email?.Trim().ToLower() ?? "";
+        model.Otp = model.Otp?.Trim() ?? "";
+
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Login/VerifyOtp.cshtml", model);
+        }
+
+        if (!_cache.TryGetValue($"otp:{model.Email}", out string? savedOtp) ||
+            savedOtp != model.Otp)
+        {
+            ModelState.AddModelError(nameof(model.Otp), "Mã OTP không đúng hoặc đã hết hạn.");
+            return View("~/Views/Login/VerifyOtp.cshtml", model);
+        }
+
+        // OTP đúng -> xoá OTP (dùng 1 lần), cấp 1 token tạm để bước 3 xác nhận
+        _cache.Remove($"otp:{model.Email}");
+
+        var resetToken = Guid.NewGuid().ToString("N");
+        _cache.Set($"resettoken:{model.Email}", resetToken, TimeSpan.FromMinutes(10));
+
+        return RedirectToAction(nameof(ResetPassword), new { email = model.Email, token = resetToken });
+    }
+
+    // =========================================
+    // BƯỚC 3: ĐẶT MẬT KHẨU MỚI
+    // =========================================
+    [HttpGet]
+    public IActionResult ResetPassword(string email, string token)
+    {
+        if (!_cache.TryGetValue($"resettoken:{email}", out string? savedToken) ||
+            savedToken != token)
+        {
+            TempData["Error"] = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        var model = new ResetPasswordViewModel { Email = email, ResetToken = token };
+        return View("~/Views/Login/ResetPassword.cshtml", model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Login/ResetPassword.cshtml", model);
+        }
+
+        if (!_cache.TryGetValue($"resettoken:{model.Email}", out string? savedToken) ||
+            savedToken != model.ResetToken)
+        {
+            TempData["Error"] = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == model.Email);
+
+        if (user == null)
+        {
+            TempData["Error"] = "Không tìm thấy tài khoản.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        user.Password = _passwordHasher.HashPassword(user, model.NewPassword);
         await _context.SaveChangesAsync();
 
-        TempData["Success"] =
-            "Đổi mật khẩu thành công. Vui lòng đăng nhập.";
+        _cache.Remove($"resettoken:{model.Email}");
 
+        TempData["Success"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập.";
         return RedirectToAction(nameof(Login));
     }
 
