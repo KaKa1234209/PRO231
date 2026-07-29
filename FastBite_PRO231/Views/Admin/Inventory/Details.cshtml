@@ -1,0 +1,302 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+@model FastBite_PRO231.ViewModels.InventoryManagementDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết tồn kho";
+
+    var role =
+        Context.Session.GetString("Role")
+        ?? "";
+
+    if (string.Equals(
+            role,
+            "Admin",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    var stockClass =
+        Model.StockStatus switch
+        {
+            "Còn hàng" => "fbinv-stock-good",
+            "Sắp hết" => "fbinv-stock-low",
+            "Hết hàng" => "fbinv-stock-out",
+            _ => "fbinv-stock-normal"
+        };
+}
+
+<section class="fbinv-page">
+
+    <div class="fbinv-header">
+        <div>
+            <p>CHI TIẾT KHO</p>
+
+            <h1>@Model.ProductName</h1>
+
+            <span>
+                Mã tồn kho #@Model.InventoryId ·
+                Mã sản phẩm #@Model.ProductId
+            </span>
+        </div>
+
+        <div class="fbinv-header-actions">
+            <a asp-controller="Inventories"
+               asp-action="Index"
+               class="fbinv-secondary-button">
+
+                ← Danh sách
+            </a>
+
+            <a asp-controller="Inventories"
+               asp-action="Edit"
+               asp-route-id="@Model.InventoryId"
+               class="fbinv-primary-button">
+
+                ✏ Cập nhật
+            </a>
+        </div>
+    </div>
+
+    <div class="fbinv-details-grid">
+
+        <section class="fbinv-product-detail-card">
+            <div class="fbinv-detail-image">
+                @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl"
+                         alt="@Model.ProductName"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+
+                    <span style="display:none;">
+                        🍔
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        🍔
+                    </span>
+                }
+            </div>
+
+            <div class="fbinv-detail-content">
+                <span class="fbinv-category">
+                    @Model.CategoryName
+                </span>
+
+                <h2>
+                    @Model.ProductName
+                </h2>
+
+                <p>
+                    @(string.IsNullOrWhiteSpace(Model.Description)
+                        ? "Sản phẩm chưa có mô tả."
+                        : Model.Description)
+                </p>
+
+                <div class="fbinv-detail-info">
+                    <div>
+                        <span>Giá bán</span>
+
+                        <strong>
+                            @Model.Price.ToString("N0")đ
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Trạng thái sản phẩm</span>
+
+                        @if (Model.ProductStatus)
+                        {
+                            <strong class="fbinv-text-green">
+                                Đang bán
+                            </strong>
+                        }
+                        else
+                        {
+                            <strong class="fbinv-text-red">
+                                Ngừng bán
+                            </strong>
+                        }
+                    </div>
+
+                    <div>
+                        <span>Cập nhật kho</span>
+
+                        <strong>
+                            @Model.UpdateAt.ToString(
+                                "dd/MM/yyyy HH:mm")
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="fbinv-stock-detail-card">
+            <p>TÌNH TRẠNG TỒN KHO</p>
+
+            <span class="fbinv-large-stock-badge @stockClass">
+                @Model.StockStatus
+            </span>
+
+            <div class="fbinv-large-quantity">
+                <strong>
+                    @Model.Quantity
+                </strong>
+
+                <span>
+                    @Model.Unit
+                </span>
+            </div>
+
+            @if (Model.Quantity <= 0)
+            {
+                <div class="fbinv-stock-message danger">
+                    Sản phẩm đã hết hàng. Cần nhập thêm để tiếp tục bán.
+                </div>
+            }
+            else if (Model.Quantity <= 10)
+            {
+                <div class="fbinv-stock-message warning">
+                    Số lượng đang thấp. Nên nhập thêm sản phẩm.
+                </div>
+            }
+            else
+            {
+                <div class="fbinv-stock-message success">
+                    Tồn kho đang ở mức ổn định.
+                </div>
+            }
+        </aside>
+    </div>
+
+    <div class="fbinv-adjust-grid">
+
+        <section class="fbinv-panel">
+            <div class="fbinv-panel-heading">
+                <div>
+                    <p>NHẬP KHO NHANH</p>
+
+                    <h2>Nhập thêm sản phẩm</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Inventories"
+                  asp-action="AdjustStock"
+                  asp-route-id="@Model.InventoryId"
+                  method="post"
+                  class="fbinv-adjust-form">
+
+                @Html.AntiForgeryToken()
+
+                <label for="add-change">
+                    Số lượng nhập thêm
+                </label>
+
+                <div class="input-group">
+                    <input id="add-change"
+                           name="change"
+                           type="number"
+                           min="1"
+                           max="1000000"
+                           value="1"
+                           class="form-control"
+                           required />
+
+                    <span class="input-group-text">
+                        @Model.Unit
+                    </span>
+                </div>
+
+                <button type="submit"
+                        class="fbinv-import-button"
+                        onclick="return confirm('Xác nhận nhập thêm sản phẩm vào kho?')">
+
+                    ＋ Nhập kho
+                </button>
+            </form>
+        </section>
+
+        <section class="fbinv-panel">
+            <div class="fbinv-panel-heading">
+                <div>
+                    <p>XUẤT KHO NHANH</p>
+
+                    <h2>Xuất bớt sản phẩm</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Inventories"
+                  asp-action="AdjustStock"
+                  asp-route-id="@Model.InventoryId"
+                  method="post"
+                  class="fbinv-adjust-form"
+                  onsubmit="return prepareExportStock(this);">
+
+                @Html.AntiForgeryToken()
+
+                <label for="export-amount">
+                    Số lượng cần xuất
+                </label>
+
+                <div class="input-group">
+                    <input id="export-amount"
+                           name="amount"
+                           type="number"
+                           min="1"
+                           max="@Model.Quantity"
+                           value="1"
+                           class="form-control"
+                           required />
+
+                    <span class="input-group-text">
+                        @Model.Unit
+                    </span>
+                </div>
+
+                <input type="hidden"
+                       name="change"
+                       value="-1" />
+
+                <button type="submit"
+                        class="fbinv-export-button"
+                    @(Model.Quantity <= 0 ? "disabled" : "")>
+
+                    − Xuất kho
+                </button>
+            </form>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function prepareExportStock(form) {
+            const amountInput =
+                form.querySelector('[name="amount"]');
+
+            const changeInput =
+                form.querySelector('[name="change"]');
+
+            const amount =
+                Number.parseInt(amountInput.value);
+
+            if (!Number.isInteger(amount) || amount <= 0) {
+                alert("Vui lòng nhập số lượng xuất hợp lệ.");
+                return false;
+            }
+
+            changeInput.value = -amount;
+
+            return confirm(
+                `Xác nhận xuất ${amount} sản phẩm khỏi kho?`
+            );
+        }
+    </script>
+}

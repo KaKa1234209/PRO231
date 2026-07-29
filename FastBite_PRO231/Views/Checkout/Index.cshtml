@@ -1,0 +1,227 @@
+﻿@model FastBite_PRO231.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Xác nhận đơn hàng";
+}
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<section class="fbco-page">
+    <div class="container">
+        <div class="fbco-header">
+            <div>
+                <p>✅ XÁC NHẬN ĐƠN HÀNG</p>
+
+                <h1>Hoàn tất đặt món</h1>
+
+                <span>
+                    Kiểm tra thông tin và danh sách món trước khi xác nhận.
+                </span>
+            </div>
+
+            <a asp-controller="Cart"
+               asp-action="Index"
+               class="fbco-back-button">
+                ← Quay lại giỏ hàng
+            </a>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <form asp-controller="Checkout"
+              asp-action="PlaceOrder"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="fbco-grid">
+                <div class="fbco-left">
+                    <section class="fbco-card">
+                        <h2>Thông tin khách hàng</h2>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label fw-bold"></label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label fw-bold"></label>
+                                <input asp-for="Phone" class="form-control" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label fw-bold"></label>
+                                <input asp-for="Email" type="email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Address" class="form-label fw-bold">
+                                    Địa chỉ giao hàng
+                                </label>
+
+                                <input asp-for="Address"
+                                       id="address"
+                                       class="form-control"
+                                       autocomplete="off"
+                                       placeholder="Nhập địa chỉ..." />
+
+                                <span asp-validation-for="Address" class="text-danger"></span>
+
+                                <div id="searchResult" class="list-group mt-1"></div>
+
+                                <input type="hidden" id="Latitude" name="Latitude" />
+                                <input type="hidden" id="Longitude" name="Longitude" />
+
+                                <div id="map"
+                                     style="height:350px;margin-top:15px;border-radius:10px;"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="fbco-card">
+                        <h2>Món trong đơn hàng</h2>
+
+                        <div class="fbco-item-list">
+                            @foreach (var item in Model.Items)
+                            {
+                                <article class="fbco-item">
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl"
+                                             alt="@item.ProductName"
+                                             class="fbco-item-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="fbco-item-placeholder">
+                                            🍔
+                                        </div>
+                                    }
+
+                                    <div class="fbco-item-info">
+                                        <strong>
+                                            @item.ProductName
+                                        </strong>
+
+                                        <span>
+                                            @item.Quantity ×
+                                            @item.UnitPrice.ToString("N0")đ
+                                        </span>
+                                    </div>
+
+                                    <strong class="fbco-item-total">
+                                        @item.SubTotal.ToString("N0")đ
+                                    </strong>
+                                </article>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="fbco-card">
+                        <h2>Phương thức thanh toán</h2>
+
+                        <div class="d-flex flex-column gap-2 mt-2">
+                            <label class="border rounded-3 p-3 d-flex align-items-center gap-3
+                                @(Model.PaymentMethod != "VNPay" ? "border-danger bg-light" : "")">
+
+                                <input type="radio"
+                                       asp-for="PaymentMethod"
+                                       value="COD"
+                                       class="form-check-input mt-0"
+                                       checked="@(Model.PaymentMethod != "VNPay")" />
+
+                                <span class="fs-4">💵</span>
+
+                                <div>
+                                    <div class="fw-bold">Thanh toán trực tiếp (COD)</div>
+                                    <div class="text-muted small">Trả tiền mặt cho shipper khi nhận hàng</div>
+                                </div>
+                            </label>
+
+                            <label class="border rounded-3 p-3 d-flex align-items-center gap-3
+                                @(Model.PaymentMethod == "VNPay" ? "border-danger bg-light" : "")">
+
+                                <input type="radio"
+                                       asp-for="PaymentMethod"
+                                       value="VNPay"
+                                       class="form-check-input mt-0"
+                                       checked="@(Model.PaymentMethod == "VNPay")" />
+
+                                <span class="fs-4">💳</span>
+
+                                <div>
+                                    <div class="fw-bold">Ví điện tử VNPay</div>
+                                    <div class="text-muted small">Thanh toán online qua thẻ ATM/QR</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <span asp-validation-for="PaymentMethod" class="text-danger d-block mt-2"></span>
+                    </section>
+
+                    <section class="fbco-card">
+                        <h2>Ghi chú cho cửa hàng</h2>
+
+                        <textarea asp-for="Note"
+                                  class="form-control mt-2"
+                                  rows="3"
+                                  placeholder="Ví dụ: không lấy hành, giao giờ trưa..."></textarea>
+                    </section>
+                </div>
+
+                <aside class="fbco-summary">
+                    <h2>Tóm tắt đơn hàng</h2>
+
+                    <div class="fbco-summary-row">
+                        <span>Tổng số lượng</span>
+
+                        <strong>
+                            @Model.TotalQuantity phần
+                        </strong>
+                    </div>
+
+                    <div class="fbco-summary-row">
+                        <span>Phí giao hàng</span>
+                        <strong>0đ</strong>
+                    </div>
+
+                    <div class="fbco-summary-total">
+                        <span>Tổng thanh toán</span>
+
+                        <strong>
+                            @Model.TotalAmount.ToString("N0")đ
+                        </strong>
+                    </div>
+
+                    <button type="submit"
+                            class="fbco-order-button"
+                            onclick="return confirm('Xác nhận đặt đơn hàng này?')">
+                        Xác nhận đặt hàng
+                    </button>
+
+                    <p class="fbco-note">
+                        Đơn hàng sẽ chuyển sang trạng thái
+                        “Đang chờ xử lý”.
+                    </p>
+                </aside>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

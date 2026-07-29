@@ -1,0 +1,187 @@
+﻿@model FastBite_PRO231.ViewModels.Customer.CustomerOrderHistoryViewModel
+
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+
+    string StatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbo-status-completed",
+            "Completed" => "fbo-status-completed",
+            "Đã hủy" => "fbo-status-cancelled",
+            "Đang giao" => "fbo-status-delivering",
+            "Đang chuẩn bị" => "fbo-status-processing",
+            "Đang xử lý" => "fbo-status-processing",
+            _ => "fbo-status-pending"
+        };
+    }
+}
+
+<section class="fbo-page">
+    <div class="container">
+        <div class="fbo-header">
+            <div>
+                <p>🧾 ĐƠN HÀNG CỦA TÔI</p>
+
+                <h1>Lịch sử đơn hàng</h1>
+
+                <span>
+                    Theo dõi tình trạng và xem lại các món đã đặt.
+                </span>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               asp-fragment="menu"
+               class="fbo-primary-button">
+                + Đặt thêm món
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="fbo-filter-list">
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               class="fbo-filter @(string.IsNullOrWhiteSpace(Model.StatusFilter) ? "active" : "")">
+                Tất cả
+            </a>
+
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               asp-route-status="Đang chờ xử lý"
+               class="fbo-filter @(Model.StatusFilter == "Đang chờ xử lý" ? "active" : "")">
+                Chờ xử lý
+            </a>
+
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               asp-route-status="Đang xử lý"
+               class="fbo-filter @(Model.StatusFilter == "Đang xử lý" ? "active" : "")">
+                Đang xử lý
+            </a>
+
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               asp-route-status="Hoàn thành"
+               class="fbo-filter @(Model.StatusFilter == "Hoàn thành" ? "active" : "")">
+                Hoàn thành
+            </a>
+
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               asp-route-status="Đã hủy"
+               class="fbo-filter @(Model.StatusFilter == "Đã hủy" ? "active" : "")">
+                Đã hủy
+            </a>
+        </div>
+
+        @if (Model.Orders.Count == 0)
+        {
+            <div class="fbo-empty">
+                <div>🧾</div>
+
+                <h2>Chưa có đơn hàng</h2>
+
+                <p>
+                    Bạn chưa có đơn hàng phù hợp với trạng thái đã chọn.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="menu"
+                   class="fbo-primary-button">
+                    Xem thực đơn
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="fbo-order-list">
+                @foreach (var order in Model.Orders)
+                {
+                    <article class="fbo-order-card">
+                        <div class="fbo-order-top">
+                            <div>
+                                <span class="fbo-order-label">
+                                    Mã đơn hàng
+                                </span>
+
+                                <h2>#@order.OrderId</h2>
+                            </div>
+
+                            <span class="fbo-status @StatusClass(order.Status)">
+                                @order.Status
+                            </span>
+                        </div>
+
+                        <div class="fbo-order-info">
+                            <div>
+                                <span>Ngày đặt</span>
+
+                                <strong>
+                                    @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Số lượng</span>
+
+                                <strong>
+                                    @order.TotalQuantity phần
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Tổng tiền</span>
+
+                                <strong class="fbo-money">
+                                    @order.TotalAmount.ToString("N0")đ
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="fbo-order-actions">
+                            <a asp-controller="CustomerOrders"
+                               asp-action="Details"
+                               asp-route-id="@order.OrderId"
+                               class="fbo-detail-button">
+                                Xem chi tiết
+                            </a>
+
+                            @if (order.CanCancel)
+                            {
+                                <form asp-controller="CustomerOrders"
+                                      asp-action="Cancel"
+                                      asp-route-id="@order.OrderId"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="fbo-cancel-button"
+                                            onclick="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?')">
+                                        Hủy đơn
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>

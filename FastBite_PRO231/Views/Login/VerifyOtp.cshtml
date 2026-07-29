@@ -1,0 +1,74 @@
+﻿@model FastBite_PRO231.ViewModels.VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Xác thực OTP";
+}
+
+<section class="fb-auth-page">
+    <div class="container">
+        <div class="fb-auth-card">
+            <div class="fb-auth-title">
+                <img src="~/images/fastbite-logo.jpg"
+                     asp-append-version="true"
+                     alt="FastBite Logo" />
+
+                <h1>Xác thực OTP</h1>
+
+                <p>
+                    Mã OTP gồm 6 chữ số vừa được gửi tới
+                    <strong>@Model.Email</strong>.
+                    Mã có hiệu lực trong 5 phút.
+                </p>
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            }
+
+            <form asp-controller="Login" asp-action="VerifyOtp" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="Email" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3 fw-bold">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Otp" class="fb-form-label"></label>
+
+                    <input asp-for="Otp"
+                           class="form-control fb-form-control text-center"
+                           style="letter-spacing: 6px; font-size: 20px;"
+                           maxlength="6"
+                           inputmode="numeric"
+                           placeholder="______"
+                           autocomplete="one-time-code" />
+
+                    <span asp-validation-for="Otp"
+                          class="text-danger fb-validation">
+                    </span>
+                </div>
+
+                <button type="submit" class="btn fb-btn-primary w-100 mt-2">
+                    Xác nhận OTP
+                </button>
+
+                <div class="text-center mt-4">
+                    <a asp-controller="Login"
+                       asp-action="ForgotPassword"
+                       class="fb-auth-link">
+                        Chưa nhận được mã? Gửi lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

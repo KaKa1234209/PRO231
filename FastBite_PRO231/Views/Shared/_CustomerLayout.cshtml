@@ -1,0 +1,198 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+
+@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString()
+        ?? "";
+
+    var fullName =
+        Context.Session.GetString("FullName")
+        ?? "Khách hàng";
+
+    string Active(string controllerName)
+    {
+        return currentController.Equals(
+            controllerName,
+            StringComparison.OrdinalIgnoreCase)
+                ? "active"
+                : "";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - FASTBITE
+    </title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/public.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/customer.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/profile.css"
+          asp-append-version="true" />
+</head>
+
+<body class="fbc-body">
+    <header class="fbc-topbar">
+        <div class="container fbc-topbar-inner">
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="fbc-brand">
+
+                <img src="~/images/fastbite-logo.jpg"
+                     alt="FastBite"
+                     class="fbc-logo" />
+
+                <div>
+                    <div class="fbc-brand-name">
+                        FASTBITE
+                    </div>
+
+                    <div class="fbc-brand-subtitle">
+                        FOOD STUDIO
+                    </div>
+                </div>
+            </a>
+
+            <nav class="fbc-nav">
+                <a class="@Active("Home")"
+                   asp-controller="Home"
+                   asp-action="Index">
+
+                    Trang chủ
+                </a>
+
+                <a class="@Active("CustomerHome")"
+                   asp-controller="CustomerHome"
+                   asp-action="Index">
+
+                    Tài khoản
+                </a>
+
+                <a class="@Active("Profile")"
+                   asp-controller="Profile"
+                   asp-action="Index">
+
+                    Hồ sơ
+                </a>
+
+                <a class="@Active("CustomerOrders")"
+                   asp-controller="CustomerOrders"
+                   asp-action="Index">
+
+                    Đơn hàng
+                </a>
+
+                <a class="@Active("Cart")"
+                   asp-controller="Cart"
+                   asp-action="Index">
+
+                    Giỏ hàng
+                </a>
+            </nav>
+
+            <div class="fbc-actions">
+                <span class="fbc-user">
+                    👤 @fullName
+                </span>
+
+                <a asp-controller="Cart"
+                   asp-action="Index"
+                   class="fbc-cart-button">
+
+                    🛒 Giỏ hàng
+
+                    <span class="fbc-cart-count">
+                        @await Component.InvokeAsync("CartCount")
+                    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="fbc-main">
+        <div class="container">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="fbc-footer">
+        <div class="container fbc-footer-inner">
+            <div>
+                <strong>FASTBITE FOOD STUDIO</strong>
+
+                <span>
+                    Món ngon nhanh chóng, phục vụ tận tâm.
+                </span>
+            </div>
+
+            <div class="fbc-footer-actions">
+                <a asp-controller="Login"
+                   asp-action="ChangePassword">
+
+                    Đổi mật khẩu
+                </a>
+
+                <form asp-controller="Login"
+                      asp-action="Logout"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit">
+                        Đăng xuất
+                    </button>
+                </form>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js">
+    </script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false)
+</body>
+</html>

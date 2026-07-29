@@ -1,0 +1,512 @@
+﻿@using System.Globalization
+@model FastBite_PRO231.ViewModels.ReportViewModel
+
+@{
+    ViewData["Title"] = "Báo cáo thống kê";
+}
+
+<section class="fbr-page">
+    <div class="fbr-header">
+        <div>
+            <p>BÁO CÁO FASTBITE</p>
+
+            <h1>Thống kê kinh doanh</h1>
+
+            <span>
+                Theo dõi đơn hàng, hóa đơn, doanh thu, sản phẩm bán chạy
+                và tình trạng tồn kho.
+            </span>
+        </div>
+
+        <a asp-controller="Report"
+           asp-action="Index"
+           class="fbr-reset-button">
+
+            ↻ Tháng hiện tại
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- BỘ LỌC NGÀY -->
+    <form asp-controller="Report"
+          asp-action="Index"
+          method="get"
+          class="fbr-filter-form">
+
+        <div>
+            <label for="fromDate"
+                   class="form-label fw-bold">
+
+                Từ ngày
+            </label>
+
+            <input id="fromDate"
+                   type="date"
+                   name="fromDate"
+                   value="@Model.FromDate.ToString("yyyy-MM-dd")"
+                   class="form-control" />
+        </div>
+
+        <div>
+            <label for="toDate"
+                   class="form-label fw-bold">
+
+                Đến ngày
+            </label>
+
+            <input id="toDate"
+                   type="date"
+                   name="toDate"
+                   value="@Model.ToDate.ToString("yyyy-MM-dd")"
+                   class="form-control" />
+        </div>
+
+        <button type="submit"
+                class="fbr-filter-button">
+
+            Xem báo cáo
+        </button>
+    </form>
+
+    <div class="fbr-date-note">
+        Dữ liệu từ
+        <strong>@Model.FromDate.ToString("dd/MM/yyyy")</strong>
+        đến
+        <strong>@Model.ToDate.ToString("dd/MM/yyyy")</strong>
+    </div>
+
+    <!-- THẺ THỐNG KÊ CHÍNH -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbr-stat-card">
+                <div class="fbr-stat-icon">
+                    🧾
+                </div>
+
+                <div>
+                    <span>Tổng đơn hàng</span>
+
+                    <strong>
+                        @Model.TotalOrders
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbr-stat-card">
+                <div class="fbr-stat-icon">
+                    💳
+                </div>
+
+                <div>
+                    <span>Hóa đơn hoạt động</span>
+
+                    <strong>
+                        @Model.TotalInvoices
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbr-stat-card">
+                <div class="fbr-stat-icon">
+                    💰
+                </div>
+
+                <div>
+                    <span>Tổng doanh thu</span>
+
+                    <strong class="fbr-money">
+                        @Model.TotalRevenue.ToString("N0")đ
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbr-stat-card">
+                <div class="fbr-stat-icon">
+                    🍔
+                </div>
+
+                <div>
+                    <span>Sản phẩm đã bán</span>
+
+                    <strong>
+                        @Model.TotalProductsSold
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRẠNG THÁI ĐƠN HÀNG -->
+    <section class="fbr-panel mb-4">
+        <div class="fbr-panel-heading">
+            <div>
+                <p>TỔNG QUAN ĐƠN HÀNG</p>
+                <h2>Trạng thái xử lý</h2>
+            </div>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               class="fbr-panel-link">
+
+                Xem đơn hàng →
+            </a>
+        </div>
+
+        <div class="fbr-order-status-grid">
+            <div class="fbr-order-status pending">
+                <span>⏳ Chờ xử lý</span>
+                <strong>@Model.PendingOrders</strong>
+            </div>
+
+            <div class="fbr-order-status processing">
+                <span>👨‍🍳 Đang xử lý</span>
+                <strong>@Model.ProcessingOrders</strong>
+            </div>
+
+            <div class="fbr-order-status completed">
+                <span>✅ Hoàn thành</span>
+                <strong>@Model.CompletedOrders</strong>
+            </div>
+
+            <div class="fbr-order-status cancelled">
+                <span>✕ Đã hủy</span>
+                <strong>@Model.CancelledOrders</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- DOANH THU THEO NGÀY -->
+    <section class="fbr-panel mb-4">
+        <div class="fbr-panel-heading">
+            <div>
+                <p>BIỂU ĐỒ DOANH THU</p>
+                <h2>Doanh thu theo ngày</h2>
+            </div>
+
+            <div class="fbr-average">
+                Trung bình hóa đơn:
+                <strong>
+                    @Model.AverageOrderValue.ToString("N0")đ
+                </strong>
+            </div>
+        </div>
+
+        @if (Model.DailyRevenue.Count == 0)
+        {
+            <div class="fbr-empty">
+                <div>📊</div>
+
+                <h3>Chưa có doanh thu</h3>
+
+                <p>
+                    Khoảng thời gian này chưa có hóa đơn hoạt động.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="fbr-chart-list">
+                @foreach (var item in Model.DailyRevenue)
+                {
+                    var revenueWidth = Math.Clamp(
+                        item.Percent,
+                        2m,
+                        100m)
+                        .ToString(
+                            "0.##",
+                            CultureInfo.InvariantCulture);
+
+                    <div class="fbr-chart-row">
+                        <div class="fbr-chart-date">
+                            <strong>
+                                @item.Date.ToString("dd/MM")
+                            </strong>
+
+                            <span>
+                                @item.InvoiceCount hóa đơn
+                            </span>
+                        </div>
+
+                        <div class="fbr-chart-track">
+                            <div class="fbr-chart-bar"
+                                 style="width:@revenueWidth%;">
+                            </div>
+                        </div>
+
+                        <strong class="fbr-chart-value">
+                            @item.Revenue.ToString("N0")đ
+                        </strong>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="fbr-two-column">
+        <!-- SẢN PHẨM BÁN CHẠY -->
+        <section class="fbr-panel">
+            <div class="fbr-panel-heading">
+                <div>
+                    <p>TOP SẢN PHẨM</p>
+                    <h2>Món bán chạy</h2>
+                </div>
+
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   class="fbr-panel-link">
+
+                    Sản phẩm →
+                </a>
+            </div>
+
+            @if (Model.TopProducts.Count == 0)
+            {
+                <div class="fbr-small-empty">
+                    Chưa có dữ liệu sản phẩm bán chạy.
+                </div>
+            }
+            else
+            {
+                <div class="fbr-ranking-list">
+                    @{
+                        var productRank = 0;
+                    }
+
+                    @foreach (var product in Model.TopProducts)
+                    {
+                        productRank++;
+
+                        var productWidth = Math.Clamp(
+                            product.Percent,
+                            2m,
+                            100m)
+                            .ToString(
+                                "0.##",
+                                CultureInfo.InvariantCulture);
+
+                        <article class="fbr-ranking-item">
+                            <div class="fbr-rank-number">
+                                @productRank
+                            </div>
+
+                            <div class="fbr-ranking-content">
+                                <div class="fbr-ranking-top">
+                                    <div>
+                                        <strong>
+                                            @product.ProductName
+                                        </strong>
+
+                                        <span>
+                                            @product.CategoryName
+                                        </span>
+                                    </div>
+
+                                    <strong class="fbr-ranking-money">
+                                        @product.Revenue.ToString("N0")đ
+                                    </strong>
+                                </div>
+
+                                <div class="fbr-product-track">
+                                    <div class="fbr-product-bar"
+                                         style="width:@productWidth%;">
+                                    </div>
+                                </div>
+
+                                <small>
+                                    Đã bán @product.QuantitySold phần
+                                </small>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <!-- KHÁCH HÀNG CHI TIÊU NHIỀU -->
+        <section class="fbr-panel">
+            <div class="fbr-panel-heading">
+                <div>
+                    <p>KHÁCH HÀNG NỔI BẬT</p>
+                    <h2>Chi tiêu nhiều nhất</h2>
+                </div>
+
+                <a asp-controller="Customers"
+                   asp-action="Index"
+                   class="fbr-panel-link">
+
+                    Khách hàng →
+                </a>
+            </div>
+
+            @if (Model.TopCustomers.Count == 0)
+            {
+                <div class="fbr-small-empty">
+                    Chưa có dữ liệu chi tiêu khách hàng.
+                </div>
+            }
+            else
+            {
+                <div class="fbr-customer-list">
+                    @{
+                        var customerRank = 0;
+                    }
+
+                    @foreach (var customer in Model.TopCustomers)
+                    {
+                        customerRank++;
+
+                        <article class="fbr-customer-item">
+                            <div class="fbr-customer-avatar">
+                                @customerRank
+                            </div>
+
+                            <div class="fbr-customer-info">
+                                <strong>
+                                    @customer.FullName
+                                </strong>
+
+                                <span>
+                                    @customer.Phone
+                                </span>
+
+                                <small>
+                                    @customer.OrderCount đơn hàng
+                                </small>
+                            </div>
+
+                            <strong class="fbr-customer-money">
+                                @customer.TotalSpent.ToString("N0")đ
+                            </strong>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- CẢNH BÁO TỒN KHO -->
+    <section class="fbr-panel mt-4">
+        <div class="fbr-panel-heading">
+            <div>
+                <p>CẢNH BÁO KHO</p>
+                <h2>Sản phẩm cần nhập thêm</h2>
+            </div>
+
+            <a asp-controller="Inventories"
+               asp-action="Index"
+               class="fbr-panel-link">
+
+                Quản lý tồn kho →
+            </a>
+        </div>
+
+        <div class="fbr-stock-summary">
+            <div>
+                <span>Sắp hết</span>
+
+                <strong class="text-warning">
+                    @Model.LowStockProducts
+                </strong>
+            </div>
+
+            <div>
+                <span>Hết hàng</span>
+
+                <strong class="text-danger">
+                    @Model.OutOfStockProducts
+                </strong>
+            </div>
+        </div>
+
+        @if (Model.StockWarnings.Count == 0)
+        {
+            <div class="fbr-stock-safe">
+                ✓ Tồn kho đang ổn định, chưa có sản phẩm sắp hết.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle fbr-stock-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Số lượng</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var stock in Model.StockWarnings)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>
+                                        @stock.ProductName
+                                    </strong>
+
+                                    <small>
+                                        Mã SP: #@stock.ProductId
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @stock.Quantity
+                                    </strong>
+
+                                    @stock.Unit
+                                </td>
+
+                                <td>
+                                    @if (stock.Quantity <= 0)
+                                    {
+                                        <span class="fbr-stock-badge out">
+                                            Hết hàng
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbr-stock-badge low">
+                                            Sắp hết
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    <a asp-controller="Inventories"
+                                       asp-action="Edit"
+                                       asp-route-id="@stock.InventoryId"
+                                       class="fbr-stock-button">
+
+                                        Cập nhật kho
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</section>

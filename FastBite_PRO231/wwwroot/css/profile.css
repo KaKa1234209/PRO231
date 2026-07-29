@@ -1,0 +1,233 @@
+﻿/* ===================================
+   PROFILE
+=================================== */
+
+.fbprofile-page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px;
+}
+
+.fbprofile-header {
+    margin-bottom: 22px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border: 1px solid #eeeeee;
+    border-radius: 21px;
+    background: linear-gradient( 120deg, #ffffff, #fff8e8, #ffe8e3 );
+}
+
+    .fbprofile-header p,
+    .fbprofile-card-heading p {
+        margin-bottom: 5px;
+        color: #d91f26;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1.3px;
+    }
+
+    .fbprofile-header h1 {
+        margin-bottom: 6px;
+        color: #950b13;
+        font-weight: 950;
+    }
+
+    .fbprofile-header span {
+        color: #747474;
+    }
+
+.fbprofile-back-button,
+.fbprofile-save-button,
+.fbprofile-password-button {
+    padding: 11px 17px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 900;
+}
+
+.fbprofile-back-button {
+    border: 1px solid #950b13;
+    background: #ffffff;
+    color: #950b13;
+}
+
+.fbprofile-save-button {
+    border: none;
+    background: #d91f26;
+    color: #ffffff;
+}
+
+.fbprofile-password-button {
+    border: 1px solid #2563eb;
+    background: #ffffff;
+    color: #1d4ed8;
+}
+
+    .fbprofile-back-button:hover,
+    .fbprofile-save-button:hover,
+    .fbprofile-password-button:hover {
+        background: #950b13;
+        color: #ffffff;
+    }
+
+.fbprofile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 22px;
+    align-items: start;
+}
+
+.fbprofile-form-card,
+.fbprofile-summary-card {
+    padding: 23px;
+    border: 1px solid #eeeeee;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.045);
+}
+
+.fbprofile-card-heading {
+    margin-bottom: 20px;
+}
+
+    .fbprofile-card-heading h2,
+    .fbprofile-summary-card h2 {
+        margin: 0;
+        color: #950b13;
+        font-size: 23px;
+        font-weight: 950;
+    }
+
+.fbprofile-warning,
+.fbprofile-note {
+    margin-top: 18px;
+    padding: 13px;
+    border-radius: 11px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.fbprofile-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.fbprofile-note {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.fbprofile-actions {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.fbprofile-summary-card {
+    position: sticky;
+    top: 100px;
+    text-align: center;
+}
+
+.fbprofile-avatar {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 15px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient( 135deg, #950b13, #d91f26 );
+    color: #ffffff;
+    font-size: 34px;
+    font-weight: 950;
+}
+
+.fbprofile-username {
+    display: block;
+    margin: 5px 0 20px;
+    color: #777777;
+}
+
+.fbprofile-info-row {
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    border-bottom: 1px solid #eeeeee;
+    text-align: left;
+}
+
+    .fbprofile-info-row span {
+        color: #777777;
+    }
+
+    .fbprofile-info-row strong {
+        max-width: 180px;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+.fbprofile-active {
+    color: #166534;
+}
+
+.fbprofile-point-box {
+    margin-top: 16px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    border-radius: 12px;
+    background: #fff3cd;
+    color: #856404;
+    text-align: left;
+}
+
+    .fbprofile-point-box strong {
+        font-weight: 950;
+    }
+
+@media (max-width: 950px) {
+    .fbprofile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fbprofile-summary-card {
+        position: static;
+    }
+}
+
+@media (max-width: 650px) {
+    .fbprofile-page {
+        padding: 15px;
+    }
+
+    .fbprofile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .fbprofile-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+        .fbprofile-actions > * {
+            width: 100%;
+            text-align: center;
+        }
+
+    .fbprofile-info-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+        .fbprofile-info-row strong {
+            max-width: none;
+            text-align: left;
+        }
+}

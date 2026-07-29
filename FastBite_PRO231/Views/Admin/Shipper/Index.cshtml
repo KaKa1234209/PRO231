@@ -1,0 +1,221 @@
+﻿@model FastBite_PRO231.ViewModels.ShipperManagementIndexViewModel
+
+@{
+    ViewData["Title"] = "Quản lý shipper";
+
+    bool IsWorking(string status)
+    {
+        return string.Equals(status, "Đang làm việc", StringComparison.OrdinalIgnoreCase);
+    }
+
+    bool IsAccountActive(string status)
+    {
+        return string.Equals(status, "Hoạt động", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<section class="fbemployee-page">
+    <div class="fbemployee-header">
+        <div>
+            <p>QUẢN LÝ FASTBITE</p>
+            <h1>Shipper</h1>
+            <span>Quản lý hồ sơ, tài khoản và hoạt động của shipper.</span>
+        </div>
+
+        <a asp-controller="AdminSettlement" asp-action="Create" class="fbemployee-create-button">
+            + Thêm shipper
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Tổng shipper</span>
+                <strong>@Model.TotalShippers</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Đang làm việc</span>
+                <strong class="fbemployee-green">@Model.WorkingShippers</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Đã nghỉ việc</span>
+                <strong class="fbemployee-red">@Model.ResignedShippers</strong>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="fbemployee-stat-card">
+                <span>Tài khoản hoạt động</span>
+                <strong class="fbemployee-blue">@Model.ActiveAccounts</strong>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="AdminSettlement" asp-action="Index" method="get" class="fbemployee-filter-form">
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Tên, tài khoản, email hoặc điện thoại..." />
+
+        <select name="status" class="form-select">
+            <option value="" selected="@(string.IsNullOrWhiteSpace(Model.StatusFilter))">Tất cả trạng thái</option>
+            <option value="working" selected="@(Model.StatusFilter == "working")">Đang làm việc</option>
+            <option value="resigned" selected="@(Model.StatusFilter == "resigned")">Đã nghỉ việc</option>
+            <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Tài khoản bị khóa</option>
+        </select>
+
+        <button type="submit" class="fbemployee-search-button">Tìm kiếm</button>
+
+        <a asp-controller="AdminSettlement" asp-action="Index" class="fbemployee-reset-button">Đặt lại</a>
+    </form>
+
+    @if (Model.Shippers.Count == 0)
+    {
+        <div class="fbemployee-empty">
+            <div>🛵</div>
+            <h2>Không tìm thấy shipper</h2>
+            <p>Hãy thử thay đổi từ khóa hoặc bộ lọc trạng thái.</p>
+
+            <a asp-controller="AdminSettlement" asp-action="Create" class="fbemployee-create-button">
+                + Thêm shipper
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="fbemployee-table-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Shipper</th>
+                            <th>Liên hệ</th>
+                            <th>Hoạt động</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var shipper in Model.Shippers)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fbemployee-profile">
+                                        <div class="fbemployee-avatar">
+                                            @{
+                                                var firstCharacter = string.IsNullOrWhiteSpace(shipper.FullName)
+                                                    ? "S"
+                                                    : shipper.FullName.Substring(0, 1).ToUpper();
+                                            }
+                                            @firstCharacter
+                                        </div>
+
+                                        <div>
+                                            <strong>@shipper.FullName</strong>
+                                            <span>@("@")@shipper.UserName</span>
+                                            <small>Mã Shipper: #@shipper.ShipperId</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-contact">
+                                        <span>✉ @shipper.Email</span>
+                                        <span>☎ @shipper.Phone</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-work-count">
+                                        <span>🧾 @shipper.OrdersHandled đơn</span>
+                                        <span>✅ @shipper.CompletedOrders hoàn thành</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-status-list">
+                                        @if (IsWorking(shipper.ShipperStatus))
+                                        {
+                                            <span class="fbemployee-status working">Đang làm việc</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fbemployee-status resigned">Đã nghỉ việc</span>
+                                        }
+
+                                        @if (IsAccountActive(shipper.AccountStatus))
+                                        {
+                                            <span class="fbemployee-account active">Tài khoản mở</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fbemployee-account inactive">Tài khoản khóa</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbemployee-actions">
+                                        <a asp-controller="AdminSettlement"
+                                           asp-action="Details"
+                                           asp-route-id="@shipper.ShipperId"
+                                           class="fbemployee-details-button">
+                                            Chi tiết
+                                        </a>
+
+                                        <a asp-controller="AdminSettlement"
+                                           asp-action="Edit"
+                                           asp-route-id="@shipper.ShipperId"
+                                           class="fbemployee-edit-button">
+                                            Sửa
+                                        </a>
+
+                                        <form asp-controller="AdminSettlement" asp-action="ToggleStatus" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@shipper.ShipperId" />
+
+                                            @if (IsWorking(shipper.ShipperStatus))
+                                            {
+                                                <button type="submit"
+                                                        class="fbemployee-resign-button"
+                                                        onclick="return confirm('Xác nhận chuyển shipper này sang trạng thái đã nghỉ việc?')">
+                                                    Cho nghỉ
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="fbemployee-return-button"
+                                                        onclick="return confirm('Xác nhận cho shipper này làm việc lại?')">
+                                                    Làm lại
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>

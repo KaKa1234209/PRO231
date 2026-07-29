@@ -1,0 +1,203 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+
+@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString()
+        ?? "";
+
+    var fullName =
+        Context.Session.GetString("FullName")
+        ?? "Nhân viên";
+
+    string Active(string controllerName)
+    {
+        return currentController.Equals(
+            controllerName,
+            StringComparison.OrdinalIgnoreCase)
+                ? "active"
+                : "";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - FASTBITE EMPLOYEE
+    </title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/admin.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/profile.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/inventory.css"
+          asp-append-version="true" />
+</head>
+
+<body class="fbe-body">
+    <header class="fbe-topbar">
+        <a class="fbe-brand"
+           asp-controller="EmployeeHome"
+           asp-action="Index">
+
+            <img src="~/images/fastbite-logo.jpg"
+                 alt="FastBite"
+                 class="fbe-logo" />
+
+            <div>
+                <div class="fbe-brand-name">
+                    FASTBITE STAFF
+                </div>
+
+                <div class="fbe-brand-subtitle">
+                    KHU VỰC NHÂN VIÊN
+                </div>
+            </div>
+        </a>
+
+        <div class="fbe-top-actions">
+            <span class="fbe-user">
+                👤 @fullName
+            </span>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="fbe-public-button">
+
+                🏠 Trang khách
+            </a>
+        </div>
+    </header>
+
+    <div class="fbe-shell">
+        <aside class="fbe-sidebar">
+            <div class="fbe-sidebar-title">
+                LÀM VIỆC
+            </div>
+
+            <nav class="fbe-nav">
+                <a class="fbe-nav-link @Active("EmployeeHome")"
+                   asp-controller="EmployeeHome"
+                   asp-action="Index">
+
+                    <span>▦</span>
+                    <strong>Trang nhân viên</strong>
+                </a>
+
+                <a class="fbe-nav-link @Active("Orders")"
+                   asp-controller="Orders"
+                   asp-action="Index">
+
+                    <span>🧾</span>
+                    <strong>Đơn hàng</strong>
+                </a>
+
+                <a class="fbe-nav-link @Active("Invoices")"
+                   asp-controller="Invoices"
+                   asp-action="Index">
+
+                    <span>💳</span>
+                    <strong>Hóa đơn</strong>
+                </a>
+
+                <a class="fbe-nav-link @Active("Inventories")"
+                   asp-controller="Inventories"
+                   asp-action="Index">
+
+                    <span>📦</span>
+                    <strong>Tồn kho</strong>
+                </a>
+            </nav>
+
+            <div class="fbe-sidebar-title">
+                TÀI KHOẢN
+            </div>
+
+            <nav class="fbe-nav">
+                <a class="fbe-nav-link @Active("Profile")"
+                   asp-controller="Profile"
+                   asp-action="Index">
+
+                    <span>👤</span>
+                    <strong>Hồ sơ cá nhân</strong>
+                </a>
+
+                <a class="fbe-nav-link @Active("Login")"
+                   asp-controller="Login"
+                   asp-action="ChangePassword">
+
+                    <span>🔑</span>
+                    <strong>Đổi mật khẩu</strong>
+                </a>
+            </nav>
+
+            <div class="fbe-sidebar-footer">
+                <form asp-controller="Login"
+                      asp-action="Logout"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="fbe-logout-button">
+
+                        ↪ Đăng xuất
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="fbe-main">
+            <div class="fbe-content">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js">
+    </script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false)
+</body>
+</html>

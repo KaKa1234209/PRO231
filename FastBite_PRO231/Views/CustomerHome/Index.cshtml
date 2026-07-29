@@ -1,0 +1,381 @@
+﻿@model FastBite_PRO231.ViewModels.CustomerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Tài khoản khách hàng";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+
+    string StatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbcd-status-completed",
+            "Completed" => "fbcd-status-completed",
+            "Đã hủy" => "fbcd-status-cancelled",
+            "Đang giao" => "fbcd-status-delivering",
+            "Đang xử lý" => "fbcd-status-processing",
+            "Đang chuẩn bị" => "fbcd-status-processing",
+            _ => "fbcd-status-pending"
+        };
+    }
+}
+
+<section class="fbcd-page">
+
+    <!-- CHÀO KHÁCH HÀNG -->
+    <div class="fbcd-welcome">
+        <div>
+            <p>KHÁCH HÀNG FASTBITE</p>
+
+            <h1>Xin chào, @Model.FullName</h1>
+
+            <span>
+                Theo dõi đơn hàng, điểm tích lũy và ưu đãi của bạn.
+            </span>
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           asp-fragment="menu"
+           class="fbcd-order-button">
+
+            🍔 Đặt món ngay
+        </a>
+    </div>
+
+    <!-- THỐNG KÊ -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <article class="fbcd-stat-card">
+                <span>Tổng đơn hàng</span>
+
+                <strong>
+                    @Model.TotalOrders
+                </strong>
+
+                <small>
+                    Toàn bộ đơn đã đặt
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbcd-stat-card">
+                <span>Đang xử lý</span>
+
+                <strong class="fbcd-blue">
+                    @(Model.PendingOrders + Model.ProcessingOrders)
+                </strong>
+
+                <small>
+                    Đơn đang được chuẩn bị
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbcd-stat-card">
+                <span>Đã hoàn thành</span>
+
+                <strong class="fbcd-green">
+                    @Model.CompletedOrders
+                </strong>
+
+                <small>
+                    Đơn giao thành công
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbcd-stat-card">
+                <span>Điểm tích lũy</span>
+
+                <strong class="fbcd-orange">
+                    @Model.Point
+                </strong>
+
+                <small>
+                    Điểm thưởng hiện có
+                </small>
+            </article>
+        </div>
+    </div>
+
+    <!-- CHI TIÊU VÀ GIỎ HÀNG -->
+    <div class="fbcd-finance-grid">
+        <article>
+            <span>Tổng chi tiêu</span>
+
+            <strong>
+                @Model.TotalSpent.ToString("N0")đ
+            </strong>
+        </article>
+
+        <article>
+            <span>Sản phẩm trong giỏ</span>
+
+            <strong>
+                @Model.CartItemCount
+            </strong>
+
+            <a asp-controller="Cart"
+               asp-action="Index">
+
+                Xem giỏ hàng →
+            </a>
+        </article>
+    </div>
+
+    <div class="fbcd-main-grid">
+
+        <!-- ĐƠN HÀNG GẦN ĐÂY -->
+        <section class="fbcd-panel">
+            <div class="fbcd-panel-heading">
+                <div>
+                    <p>LỊCH SỬ MUA HÀNG</p>
+
+                    <h2>Đơn hàng gần đây</h2>
+                </div>
+
+                <a asp-controller="CustomerOrders"
+                   asp-action="Index">
+
+                    Xem tất cả →
+                </a>
+            </div>
+
+            @if (Model.RecentOrders.Count == 0)
+            {
+                <div class="fbcd-empty">
+                    <div>🧾</div>
+
+                    <h3>Bạn chưa có đơn hàng</h3>
+
+                    <p>
+                        Hãy chọn món yêu thích và đặt đơn đầu tiên.
+                    </p>
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       asp-fragment="menu">
+
+                        Xem thực đơn
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle fbcd-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th>Số lượng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Hóa đơn</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var order in Model.RecentOrders)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            #@order.OrderId
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @order.OrderDate.ToString(
+                                            "dd/MM/yyyy HH:mm")
+                                    </td>
+
+                                    <td>
+                                        @order.TotalQuantity phần
+                                    </td>
+
+                                    <td>
+                                        <strong class="fbcd-money">
+                                            @order.TotalAmount.ToString("N0")đ
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <span class="fbcd-order-status @StatusClass(order.Status)">
+                                            @order.Status
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (order.HasInvoice)
+                                        {
+                                            <span class="fbcd-invoice yes">
+                                                Đã tạo
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fbcd-invoice no">
+                                                Chưa tạo
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="CustomerOrders"
+                                           asp-action="Details"
+                                           asp-route-id="@order.OrderId"
+                                           class="fbcd-small-button">
+
+                                            Chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <!-- THÔNG TIN TÀI KHOẢN -->
+        <aside class="fbcd-profile-card">
+            <p>THÔNG TIN TÀI KHOẢN</p>
+
+            <div class="fbcd-profile-head">
+                <div class="fbcd-avatar">
+                    @{
+                        var firstCharacter =
+                            string.IsNullOrWhiteSpace(Model.FullName)
+                                ? "K"
+                                : Model.FullName
+                                    .Substring(0, 1)
+                                    .ToUpper();
+                    }
+
+                    @firstCharacter
+                </div>
+
+                <div>
+                    <h2>@Model.FullName</h2>
+
+                    <span>
+                        @("@")@Model.UserName
+                    </span>
+                </div>
+            </div>
+
+            <div class="fbcd-info-row">
+                <span>Email</span>
+
+                <strong>
+                    @Model.Email
+                </strong>
+            </div>
+
+            <div class="fbcd-info-row">
+                <span>Số điện thoại</span>
+
+                <strong>
+                    @Model.Phone
+                </strong>
+            </div>
+
+            <div class="fbcd-info-row">
+                <span>Địa chỉ</span>
+
+                <strong>
+                    @(string.IsNullOrWhiteSpace(Model.Address)
+                        ? "Chưa cập nhật"
+                        : Model.Address)
+                </strong>
+            </div>
+
+            <div class="fbcd-info-row">
+                <span>Đơn đã hủy</span>
+
+                <strong class="fbcd-red">
+                    @Model.CancelledOrders
+                </strong>
+            </div>
+
+            <a asp-controller="Login"
+               asp-action="ChangePassword"
+               class="fbcd-password-button">
+
+                🔑 Đổi mật khẩu
+            </a>
+        </aside>
+    </div>
+
+    <!-- KHUYẾN MÃI -->
+    <section class="fbcd-panel">
+        <div class="fbcd-panel-heading">
+            <div>
+                <p>ƯU ĐÃI DÀNH CHO BẠN</p>
+
+                <h2>Khuyến mãi đang hoạt động</h2>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               asp-fragment="menu">
+
+                Xem thực đơn →
+            </a>
+        </div>
+
+        @if (Model.Promotions.Count == 0)
+        {
+            <div class="fbcd-empty small">
+                Hiện chưa có chương trình khuyến mãi.
+            </div>
+        }
+        else
+        {
+            <div class="fbcd-promotion-grid">
+                @foreach (var promotion in Model.Promotions)
+                {
+                    var discountText =
+                        promotion.DiscountType == "Percent"
+                            ? $"{promotion.DiscountValue:N0}%"
+                            : $"{promotion.DiscountValue:N0}đ";
+
+                    <article class="fbcd-promotion-card">
+                        <div class="fbcd-discount">
+                            <span>GIẢM</span>
+
+                            <strong>
+                                @discountText
+                            </strong>
+                        </div>
+
+                        <h3>
+                            @promotion.PromotionName
+                        </h3>
+
+                        <p>
+                            @promotion.ProductNames
+                        </p>
+
+                        <span>
+                            Áp dụng cho
+                            @promotion.ProductCount sản phẩm
+                        </span>
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           asp-fragment="menu">
+
+                            Đặt món ngay
+                        </a>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</section>

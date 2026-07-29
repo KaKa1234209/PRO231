@@ -1,0 +1,93 @@
+﻿@model FastBite_PRO231.ViewModels.OrderSuccessViewModel
+
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<section class="fbos-page">
+    <div class="container">
+        <div class="fbos-card">
+            <div class="fbos-icon">
+                ✓
+            </div>
+
+            <p class="fbos-overline">
+                FASTBITE FOOD STUDIO
+            </p>
+
+            <h1>Đặt hàng thành công!</h1>
+
+            <p class="fbos-description">
+                Đơn hàng của bạn đã được gửi đến cửa hàng.
+            </p>
+
+            <div class="fbos-order-code">
+                Mã đơn hàng:
+                <strong>#@Model.OrderId</strong>
+            </div>
+
+            <div class="fbos-info-grid">
+                <div>
+                    <span>Ngày đặt</span>
+
+                    <strong>
+                        @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Trạng thái</span>
+                    <strong>@Model.Status</strong>
+                </div>
+
+                <div>
+                    <span>Tổng số lượng</span>
+                    <strong>@Model.TotalQuantity phần</strong>
+                </div>
+
+                <div>
+                    <span>Tổng thanh toán</span>
+
+                    <strong>
+                        @Model.TotalAmount.ToString("N0")đ
+                    </strong>
+                </div>
+            </div>
+
+            <div class="fbos-item-list">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="fbos-item">
+                        <div>
+                            <strong>@item.ProductName</strong>
+
+                            <span>
+                                @item.Quantity ×
+                                @item.UnitPrice.ToString("N0")đ
+                            </span>
+                        </div>
+
+                        <strong>
+                            @item.SubTotal.ToString("N0")đ
+                        </strong>
+                    </div>
+                }
+            </div>
+
+            <div class="fbos-actions">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="menu"
+                   class="fbos-primary-button">
+                    Tiếp tục đặt món
+                </a>
+
+                <a asp-controller="CustomerOrders"
+                   asp-action="Index"
+                   class="fbos-outline-button">
+                    Xem đơn hàng của tôi
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

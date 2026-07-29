@@ -1,0 +1,183 @@
+﻿@model FastBite_PRO231.ViewModels.Customer.CustomerOrderDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+
+    var statusClass = Model.Status switch
+    {
+        "Hoàn thành" => "fbo-status-completed",
+        "Completed" => "fbo-status-completed",
+        "Đã hủy" => "fbo-status-cancelled",
+        "Đang giao" => "fbo-status-delivering",
+        "Đang chuẩn bị" => "fbo-status-processing",
+        "Đang xử lý" => "fbo-status-processing",
+        _ => "fbo-status-pending"
+    };
+}
+
+<section class="fbo-page">
+    <div class="container">
+        <div class="fbo-header">
+            <div>
+                <p>📦 CHI TIẾT ĐƠN HÀNG</p>
+
+                <h1>Đơn hàng #@Model.OrderId</h1>
+
+                <span>
+                    Kiểm tra danh sách món và tình trạng xử lý.
+                </span>
+            </div>
+
+            <a asp-controller="CustomerOrders"
+               asp-action="Index"
+               class="fbo-outline-button">
+                ← Lịch sử đơn hàng
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="fbo-details-grid">
+            <div class="fbo-details-left">
+                <section class="fbo-details-card">
+                    <div class="fbo-details-heading">
+                        <h2>Thông tin đơn hàng</h2>
+
+                        <span class="fbo-status @statusClass">
+                            @Model.Status
+                        </span>
+                    </div>
+
+                    <div class="fbo-detail-row">
+                        <span>Mã đơn hàng</span>
+                        <strong>#@Model.OrderId</strong>
+                    </div>
+
+                    <div class="fbo-detail-row">
+                        <span>Ngày đặt</span>
+
+                        <strong>
+                            @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        </strong>
+                    </div>
+
+                    <div class="fbo-detail-row">
+                        <span>Tổng số lượng</span>
+
+                        <strong>
+                            @Model.TotalQuantity phần
+                        </strong>
+                    </div>
+
+                    <div class="fbo-detail-row">
+                        <span>Tổng thanh toán</span>
+
+                        <strong class="fbo-money">
+                            @Model.TotalAmount.ToString("N0")đ
+                        </strong>
+                    </div>
+                </section>
+
+                <section class="fbo-details-card">
+                    <h2>Món trong đơn hàng</h2>
+
+                    <div class="fbo-product-list">
+                        @foreach (var item in Model.Items)
+                        {
+                            <article class="fbo-product-item">
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         alt="@item.ProductName"
+                                         class="fbo-product-image" />
+                                }
+                                else
+                                {
+                                    <div class="fbo-product-placeholder">
+                                        🍔
+                                    </div>
+                                }
+
+                                <div class="fbo-product-info">
+                                    <strong>
+                                        @item.ProductName
+                                    </strong>
+
+                                    <span>
+                                        @item.Quantity ×
+                                        @item.UnitPrice.ToString("N0")đ
+                                    </span>
+                                </div>
+
+                                <strong class="fbo-product-total">
+                                    @item.SubTotal.ToString("N0")đ
+                                </strong>
+                            </article>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <aside class="fbo-details-summary">
+                <h2>Tổng đơn hàng</h2>
+
+                <div class="fbo-detail-row">
+                    <span>Số lượng</span>
+                    <strong>@Model.TotalQuantity phần</strong>
+                </div>
+
+                <div class="fbo-detail-row">
+                    <span>Phí giao hàng</span>
+                    <strong>0đ</strong>
+                </div>
+
+                <div class="fbo-summary-total">
+                    <span>Tổng thanh toán</span>
+
+                    <strong>
+                        @Model.TotalAmount.ToString("N0")đ
+                    </strong>
+                </div>
+
+                @if (Model.CanCancel)
+                {
+                    <form asp-controller="CustomerOrders"
+                          asp-action="Cancel"
+                          asp-route-id="@Model.OrderId"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="fbo-cancel-full-button"
+                                onclick="return confirm('Bạn chắc chắn muốn hủy đơn hàng này? Tồn kho sẽ được hoàn lại.')">
+                            Hủy đơn hàng
+                        </button>
+                    </form>
+
+                    <p class="fbo-note">
+                        Chỉ có thể hủy khi cửa hàng chưa bắt đầu xử lý đơn.
+                    </p>
+                }
+                else
+                {
+                    <div class="fbo-locked-note">
+                        Đơn hàng hiện không thể hủy.
+                    </div>
+                }
+            </aside>
+        </div>
+    </div>
+</section>

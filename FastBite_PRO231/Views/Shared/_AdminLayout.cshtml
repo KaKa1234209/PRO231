@@ -1,0 +1,285 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+
+@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString()
+        ?? "";
+
+    var fullName =
+        Context.Session.GetString("FullName")
+        ?? "Quản trị viên";
+
+    var role =
+        Context.Session.GetString("Role")
+        ?? "Admin";
+
+    string Active(string controllerName)
+    {
+        return currentController.Equals(
+            controllerName,
+            StringComparison.OrdinalIgnoreCase)
+                ? "active"
+                : "";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - FASTBITE ADMIN
+    </title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/admin.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/profile.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/inventory.css"
+          asp-append-version="true" />
+</head>
+
+<body class="fba-body">
+    <header class="fba-topbar">
+        <a class="fba-brand"
+           asp-controller="AdminDashboard"
+           asp-action="Index">
+
+            <img src="~/images/fastbite-logo.jpg"
+                 alt="FASTBITE"
+                 class="fba-logo" />
+
+            <div>
+                <div class="fba-brand-name">
+                    FASTBITE ADMIN
+                </div>
+
+                <div class="fba-brand-subtitle">
+                    QUẢN LÝ CỬA HÀNG
+                </div>
+            </div>
+        </a>
+
+        <div class="fba-top-actions">
+            <span class="fba-user">
+                👤 @fullName
+                · @role
+            </span>
+
+            <a class="fba-guest-button"
+               asp-controller="Home"
+               asp-action="Index">
+
+                🏠 Trang khách
+            </a>
+        </div>
+    </header>
+
+    <div class="fba-shell">
+        <aside class="fba-sidebar">
+            <div class="fba-sidebar-title">
+                TỔNG QUAN
+            </div>
+
+            <nav class="fba-nav">
+                <a class="fba-nav-link @Active("AdminDashboard")"
+                   asp-controller="AdminDashboard"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">▦</span>
+                    <span>Trang chủ</span>
+                </a>
+            </nav>
+
+            <div class="fba-sidebar-title">
+                QUẢN LÝ
+            </div>
+
+            <nav class="fba-nav">
+                <a class="fba-nav-link @Active("Categories")"
+                   asp-controller="Categories"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">🏷️</span>
+                    <span>Danh mục</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Products")"
+                   asp-controller="Products"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">🍔</span>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Orders")"
+                   asp-controller="Orders"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">🧾</span>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Invoices")"
+                   asp-controller="Invoices"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">💳</span>
+                    <span>Hóa đơn</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Inventories")"
+                   asp-controller="Inventories"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">📦</span>
+                    <span>Tồn kho</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Customers")"
+                   asp-controller="Customers"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">👥</span>
+                    <span>Khách hàng</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Employees")"
+                   asp-controller="Employees"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">👨‍🍳</span>
+                    <span>Nhân viên</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Shippers")"
+                   asp-controller="AdminSettlement"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">🛵</span>
+                    <span>Shipper</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Promotions")"
+                   asp-controller="Promotions"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">%</span>
+                    <span>Khuyến mãi</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Users")"
+                   asp-controller="Users"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">🔐</span>
+                    <span>Tài khoản</span>
+                </a>
+            </nav>
+
+            <div class="fba-sidebar-title">
+                BÁO CÁO
+            </div>
+
+            <nav class="fba-nav">
+                <a class="fba-nav-link @Active("Report")"
+                   asp-controller="Report"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">📊</span>
+                    <span>Thống kê</span>
+                </a>
+            </nav>
+
+            <div class="fba-sidebar-title">
+                TÀI KHOẢN
+            </div>
+
+            <nav class="fba-nav">
+                <a class="fba-nav-link @Active("Profile")"
+                   asp-controller="Profile"
+                   asp-action="Index">
+
+                    <span class="fba-nav-icon">👤</span>
+                    <span>Hồ sơ cá nhân</span>
+                </a>
+
+                <a class="fba-nav-link @Active("Login")"
+                   asp-controller="Login"
+                   asp-action="ChangePassword">
+
+                    <span class="fba-nav-icon">🔑</span>
+                    <span>Đổi mật khẩu</span>
+                </a>
+            </nav>
+
+            <div class="fba-sidebar-footer">
+                <form class="fba-logout-form"
+                      asp-controller="Login"
+                      asp-action="Logout"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="fba-logout-button">
+
+                        ↪ Đăng xuất
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="fba-main">
+            <div class="fba-content">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success fba-alert">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger fba-alert">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js">
+    </script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false)
+</body>
+</html>

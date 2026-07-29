@@ -1,0 +1,174 @@
+﻿@model FastBite_PRO231.ViewModels.Login.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<section class="fb-auth-page">
+    <div class="fb-auth-card">
+        <div class="fb-auth-brand">
+            <a asp-controller="Home"
+               asp-action="Index">
+
+                <img src="~/images/fastbite-logo.jpg"
+                     alt="FastBite"
+                     class="fb-auth-logo" />
+            </a>
+        </div>
+
+        <div class="fb-auth-heading">
+            <h1>Đăng ký tài khoản</h1>
+
+            <p>
+                Tạo tài khoản khách hàng để sử dụng FastBite.
+            </p>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <form asp-controller="Login"
+              asp-action="Register"
+              method="post"
+              class="fb-auth-form">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="FullName">
+                    Họ và tên
+                </label>
+
+                <input asp-for="FullName"
+                       class="form-control"
+                       placeholder="Nhập họ và tên" />
+
+                <span asp-validation-for="FullName"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="UserName">
+                    Tên đăng nhập
+                </label>
+
+                <input asp-for="UserName"
+                       class="form-control"
+                       placeholder="Nhập tên đăng nhập"
+                       autocomplete="username" />
+
+                <span asp-validation-for="UserName"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="Email">
+                    Email
+                </label>
+
+                <input asp-for="Email"
+                       class="form-control"
+                       placeholder="Nhập địa chỉ email"
+                       autocomplete="email" />
+
+                <span asp-validation-for="Email"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="Phone">
+                    Số điện thoại
+                </label>
+
+                <input asp-for="Phone"
+                       class="form-control"
+                       placeholder="Nhập số điện thoại"
+                       autocomplete="tel" />
+
+                <span asp-validation-for="Phone"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="Address">
+                    Địa chỉ
+                </label>
+
+                <input asp-for="Address"
+                       class="form-control"
+                       placeholder="Nhập địa chỉ nhận hàng" />
+
+                <span asp-validation-for="Address"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="Password">
+                    Mật khẩu
+                </label>
+
+                <input asp-for="Password"
+                       class="form-control"
+                       placeholder="Nhập mật khẩu"
+                       autocomplete="new-password" />
+
+                <span asp-validation-for="Password"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="fb-auth-field">
+                <label asp-for="ConfirmPassword">
+                    Xác nhận mật khẩu
+                </label>
+
+                <input asp-for="ConfirmPassword"
+                       class="form-control"
+                       placeholder="Nhập lại mật khẩu"
+                       autocomplete="new-password" />
+
+                <span asp-validation-for="ConfirmPassword"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <button type="submit"
+                    class="fb-auth-submit">
+                Tạo tài khoản
+            </button>
+        </form>
+
+        <div class="fb-auth-footer">
+            <span>Đã có tài khoản?</span>
+
+            <a asp-controller="Login"
+               asp-action="Login">
+                Đăng nhập ngay
+            </a>
+        </div>
+
+        <div class="fb-auth-back">
+            <a asp-controller="Home"
+               asp-action="Index">
+                ← Về trang chủ
+            </a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,329 @@
+﻿@model FastBite_PRO231.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+
+    if (Model.IsAdmin)
+    {
+        Layout =
+            "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else if (Model.IsEmployee)
+    {
+        Layout =
+            "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+    else
+    {
+        Layout =
+            "~/Views/Shared/_CustomerLayout.cshtml";
+    }
+
+    var roleText = Model.RoleName switch
+    {
+        "Admin" => "Quản trị viên",
+        "Employee" => "Nhân viên",
+        "Empolyee" => "Nhân viên",
+        "Customer" => "Khách hàng",
+        _ => Model.RoleName
+    };
+
+    var firstCharacter =
+        string.IsNullOrWhiteSpace(Model.FullName)
+            ? "U"
+            : Model.FullName
+                .Substring(0, 1)
+                .ToUpper();
+}
+
+<section class="fbprofile-page">
+    <div class="fbprofile-header">
+        <div>
+            <p>HỒ SƠ FASTBITE</p>
+
+            <h1>Thông tin cá nhân</h1>
+
+            <span>
+                Cập nhật thông tin tài khoản đang đăng nhập.
+            </span>
+        </div>
+
+        @if (Model.IsAdmin)
+        {
+            <a asp-controller="AdminDashboard"
+               asp-action="Index"
+               class="fbprofile-back-button">
+
+                ← Trang quản trị
+            </a>
+        }
+        else if (Model.IsEmployee)
+        {
+            <a asp-controller="EmployeeHome"
+               asp-action="Index"
+               class="fbprofile-back-button">
+
+                ← Trang nhân viên
+            </a>
+        }
+        else
+        {
+            <a asp-controller="CustomerHome"
+               asp-action="Index"
+               class="fbprofile-back-button">
+
+                ← Trang tài khoản
+            </a>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="fbprofile-grid">
+        <section class="fbprofile-form-card">
+            <div class="fbprofile-card-heading">
+                <div>
+                    <p>THÔNG TIN CÓ THỂ CHỈNH SỬA</p>
+
+                    <h2>Cập nhật hồ sơ</h2>
+                </div>
+            </div>
+
+            <form asp-controller="Profile"
+                  asp-action="Index"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="UserId"
+                       type="hidden" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control"
+                               placeholder="Nhập họ và tên" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="UserName"
+                               class="form-control"
+                               placeholder="Nhập tên đăng nhập" />
+
+                        <span asp-validation-for="UserName"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="example@gmail.com" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Phone"
+                               class="form-control"
+                               placeholder="0901234567" />
+
+                        <span asp-validation-for="Phone"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    @if (Model.IsCustomer)
+                    {
+                        <div class="col-12">
+                            <label asp-for="Address"
+                                   class="form-label fw-bold">
+                            </label>
+
+                            <textarea asp-for="Address"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="Nhập địa chỉ nhận hàng">
+                            </textarea>
+
+                            <span asp-validation-for="Address"
+                                  class="text-danger">
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="fbprofile-warning">
+                    Email, số điện thoại và tên đăng nhập không được
+                    trùng với tài khoản khác.
+                </div>
+
+                <div class="fbprofile-actions">
+                    <button type="submit"
+                            class="fbprofile-save-button"
+                            onclick="return confirm('Xác nhận lưu thay đổi hồ sơ?')">
+
+                        Lưu thay đổi
+                    </button>
+
+                    <a asp-controller="Login"
+                       asp-action="ChangePassword"
+                       class="fbprofile-password-button">
+
+                        Đổi mật khẩu
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbprofile-summary-card">
+            <div class="fbprofile-avatar">
+                @firstCharacter
+            </div>
+
+            <h2>@Model.FullName</h2>
+
+            <span class="fbprofile-username">
+                @("@")@Model.UserName
+            </span>
+
+            <div class="fbprofile-info-row">
+                <span>Mã tài khoản</span>
+
+                <strong>
+                    #@Model.UserId
+                </strong>
+            </div>
+
+            <div class="fbprofile-info-row">
+                <span>Vai trò</span>
+
+                <strong>
+                    @roleText
+                </strong>
+            </div>
+
+            <div class="fbprofile-info-row">
+                <span>Trạng thái</span>
+
+                <strong class="fbprofile-active">
+                    @Model.AccountStatus
+                </strong>
+            </div>
+
+            <div class="fbprofile-info-row">
+                <span>Ngày tạo</span>
+
+                <strong>
+                    @Model.CreatedAt.ToString(
+                        "dd/MM/yyyy")
+                </strong>
+            </div>
+
+            @if (Model.IsCustomer)
+            {
+                <div class="fbprofile-info-row">
+                    <span>Mã khách hàng</span>
+
+                    <strong>
+                        #@Model.CustomerId
+                    </strong>
+                </div>
+
+                <div class="fbprofile-point-box">
+                    <span>Điểm tích lũy</span>
+
+                    <strong>
+                        ⭐ @Model.Point điểm
+                    </strong>
+                </div>
+            }
+
+            @if (Model.IsEmployee)
+            {
+                <div class="fbprofile-info-row">
+                    <span>Mã nhân viên</span>
+
+                    <strong>
+                        #@Model.EmployeeId
+                    </strong>
+                </div>
+
+                <div class="fbprofile-info-row">
+                    <span>Chức vụ</span>
+
+                    <strong>
+                        @Model.Position
+                    </strong>
+                </div>
+
+                <div class="fbprofile-info-row">
+                    <span>Ngày vào làm</span>
+
+                    <strong>
+                        @(Model.HireDate.HasValue
+                            ? Model.HireDate.Value
+                                .ToString("dd/MM/yyyy")
+                            : "Chưa cập nhật")
+                    </strong>
+                </div>
+
+                <div class="fbprofile-info-row">
+                    <span>Làm việc</span>
+
+                    <strong>
+                        @Model.EmployeeStatus
+                    </strong>
+                </div>
+            }
+
+            <div class="fbprofile-note">
+                Vai trò, điểm tích lũy và trạng thái tài khoản
+                chỉ được thay đổi bởi quản trị viên.
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

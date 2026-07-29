@@ -1,0 +1,731 @@
+﻿@using System.Globalization
+@model FastBite_PRO231.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Trang quản trị";
+
+    string OrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbdash-order-completed",
+            "Completed" => "fbdash-order-completed",
+            "Đã hủy" => "fbdash-order-cancelled",
+            "Đang giao" => "fbdash-order-delivering",
+            "Đang xử lý" => "fbdash-order-processing",
+            "Đang chuẩn bị" => "fbdash-order-processing",
+            _ => "fbdash-order-pending"
+        };
+    }
+
+    string StockStatusClass(int quantity)
+    {
+        return quantity <= 0
+            ? "fbdash-stock-out"
+            : "fbdash-stock-low";
+    }
+}
+
+<section class="fbdash-page">
+
+    <!-- TIÊU ĐỀ -->
+    <div class="fbdash-header">
+        <div>
+            <p>TỔNG QUAN FASTBITE</p>
+
+            <h1>Trang quản trị</h1>
+
+            <span>
+                Theo dõi hoạt động kinh doanh, đơn hàng,
+                doanh thu và tồn kho của cửa hàng.
+            </span>
+        </div>
+
+        <div class="fbdash-header-actions">
+            <a asp-controller="Orders"
+               asp-action="Index"
+               class="fbdash-header-dark-button">
+
+                🧾 Quản lý đơn hàng
+            </a>
+
+            <a asp-controller="Report"
+               asp-action="Index"
+               class="fbdash-header-red-button">
+
+                📊 Xem báo cáo
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- THỐNG KÊ DOANH THU -->
+    <div class="fbdash-revenue-grid">
+        <article class="fbdash-revenue-card today">
+            <div class="fbdash-revenue-icon">
+                💰
+            </div>
+
+            <div>
+                <span>Doanh thu hôm nay</span>
+
+                <strong>
+                    @Model.RevenueToday.ToString("N0")đ
+                </strong>
+            </div>
+        </article>
+
+        <article class="fbdash-revenue-card week">
+            <div class="fbdash-revenue-icon">
+                📅
+            </div>
+
+            <div>
+                <span>Doanh thu 7 ngày</span>
+
+                <strong>
+                    @Model.RevenueWeek.ToString("N0")đ
+                </strong>
+            </div>
+        </article>
+
+        <article class="fbdash-revenue-card month">
+            <div class="fbdash-revenue-icon">
+                📈
+            </div>
+
+            <div>
+                <span>Doanh thu tháng này</span>
+
+                <strong>
+                    @Model.RevenueMonth.ToString("N0")đ
+                </strong>
+            </div>
+        </article>
+    </div>
+
+    <!-- THỐNG KÊ CHUNG -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <article class="fbdash-stat-card">
+                <div class="fbdash-stat-icon">
+                    🧾
+                </div>
+
+                <div>
+                    <span>Tổng đơn hàng</span>
+
+                    <strong>
+                        @Model.TotalOrders
+                    </strong>
+
+                    <small>
+                        Hôm nay: @Model.TodayOrders đơn
+                    </small>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbdash-stat-card">
+                <div class="fbdash-stat-icon">
+                    👥
+                </div>
+
+                <div>
+                    <span>Khách hàng</span>
+
+                    <strong>
+                        @Model.TotalCustomers
+                    </strong>
+
+                    <small>
+                        Tài khoản khách hàng
+                    </small>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbdash-stat-card">
+                <div class="fbdash-stat-icon">
+                    🍔
+                </div>
+
+                <div>
+                    <span>Sản phẩm</span>
+
+                    <strong>
+                        @Model.TotalProducts
+                    </strong>
+
+                    <small>
+                        Món ăn trong hệ thống
+                    </small>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbdash-stat-card">
+                <div class="fbdash-stat-icon">
+                    👨‍🍳
+                </div>
+
+                <div>
+                    <span>Nhân viên làm việc</span>
+
+                    <strong>
+                        @Model.WorkingEmployees
+                    </strong>
+
+                    <small>
+                        Tài khoản đang hoạt động
+                    </small>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <!-- TRẠNG THÁI ĐƠN HÀNG -->
+    <section class="fbdash-panel mb-4">
+        <div class="fbdash-panel-heading">
+            <div>
+                <p>TÌNH TRẠNG ĐƠN HÀNG</p>
+
+                <h2>Tiến độ xử lý đơn</h2>
+            </div>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               class="fbdash-panel-link">
+
+                Xem tất cả đơn hàng →
+            </a>
+        </div>
+
+        <div class="fbdash-order-status-grid">
+            <a asp-controller="Orders"
+               asp-action="Index"
+               asp-route-status="pending"
+               class="fbdash-order-status-card pending">
+
+                <span>⏳ Đang chờ xử lý</span>
+
+                <strong>
+                    @Model.PendingOrders
+                </strong>
+            </a>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               asp-route-status="processing"
+               class="fbdash-order-status-card processing">
+
+                <span>👨‍🍳 Đang xử lý</span>
+
+                <strong>
+                    @Model.ProcessingOrders
+                </strong>
+            </a>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               asp-route-status="completed"
+               class="fbdash-order-status-card completed">
+
+                <span>✅ Hoàn thành</span>
+
+                <strong>
+                    @Model.CompletedOrders
+                </strong>
+            </a>
+
+            <a asp-controller="Orders"
+               asp-action="Index"
+               asp-route-status="cancelled"
+               class="fbdash-order-status-card cancelled">
+
+                <span>✕ Đã hủy</span>
+
+                <strong>
+                    @Model.CancelledOrders
+                </strong>
+            </a>
+        </div>
+    </section>
+
+    <!-- DOANH THU 7 NGÀY -->
+    <section class="fbdash-panel mb-4">
+        <div class="fbdash-panel-heading">
+            <div>
+                <p>DOANH THU GẦN ĐÂY</p>
+
+                <h2>Doanh thu 7 ngày</h2>
+            </div>
+
+            <a asp-controller="Report"
+               asp-action="Index"
+               class="fbdash-panel-link">
+
+                Xem báo cáo chi tiết →
+            </a>
+        </div>
+
+        @if (Model.DailyRevenue.Count == 0)
+        {
+            <div class="fbdash-empty">
+                <div>📊</div>
+
+                <h3>Chưa có doanh thu</h3>
+
+                <p>
+                    Doanh thu xuất hiện khi có hóa đơn hoạt động.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="fbdash-revenue-chart">
+                @foreach (var item in Model.DailyRevenue)
+                {
+                    var width = Math.Clamp(
+                        item.Percent,
+                        3m,
+                        100m)
+                        .ToString(
+                            "0.##",
+                            CultureInfo.InvariantCulture);
+
+                    <div class="fbdash-chart-row">
+                        <div class="fbdash-chart-date">
+                            <strong>
+                                @item.Date.ToString("dd/MM")
+                            </strong>
+
+                            <span>
+                                @item.InvoiceCount hóa đơn
+                            </span>
+                        </div>
+
+                        <div class="fbdash-chart-track">
+                            <div class="fbdash-chart-bar"
+                                 style="width:@width%;">
+                            </div>
+                        </div>
+
+                        <strong class="fbdash-chart-money">
+                            @item.Revenue.ToString("N0")đ
+                        </strong>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- ĐƠN HÀNG VÀ SẢN PHẨM BÁN CHẠY -->
+    <div class="fbdash-main-grid">
+
+        <!-- ĐƠN GẦN ĐÂY -->
+        <section class="fbdash-panel">
+            <div class="fbdash-panel-heading">
+                <div>
+                    <p>HOẠT ĐỘNG GẦN ĐÂY</p>
+
+                    <h2>Đơn hàng mới nhất</h2>
+                </div>
+
+                <a asp-controller="Orders"
+                   asp-action="Index"
+                   class="fbdash-panel-link">
+
+                    Xem tất cả →
+                </a>
+            </div>
+
+            @if (Model.RecentOrders.Count == 0)
+            {
+                <div class="fbdash-empty">
+                    <div>🧾</div>
+
+                    <h3>Chưa có đơn hàng</h3>
+
+                    <p>
+                        Đơn hàng mới sẽ xuất hiện tại đây.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle fbdash-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Nhân viên</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var order in Model.RecentOrders)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fbdash-order-code">
+                                            <strong>
+                                                #@order.OrderId
+                                            </strong>
+
+                                            <small>
+                                                @order.OrderDate.ToString(
+                                                    "dd/MM HH:mm")
+                                            </small>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @order.CustomerName
+                                    </td>
+
+                                    <td>
+                                        @order.EmployeeName
+                                    </td>
+
+                                    <td>
+                                        <strong class="fbdash-money">
+                                            @order.TotalAmount.ToString("N0")đ
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <div class="fbdash-order-state">
+                                            <span class="fbdash-order-badge @OrderStatusClass(order.Status)">
+                                                @order.Status
+                                            </span>
+
+                                            @if (order.HasInvoice)
+                                            {
+                                                <small class="fbdash-invoice-created">
+                                                    ✓ Đã có hóa đơn
+                                                </small>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="Orders"
+                                           asp-action="Details"
+                                           asp-route-id="@order.OrderId"
+                                           class="fbdash-small-button">
+
+                                            Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <!-- SẢN PHẨM BÁN CHẠY -->
+        <section class="fbdash-panel">
+            <div class="fbdash-panel-heading">
+                <div>
+                    <p>SẢN PHẨM NỔI BẬT</p>
+
+                    <h2>Bán chạy trong tháng</h2>
+                </div>
+
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   class="fbdash-panel-link">
+
+                    Sản phẩm →
+                </a>
+            </div>
+
+            @if (Model.TopProducts.Count == 0)
+            {
+                <div class="fbdash-empty">
+                    <div>🍔</div>
+
+                    <h3>Chưa có dữ liệu</h3>
+
+                    <p>
+                        Sản phẩm bán chạy được tính từ hóa đơn hoạt động.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="fbdash-product-ranking">
+                    @{
+                        var rank = 0;
+                    }
+
+                    @foreach (var product in Model.TopProducts)
+                    {
+                        rank++;
+
+                        var productWidth = Math.Clamp(
+                            product.Percent,
+                            3m,
+                            100m)
+                            .ToString(
+                                "0.##",
+                                CultureInfo.InvariantCulture);
+
+                        <article class="fbdash-product-item">
+                            <div class="fbdash-rank-number">
+                                @rank
+                            </div>
+
+                            <div class="fbdash-product-content">
+                                <div class="fbdash-product-heading">
+                                    <div>
+                                        <strong>
+                                            @product.ProductName
+                                        </strong>
+
+                                        <span>
+                                            Đã bán @product.Quantity phần
+                                        </span>
+                                    </div>
+
+                                    <strong class="fbdash-money">
+                                        @product.Revenue.ToString("N0")đ
+                                    </strong>
+                                </div>
+
+                                <div class="fbdash-product-track">
+                                    <div class="fbdash-product-bar"
+                                         style="width:@productWidth%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- TỒN KHO VÀ THAO TÁC NHANH -->
+    <div class="fbdash-bottom-grid">
+
+        <!-- CẢNH BÁO KHO -->
+        <section class="fbdash-panel">
+            <div class="fbdash-panel-heading">
+                <div>
+                    <p>CẢNH BÁO TỒN KHO</p>
+
+                    <h2>Sản phẩm cần nhập thêm</h2>
+                </div>
+
+                <a asp-controller="Inventories"
+                   asp-action="Index"
+                   class="fbdash-panel-link">
+
+                    Quản lý kho →
+                </a>
+            </div>
+
+            <div class="fbdash-stock-summary">
+                <div class="low">
+                    <span>Sắp hết</span>
+
+                    <strong>
+                        @Model.LowStockProducts
+                    </strong>
+                </div>
+
+                <div class="out">
+                    <span>Hết hàng</span>
+
+                    <strong>
+                        @Model.OutOfStockProducts
+                    </strong>
+                </div>
+            </div>
+
+            @if (Model.StockWarnings.Count == 0)
+            {
+                <div class="fbdash-stock-safe">
+                    ✓ Tồn kho đang ổn định.
+                </div>
+            }
+            else
+            {
+                <div class="fbdash-stock-list">
+                    @foreach (var stock in Model.StockWarnings)
+                    {
+                        <article class="fbdash-stock-item">
+                            <div class="fbdash-stock-icon">
+                                📦
+                            </div>
+
+                            <div class="fbdash-stock-content">
+                                <strong>
+                                    @stock.ProductName
+                                </strong>
+
+                                <span>
+                                    Mã sản phẩm: #@stock.ProductId
+                                </span>
+                            </div>
+
+                            <div class="fbdash-stock-quantity">
+                                <strong>
+                                    @stock.Quantity @stock.Unit
+                                </strong>
+
+                                <span class="@StockStatusClass(stock.Quantity)">
+                                    @stock.StatusText
+                                </span>
+                            </div>
+
+                            <a asp-controller="Inventories"
+                               asp-action="Edit"
+                               asp-route-id="@stock.InventoryId"
+                               class="fbdash-small-button">
+
+                                Cập nhật
+                            </a>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <!-- THAO TÁC NHANH -->
+        <section class="fbdash-panel">
+            <div class="fbdash-panel-heading">
+                <div>
+                    <p>TRUY CẬP NHANH</p>
+
+                    <h2>Chức năng quản trị</h2>
+                </div>
+            </div>
+
+            <div class="fbdash-quick-grid">
+                <a asp-area="Admin"
+                    asp-controller="Categories"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>🏷️</span>
+
+                    <div>
+                        <strong>Danh mục</strong>
+                        <small>Quản lý loại món</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>🍔</span>
+
+                    <div>
+                        <strong>Sản phẩm</strong>
+                        <small>Thêm và sửa món ăn</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Customers"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>👥</span>
+
+                    <div>
+                        <strong>Khách hàng</strong>
+                        <small>Thông tin và lịch sử mua</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Employees"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>👨‍🍳</span>
+
+                    <div>
+                        <strong>Nhân viên</strong>
+                        <small>Hồ sơ và tài khoản</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Promotions"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>🎁</span>
+
+                    <div>
+                        <strong>Khuyến mãi</strong>
+                        <small>
+                            @Model.ActivePromotions chương trình hoạt động
+                        </small>
+                    </div>
+                </a>
+
+                <a asp-controller="Users"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>🔐</span>
+
+                    <div>
+                        <strong>Tài khoản</strong>
+                        <small>Quản lý quyền truy cập</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Invoices"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>💳</span>
+
+                    <div>
+                        <strong>Hóa đơn</strong>
+                        <small>Xem và in hóa đơn</small>
+                    </div>
+                </a>
+
+                <a asp-controller="Report"
+                   asp-action="Index"
+                   class="fbdash-quick-item">
+
+                    <span>📊</span>
+
+                    <div>
+                        <strong>Thống kê</strong>
+                        <small>Báo cáo kinh doanh</small>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div>
+</section>

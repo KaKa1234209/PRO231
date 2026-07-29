@@ -1,0 +1,146 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+@model FastBite_PRO231.ViewModels.InventoryManagementFormViewModel
+
+@{
+    ViewData["Title"] = "Cập nhật tồn kho";
+
+    var role =
+        Context.Session.GetString("Role")
+        ?? "";
+
+    if (string.Equals(
+            role,
+            "Admin",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+}
+
+<section class="fbinv-page">
+
+    <div class="fbinv-header">
+        <div>
+            <p>CẬP NHẬT TỒN KHO</p>
+
+            <h1>@Model.ProductName</h1>
+
+            <span>
+                Mã tồn kho #@Model.InventoryId ·
+                Mã sản phẩm #@Model.ProductId
+            </span>
+        </div>
+
+        <a asp-controller="Inventories"
+           asp-action="Details"
+           asp-route-id="@Model.InventoryId"
+           class="fbinv-secondary-button">
+
+            ← Quay lại chi tiết
+        </a>
+    </div>
+
+    <section class="fbinv-form-card">
+        <div class="fbinv-panel-heading">
+            <div>
+                <p>THÔNG TIN TỒN KHO</p>
+
+                <h2>Chỉnh sửa số lượng và đơn vị</h2>
+            </div>
+        </div>
+
+        <form asp-controller="Inventories"
+              asp-action="Edit"
+              asp-route-id="@Model.InventoryId"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input asp-for="InventoryId"
+                   type="hidden" />
+
+            <input asp-for="ProductId"
+                   type="hidden" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="alert alert-danger">
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold">
+                        Sản phẩm
+                    </label>
+
+                    <input value="@Model.ProductName"
+                           class="form-control"
+                           readonly />
+
+                    <div class="form-text">
+                        Không thể đổi sản phẩm của bản ghi tồn kho.
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Quantity"
+                           class="form-label fw-bold">
+                    </label>
+
+                    <input asp-for="Quantity"
+                           type="number"
+                           min="0"
+                           class="form-control" />
+
+                    <span asp-validation-for="Quantity"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Unit"
+                           class="form-label fw-bold">
+                    </label>
+
+                    <input asp-for="Unit"
+                           class="form-control"
+                           placeholder="Ví dụ: Phần, Cái, Hộp..." />
+
+                    <span asp-validation-for="Unit"
+                          class="text-danger">
+                    </span>
+                </div>
+            </div>
+
+            <div class="fbinv-form-note">
+                Số lượng không được nhỏ hơn 0. Thời gian cập nhật sẽ
+                được hệ thống ghi tự động.
+            </div>
+
+            <div class="fbinv-form-actions">
+                <button type="submit"
+                        class="fbinv-primary-button"
+                        onclick="return confirm('Xác nhận lưu thay đổi tồn kho?')">
+
+                    Lưu thay đổi
+                </button>
+
+                <a asp-controller="Inventories"
+                   asp-action="Details"
+                   asp-route-id="@Model.InventoryId"
+                   class="fbinv-secondary-button">
+
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </section>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,263 @@
+﻿@model FastBite_PRO231.ViewModels.ShipperHomeViewModel
+
+@{
+    ViewData["Title"] = "Trang shipper";
+    Layout = "~/Views/Shared/_ShipperLayout.cshtml";
+
+    string OrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbew-status-completed",
+            "Đã hủy" => "fbew-status-cancelled",
+            "Đang giao" => "fbew-status-delivering",
+            "Đang chờ xử lý" => "fbew-status-pending",
+            _ => "fbew-status-processing"
+        };
+    }
+}
+
+<section class="fbew-page">
+    <div class="fbew-header">
+        <div>
+            <p>CA GIAO HÀNG FASTBITE</p>
+
+            <h1>Xin chào, @Model.ShipperName</h1>
+
+            <span>
+                Nhận đơn, giao hàng và xác nhận thu tiền ngay tại đây.
+            </span>
+        </div>
+
+        <a asp-controller="ShipperHome"
+           asp-action="Index"
+           class="fbew-primary-button">
+
+            🔄 Làm mới danh sách
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đơn chờ nhận</span>
+
+                <strong class="fbew-orange">
+                    @Model.PendingClaimCount
+                </strong>
+
+                <small>Chưa shipper nào nhận</small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đơn đang giao</span>
+
+                <strong class="fbew-blue">
+                    @Model.MyActiveOrders
+                </strong>
+
+                <small>Bạn đang xử lý</small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Hoàn thành hôm nay</span>
+
+                <strong class="fbew-green">
+                    @Model.TodayCompletedOrders
+                </strong>
+
+                <small>Đơn đã giao xong</small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Tiền COD chưa nộp</span>
+
+                <strong>
+                    @Model.PendingSettlementAmount.ToString("N0")đ
+                </strong>
+
+                <small>Chờ đối soát với Admin</small>
+            </article>
+        </div>
+    </div>
+
+    <section class="fbew-panel mb-4">
+        <div class="fbew-panel-heading">
+            <div>
+                <p>ĐANG XỬ LÝ</p>
+
+                <h2>Đơn của tôi</h2>
+            </div>
+        </div>
+
+        @if (Model.MyOrders.Count == 0)
+        {
+            <div class="fbew-empty">
+                <div>🛵</div>
+
+                <h3>Chưa có đơn đang giao</h3>
+
+                <p>Hãy nhận đơn ở danh sách bên dưới.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle fbew-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Địa chỉ</th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.MyOrders)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>#@order.OrderId</strong>
+                                </td>
+
+                                <td>
+                                    @order.CustomerName
+                                    <br />
+                                    <small>☎ @order.CustomerPhone</small>
+                                </td>
+
+                                <td>@order.DeliveryAddress</td>
+
+                                <td>
+                                    <strong class="fbew-money">
+                                        @order.TotalAmount.ToString("N0")đ
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @order.PaymentMethod
+                                    <br />
+                                    <small>@order.PaymentStatus</small>
+                                </td>
+
+                                <td>
+                                    <span class="fbew-order-status @OrderStatusClass(order.Status)">
+                                        @order.Status
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <form asp-controller="ShipperHome"
+                                          asp-action="ConfirmDelivered"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+
+                                        <button type="submit"
+                                                class="fbew-small-button"
+                                                onclick="return confirm('Xác nhận đã giao và thu tiền đơn #@order.OrderId?');">
+
+                                            Xác nhận đã giao
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <section class="fbew-panel">
+        <div class="fbew-panel-heading">
+            <div>
+                <p>CƠ HỘI NHẬN ĐƠN</p>
+
+                <h2>Đơn chờ nhận</h2>
+            </div>
+        </div>
+
+        @if (Model.AvailableOrders.Count == 0)
+        {
+            <div class="fbew-empty">
+                <div>✅</div>
+
+                <h3>Không có đơn nào chờ nhận</h3>
+
+                <p>Hiện tại danh sách đang trống.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle fbew-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Địa chỉ</th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.AvailableOrders)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>#@order.OrderId</strong>
+                                </td>
+
+                                <td>
+                                    @order.CustomerName
+                                    <br />
+                                    <small>☎ @order.CustomerPhone</small>
+                                </td>
+
+                                <td>@order.DeliveryAddress</td>
+
+                                <td>
+                                    <strong class="fbew-money">
+                                        @order.TotalAmount.ToString("N0")đ
+                                    </strong>
+                                </td>
+
+                                <td>@order.PaymentMethod</td>
+
+                                <td class="text-end">
+                                    <form asp-controller="ShipperHome"
+                                          asp-action="ClaimOrder"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+
+                                        <button type="submit" class="fbew-small-button">
+                                            Nhận đơn
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</section>

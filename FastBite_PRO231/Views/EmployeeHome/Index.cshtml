@@ -1,0 +1,370 @@
+﻿@model FastBite_PRO231.ViewModels.Employee.EmployeeDashboardViewModel
+
+@{
+    ViewData["Title"] = "Trang nhân viên";
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+
+    string OrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Hoàn thành" => "fbew-status-completed",
+            "Completed" => "fbew-status-completed",
+            "Đã hủy" => "fbew-status-cancelled",
+            "Đang giao" => "fbew-status-delivering",
+            "Đang xử lý" => "fbew-status-processing",
+            "Đang chuẩn bị" => "fbew-status-processing",
+            _ => "fbew-status-pending"
+        };
+    }
+
+    string PaymentName(string paymentMethod)
+    {
+        return paymentMethod switch
+        {
+            "Cash" => "Tiền mặt",
+            "Banking" => "Chuyển khoản",
+            "Momo" => "Ví MoMo",
+            _ => paymentMethod
+        };
+    }
+}
+
+<section class="fbew-page">
+    <div class="fbew-header">
+        <div>
+            <p>CA LÀM VIỆC FASTBITE</p>
+
+            <h1>Xin chào, @Model.EmployeeName</h1>
+
+            <span>
+                @Model.Position · Vào làm ngày
+                @Model.HireDate.ToString("dd/MM/yyyy")
+            </span>
+        </div>
+
+        <a asp-controller="Orders"
+           asp-action="Index"
+           class="fbew-primary-button">
+
+            🧾 Mở danh sách đơn
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đơn chưa phân công</span>
+
+                <strong class="fbew-orange">
+                    @Model.PendingStoreOrders
+                </strong>
+
+                <small>Cần nhân viên tiếp nhận</small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đơn của tôi</span>
+
+                <strong>
+                    @Model.AssignedOrders
+                </strong>
+
+                <small>
+                    Hôm nay: @Model.TodayAssignedOrders đơn
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đang xử lý</span>
+
+                <strong class="fbew-blue">
+                    @Model.ProcessingOrders
+                </strong>
+
+                <small>Chuẩn bị hoặc đang giao</small>
+            </article>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <article class="fbew-stat-card">
+                <span>Đã hoàn thành</span>
+
+                <strong class="fbew-green">
+                    @Model.CompletedOrders
+                </strong>
+
+                <small>Tổng đơn đã hoàn tất</small>
+            </article>
+        </div>
+    </div>
+
+    <div class="fbew-finance-grid">
+        <article>
+            <span>Hóa đơn tôi đã lập</span>
+
+            <strong>
+                @Model.TotalInvoices
+            </strong>
+        </article>
+
+        <article>
+            <span>Giá trị hóa đơn hoạt động</span>
+
+            <strong>
+                @Model.InvoiceRevenue.ToString("N0")đ
+            </strong>
+        </article>
+    </div>
+
+    <section class="fbew-panel mb-4">
+        <div class="fbew-panel-heading">
+            <div>
+                <p>CÔNG VIỆC CẦN XỬ LÝ</p>
+
+                <h2>Hàng đợi đơn hàng</h2>
+            </div>
+
+            <a asp-controller="Orders"
+               asp-action="Index">
+
+                Xem tất cả →
+            </a>
+        </div>
+
+        @if (Model.WorkQueue.Count == 0)
+        {
+            <div class="fbew-empty">
+                <div>✅</div>
+
+                <h3>Không có đơn cần xử lý</h3>
+
+                <p>Hiện tại hàng đợi đang trống.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle fb­ew-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Phân công</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var order in Model.WorkQueue)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>
+                                        #@order.OrderId
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @order.CustomerName
+                                </td>
+
+                                <td>
+                                    @order.OrderDate.ToString(
+                                        "dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    <strong class="fbew-money">
+                                        @order.TotalAmount.ToString("N0")đ
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @if (order.IsAssignedToMe)
+                                    {
+                                        <span class="fbew-assignment mine">
+                                            Đơn của tôi
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbew-assignment unassigned">
+                                            Chưa phân công
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="fbew-order-status @OrderStatusClass(order.Status)">
+                                        @order.Status
+                                    </span>
+
+                                    @if (order.HasInvoice)
+                                    {
+                                        <small class="fbew-has-invoice">
+                                            ✓ Đã có hóa đơn
+                                        </small>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    <a asp-controller="Orders"
+                                       asp-action="Details"
+                                       asp-route-id="@order.OrderId"
+                                       class="fbew-small-button">
+
+                                        Xử lý
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <div class="fbew-bottom-grid">
+        <section class="fbew-panel">
+            <div class="fbew-panel-heading">
+                <div>
+                    <p>HÓA ĐƠN CỦA TÔI</p>
+
+                    <h2>Hóa đơn gần đây</h2>
+                </div>
+
+                <a asp-controller="Invoices"
+                   asp-action="Index">
+
+                    Xem tất cả →
+                </a>
+            </div>
+
+            @if (Model.RecentInvoices.Count == 0)
+            {
+                <div class="fbew-empty small">
+                    Chưa có hóa đơn được lập.
+                </div>
+            }
+            else
+            {
+                <div class="fbew-invoice-list">
+                    @foreach (var invoice in Model.RecentInvoices)
+                    {
+                        <article class="fbew-invoice-item">
+                            <div>
+                                <strong>
+                                    Hóa đơn #@invoice.InvoiceId
+                                </strong>
+
+                                <span>
+                                    Đơn #@invoice.OrderId ·
+                                    @invoice.CustomerName
+                                </span>
+
+                                <small>
+                                    @invoice.InvoiceDate.ToString(
+                                        "dd/MM/yyyy HH:mm")
+                                    · @PaymentName(invoice.PaymentMethod)
+                                </small>
+                            </div>
+
+                            <div class="fbew-invoice-right">
+                                <strong>
+                                    @invoice.TotalAmount.ToString("N0")đ
+                                </strong>
+
+                                @if (invoice.Status)
+                                {
+                                    <span class="active">
+                                        Hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="cancelled">
+                                        Đã hủy
+                                    </span>
+                                }
+
+                                <a asp-controller="Invoices"
+                                   asp-action="Details"
+                                   asp-route-id="@invoice.InvoiceId">
+
+                                    Xem
+                                </a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="fbew-panel">
+            <div class="fbew-panel-heading">
+                <div>
+                    <p>CẢNH BÁO KHO</p>
+
+                    <h2>Sản phẩm sắp hết</h2>
+                </div>
+
+                <a asp-controller="Inventories"
+                   asp-action="Index">
+
+                    Quản lý kho →
+                </a>
+            </div>
+
+            @if (Model.StockWarnings.Count == 0)
+            {
+                <div class="fbew-stock-safe">
+                    ✓ Tồn kho đang ổn định.
+                </div>
+            }
+            else
+            {
+                <div class="fbew-stock-list">
+                    @foreach (var stock in Model.StockWarnings)
+                    {
+                        <article>
+                            <div>
+                                <strong>
+                                    @stock.ProductName
+                                </strong>
+
+                                <span>
+                                    Mã SP: #@stock.ProductId
+                                </span>
+                            </div>
+
+                            <div>
+                                <strong>
+                                    @stock.Quantity @stock.Unit
+                                </strong>
+
+                                <span class="@(stock.Quantity <= 0 ? "out" : "low")">
+                                    @stock.StatusText
+                                </span>
+                            </div>
+
+                            <a asp-controller="Inventories"
+                               asp-action="Edit"
+                               asp-route-id="@stock.InventoryId">
+
+                                Cập nhật
+                            </a>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</section>

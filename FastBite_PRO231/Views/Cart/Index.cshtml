@@ -1,0 +1,230 @@
+﻿@model FastBite_PRO231.ViewModels.CartViewModel
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+
+<section class="fbc-page">
+    <div class="container">
+        <div class="fbc-header">
+            <div>
+                <p>🛒 GIỎ HÀNG FASTBITE</p>
+                <h1>Giỏ hàng của bạn</h1>
+                <span>
+                    Kiểm tra số lượng và tổng tiền trước khi đặt hàng.
+                </span>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               asp-fragment="menu"
+               class="fbc-back-button">
+                ← Chọn thêm món
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        @if (Model.Items.Count == 0)
+        {
+            <div class="fbc-empty">
+                <div>🛒</div>
+                <h2>Giỏ hàng đang trống</h2>
+
+                <p>
+                    Hãy chọn một món ngon từ thực đơn FastBite.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="menu"
+                   class="fbc-checkout-button">
+                    Xem thực đơn
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="fbc-grid">
+                <div class="fbc-list">
+                    @foreach (var item in Model.Items)
+                    {
+                        <article class="fbc-item">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl"
+                                     alt="@item.ProductName"
+                                     class="fbc-image" />
+                            }
+                            else
+                            {
+                                <div class="fbc-image-placeholder">
+                                    🍔
+                                </div>
+                            }
+
+                            <div class="fbc-info">
+                                <h3>@item.ProductName</h3>
+
+                                <p>
+                                    Đơn giá:
+                                    <strong>
+                                        @item.Price.ToString("N0")đ
+                                    </strong>
+                                </p>
+
+                                <span>
+                                    Còn @item.StockQuantity phần
+                                </span>
+                            </div>
+
+                            <div class="fbc-actions">
+                                <form asp-controller="Cart"
+                                      asp-action="UpdateQuantity"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="cartItemId"
+                                           value="@item.CartItemId" />
+
+                                    <div class="fbc-quantity">
+                                        <button type="button"
+                                                class="fbc-minus">
+                                            −
+                                        </button>
+
+                                        <input type="number"
+                                               name="quantity"
+                                               value="@item.Quantity"
+                                               min="1"
+                                               max="@item.StockQuantity"
+                                               class="fbc-quantity-input" />
+
+                                        <button type="button"
+                                                class="fbc-plus">
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <button type="submit"
+                                            class="fbc-update-button">
+                                        Cập nhật
+                                    </button>
+                                </form>
+
+                                <strong class="fbc-subtotal">
+                                    @item.SubTotal.ToString("N0")đ
+                                </strong>
+
+                                <form asp-controller="Cart"
+                                      asp-action="Remove"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="cartItemId"
+                                           value="@item.CartItemId" />
+
+                                    <button type="submit"
+                                            class="fbc-remove-button"
+                                            onclick="return confirm('Xóa món này khỏi giỏ hàng?')">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+
+                <aside class="fbc-summary">
+                    <h2>Tóm tắt giỏ hàng</h2>
+
+                    <div class="fbc-summary-row">
+                        <span>Tổng số lượng</span>
+                        <strong>@Model.TotalQuantity phần</strong>
+                    </div>
+
+                    <div class="fbc-summary-row">
+                        <span>Tạm tính</span>
+                        <strong>
+                            @Model.TotalPrice.ToString("N0")đ
+                        </strong>
+                    </div>
+
+                    <div class="fbc-summary-row">
+                        <span>Phí giao hàng</span>
+                        <strong>0đ</strong>
+                    </div>
+
+                    <div class="fbc-summary-total">
+                        <span>Tổng thanh toán</span>
+
+                        <strong>
+                            @Model.TotalPrice.ToString("N0")đ
+                        </strong>
+                    </div>
+
+                    <a asp-controller="Checkout"
+                       asp-action="Index"
+                       class="fbc-checkout-button">
+                        Tiến hành đặt hàng
+                    </a>
+
+                    <form asp-controller="Cart"
+                          asp-action="Clear"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="fbc-clear-button"
+                                onclick="return confirm('Xóa toàn bộ giỏ hàng?')">
+                            Xóa toàn bộ
+                        </button>
+                    </form>
+                </aside>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll(".fbc-minus").forEach(button => {
+            button.addEventListener("click", function () {
+                const input = this.parentElement
+                    .querySelector(".fbc-quantity-input");
+
+                const current = parseInt(input.value) || 1;
+                input.value = Math.max(1, current - 1);
+            });
+        });
+
+        document.querySelectorAll(".fbc-plus").forEach(button => {
+            button.addEventListener("click", function () {
+                const input = this.parentElement
+                    .querySelector(".fbc-quantity-input");
+
+                const current = parseInt(input.value) || 1;
+                const max = parseInt(input.max) || 999;
+
+                input.value = Math.min(max, current + 1);
+            });
+        });
+    </script>
+}

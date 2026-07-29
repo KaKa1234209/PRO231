@@ -1,0 +1,379 @@
+﻿@using System
+@using Microsoft.AspNetCore.Http
+@model FastBite_PRO231.ViewModels.InventoryManagementIndexViewModel
+
+@{
+    ViewData["Title"] = "Quản lý tồn kho";
+
+    var role =
+        Context.Session.GetString("Role")
+        ?? "";
+
+    if (string.Equals(
+            role,
+            "Admin",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    }
+
+    string StockClass(string status)
+    {
+        return status switch
+        {
+            "Còn hàng" => "fbinv-stock-good",
+            "Sắp hết" => "fbinv-stock-low",
+            "Hết hàng" => "fbinv-stock-out",
+            _ => "fbinv-stock-normal"
+        };
+    }
+}
+
+<section class="fbinv-page">
+
+    <div class="fbinv-header">
+        <div>
+            <p>QUẢN LÝ KHO FASTBITE</p>
+
+            <h1>Tồn kho sản phẩm</h1>
+
+            <span>
+                Theo dõi số lượng, nhập thêm và xuất bớt sản phẩm.
+            </span>
+        </div>
+
+        <a asp-controller="Inventories"
+           asp-action="Create"
+           class="fbinv-primary-button">
+
+            ＋ Tạo tồn kho
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl col-md-6">
+            <article class="fbinv-stat-card">
+                <span>Tổng sản phẩm có kho</span>
+
+                <strong>
+                    @Model.TotalInventories
+                </strong>
+
+                <small>
+                    Bản ghi tồn kho
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl col-md-6">
+            <article class="fbinv-stat-card good">
+                <span>Còn hàng</span>
+
+                <strong>
+                    @Model.InStockProducts
+                </strong>
+
+                <small>
+                    Trên 10 đơn vị
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl col-md-6">
+            <article class="fbinv-stat-card low">
+                <span>Sắp hết</span>
+
+                <strong>
+                    @Model.LowStockProducts
+                </strong>
+
+                <small>
+                    Từ 1 đến 10 đơn vị
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl col-md-6">
+            <article class="fbinv-stat-card out">
+                <span>Hết hàng</span>
+
+                <strong>
+                    @Model.OutOfStockProducts
+                </strong>
+
+                <small>
+                    Số lượng bằng 0
+                </small>
+            </article>
+        </div>
+
+        <div class="col-xl col-md-6">
+            <article class="fbinv-stat-card quantity">
+                <span>Tổng số lượng</span>
+
+                <strong>
+                    @Model.TotalQuantity
+                </strong>
+
+                <small>
+                    Tất cả sản phẩm
+                </small>
+            </article>
+        </div>
+    </div>
+
+    <section class="fbinv-panel">
+
+        <form asp-controller="Inventories"
+              asp-action="Index"
+              method="get"
+              class="fbinv-filter-form">
+
+            <div class="fbinv-search-box">
+                <label for="search">
+                    Tìm kiếm
+                </label>
+
+                <input id="search"
+                       name="search"
+                       value="@Model.Search"
+                       class="form-control"
+                       placeholder="Tên sản phẩm, danh mục hoặc đơn vị..." />
+            </div>
+
+            <div class="fbinv-filter-box">
+                <label for="stock">
+                    Trạng thái kho
+                </label>
+
+                <select id="stock"
+                        name="stock"
+                        class="form-select">
+
+                    <option value="">
+                        Tất cả trạng thái
+                    </option>
+
+                    @if (Model.StockFilter == "instock")
+                    {
+                        <option value="instock" selected>
+                            Còn hàng
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="instock">
+                            Còn hàng
+                        </option>
+                    }
+
+                    @if (Model.StockFilter == "low")
+                    {
+                        <option value="low" selected>
+                            Sắp hết
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="low">
+                            Sắp hết
+                        </option>
+                    }
+
+                    @if (Model.StockFilter == "out")
+                    {
+                        <option value="out" selected>
+                            Hết hàng
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="out">
+                            Hết hàng
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="fbinv-filter-actions">
+                <button type="submit"
+                        class="fbinv-search-button">
+
+                    🔍 Tìm kiếm
+                </button>
+
+                <a asp-controller="Inventories"
+                   asp-action="Index"
+                   class="fbinv-reset-button">
+
+                    Đặt lại
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <section class="fbinv-panel">
+        <div class="fbinv-panel-heading">
+            <div>
+                <p>DANH SÁCH TỒN KHO</p>
+
+                <h2>
+                    Kết quả: @Model.Inventories.Count sản phẩm
+                </h2>
+            </div>
+        </div>
+
+        @if (Model.Inventories.Count == 0)
+        {
+            <div class="fbinv-empty">
+                <div>📦</div>
+
+                <h3>Không tìm thấy tồn kho</h3>
+
+                <p>
+                    Chưa có sản phẩm phù hợp với điều kiện tìm kiếm.
+                </p>
+
+                <a asp-controller="Inventories"
+                   asp-action="Create">
+
+                    Tạo tồn kho mới
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle fbinv-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Trạng thái bán</th>
+                            <th>Số lượng</th>
+                            <th>Kho</th>
+                            <th>Cập nhật gần nhất</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var inventory in Model.Inventories)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fbinv-product-cell">
+                                        <div class="fbinv-product-image">
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                inventory.ImageUrl))
+                                            {
+                                                <img src="@inventory.ImageUrl"
+                                                     alt="@inventory.ProductName"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+
+                                                <span style="display:none;">
+                                                    🍔
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span>
+                                                    🍔
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                @inventory.ProductName
+                                            </strong>
+
+                                            <small>
+                                                Mã SP: #@inventory.ProductId
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @inventory.CategoryName
+                                </td>
+
+                                <td>
+                                    @if (inventory.ProductStatus)
+                                    {
+                                        <span class="fbinv-product-active">
+                                            Đang bán
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fbinv-product-inactive">
+                                            Ngừng bán
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="fbinv-quantity">
+                                        <strong>
+                                            @inventory.Quantity
+                                        </strong>
+
+                                        <span>
+                                            @inventory.Unit
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="fbinv-stock-badge @StockClass(inventory.StockStatus)">
+                                        @inventory.StockStatus
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="fbinv-date">
+                                        <strong>
+                                            @inventory.UpdateAt.ToString(
+                                                "dd/MM/yyyy")
+                                        </strong>
+
+                                        <small>
+                                            @inventory.UpdateAt.ToString(
+                                                "HH:mm")
+                                        </small>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fbinv-row-actions">
+                                        <a asp-controller="Inventories"
+                                           asp-action="Details"
+                                           asp-route-id="@inventory.InventoryId"
+                                           class="fbinv-view-button">
+
+                                            Chi tiết
+                                        </a>
+
+                                        <a asp-controller="Inventories"
+                                           asp-action="Edit"
+                                           asp-route-id="@inventory.InventoryId"
+                                           class="fbinv-edit-button">
+
+                                            Cập nhật
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</section>

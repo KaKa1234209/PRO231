@@ -1,0 +1,136 @@
+﻿@model FastBite_PRO231.ViewModels.ShipperManagementFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm shipper";
+}
+
+<section class="fbemployee-page">
+    <div class="fbemployee-header">
+        <div>
+            <p>THÊM SHIPPER</p>
+            <h1>Tạo hồ sơ shipper</h1>
+            <span>Hệ thống sẽ tạo đồng thời tài khoản Shipper và hồ sơ shipper.</span>
+        </div>
+
+        <a asp-controller="AdminSettlement" asp-action="Index" class="fbemployee-reset-button">
+            ← Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="fbemployee-form-grid">
+        <section class="fbemployee-form-card">
+            <div class="fbemployee-panel-heading">
+                <div>
+                    <p>THÔNG TIN SHIPPER</p>
+                    <h2>Hồ sơ mới</h2>
+                </div>
+            </div>
+
+            <form asp-controller="AdminSettlement" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label fw-bold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Ví dụ: Trần Văn Giao Hàng" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UserName" class="form-label fw-bold"></label>
+                        <input asp-for="UserName" class="form-control" autocomplete="off" placeholder="Ví dụ: shipper01" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-bold"></label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="shipper@fastbite.vn" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label fw-bold"></label>
+                        <input asp-for="Phone" class="form-control" placeholder="0901234567" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Status" class="form-label fw-bold"></label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="Đang làm việc">Đang làm việc</option>
+                            <option value="Đã nghỉ việc">Đã nghỉ việc</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label fw-bold"></label>
+                        <div class="fbemployee-password-wrap">
+                            <input asp-for="Password" class="form-control" id="shipperPassword" autocomplete="new-password" />
+                            <button type="button" class="fbemployee-show-password" data-target="shipperPassword">Hiện</button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label fw-bold"></label>
+                        <div class="fbemployee-password-wrap">
+                            <input asp-for="ConfirmPassword" class="form-control" id="shipperConfirmPassword" autocomplete="new-password" />
+                            <button type="button" class="fbemployee-show-password" data-target="shipperConfirmPassword">Hiện</button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="fbemployee-warning">
+                    Shipper ở trạng thái "Đang làm việc" sẽ có tài khoản hoạt động.
+                    Shipper "Đã nghỉ việc" sẽ có tài khoản bị khóa.
+                </div>
+
+                <div class="fbemployee-form-actions">
+                    <button type="submit"
+                            class="fbemployee-save-button"
+                            onclick="return confirm('Xác nhận tạo shipper mới?')">
+                        Tạo shipper
+                    </button>
+
+                    <a asp-controller="AdminSettlement" asp-action="Index" class="fbemployee-reset-button">
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="fbemployee-guide-card">
+            <div class="fbemployee-guide-icon">🛵</div>
+            <h2>Tài khoản shipper</h2>
+            <p>Shipper sẽ sử dụng tên đăng nhập và mật khẩu này để nhận đơn và xác nhận giao hàng.</p>
+
+            <div class="fbemployee-guide-item"><span>✓</span> Mật khẩu tối thiểu 6 ký tự</div>
+            <div class="fbemployee-guide-item"><span>✓</span> Tên đăng nhập không được trùng</div>
+            <div class="fbemployee-guide-item"><span>✓</span> Email và số điện thoại không được trùng</div>
+            <div class="fbemployee-guide-item"><span>✓</span> Mật khẩu được mã hóa trước khi lưu</div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".fbemployee-show-password").forEach(function(button) {
+                button.addEventListener("click", function() {
+                    const input = document.getElementById(button.dataset.target);
+                    if (!input) return;
+
+                    const isPassword = input.type === "password";
+                    input.type = isPassword ? "text" : "password";
+                    button.textContent = isPassword ? "Ẩn" : "Hiện";
+                });
+            });
+        });
+    </script>
+}
