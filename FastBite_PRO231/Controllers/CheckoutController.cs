@@ -163,7 +163,8 @@ public class CheckoutController : Controller
             }).ToList();
 
             model.TotalQuantity = model.Items.Sum(item => item.Quantity);
-            model.TotalAmount = model.Items.Sum(item => item.SubTotal);
+            model.TotalAmount =  model.Items.Sum(item => item.SubTotal);
+            model.DeliveryFee = CalculateDeliveryFee(model.TotalAmount);
 
             return View("Index", model);
         }
@@ -248,7 +249,9 @@ public class CheckoutController : Controller
                 inventory.UpdateAt = DateTime.Now;
             }
 
-            order.TotalAmount = totalAmount + model.DeliveryFee;
+            var deliveryFee = CalculateDeliveryFee(totalAmount);
+            order.DeliveryFee = deliveryFee;
+            order.TotalAmount = totalAmount + deliveryFee;
 
             _context.Orders.Add(order);
             _context.CartItems.RemoveRange(cart.CartItems);
@@ -317,6 +320,8 @@ public class CheckoutController : Controller
         var model = new OrderSuccessViewModel
         {
             OrderId = order.OrderId,
+            Latitude = order.Latitude,
+            Longitude = order.Longitude,
             OrderDate = order.OrderDate,
             Status = order.Status,
             TotalAmount = order.TotalAmount,

@@ -1,6 +1,14 @@
 USE FastBiteDB;
 GO
 
+ALTER TABLE Orders
+ADD DeliveryFee DECIMAL(18,2) NOT NULL
+DEFAULT 0;
+
+ALTER TABLE Orders
+ADD Latitude FLOAT NULL,
+    Longitude FLOAT NULL;
+
 -- Xóa khóa ngoại ở Orders
 ALTER TABLE Orders
 DROP CONSTRAINT FK_Orders_Shippers;

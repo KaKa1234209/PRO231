@@ -35,6 +35,12 @@ public partial class Order
 
     public DateTime? SettledAt { get; set; }
 
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
+    public decimal DeliveryFee { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual Employee? Employee { get; set; }
