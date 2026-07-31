@@ -21,25 +21,11 @@ public class InventoriesController : Controller
 
     // =========================================
     // KIỂM TRA QUYỀN ADMIN HOẶC NHÂN VIÊN
-    // =========================================
-
-    private bool CanManageInventory()
+    private bool CanManageInvoices()
     {
-        var role =
-            HttpContext.Session.GetString("Role");
-
-        return string.Equals(
-                   role,
-                   "Admin",
-                   StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(
-                   role,
-                   "Employee",
-                   StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(
-                   role,
-                   "Empolyee",
-                   StringComparison.OrdinalIgnoreCase);
+        var role = HttpContext.Session.GetString("Role");
+        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(role, "Employee", StringComparison.OrdinalIgnoreCase);
     }
 
     private IActionResult RedirectUnauthorized()
@@ -49,26 +35,17 @@ public class InventoriesController : Controller
 
         if (!userId.HasValue)
         {
-            TempData["Error"] =
-                "Vui lòng đăng nhập để quản lý tồn kho.";
+            TempData["Error"] = "Vui lòng đăng nhập để quản lý tồn kho.";
 
-            return RedirectToAction(
-                "Login",
-                "Login");
+            return RedirectToAction("Login", "Login");
         }
+        TempData["Error"] = "Bạn không có quyền quản lý tồn kho.";
 
-        TempData["Error"] =
-            "Bạn không có quyền quản lý tồn kho.";
-
-        return RedirectToAction(
-            "Index",
-            "Home");
+        return RedirectToAction("Index", "Home");
     }
 
     // =========================================
     // CHUẨN HÓA ĐƯỜNG DẪN ẢNH
-    // =========================================
-
     private static string NormalizeImageUrl(
         string? image)
     {
@@ -104,8 +81,6 @@ public class InventoriesController : Controller
 
     // =========================================
     // XÁC ĐỊNH TRẠNG THÁI KHO
-    // =========================================
-
     private static string GetStockStatus(
         int quantity)
     {
@@ -124,8 +99,6 @@ public class InventoriesController : Controller
 
     // =========================================
     // NẠP SẢN PHẨM CHƯA CÓ TỒN KHO
-    // =========================================
-
     private async Task LoadAvailableProductsAsync(
         InventoryManagementFormViewModel model,
         int? includeProductId = null)
@@ -133,21 +106,17 @@ public class InventoriesController : Controller
         var usedProductIds =
             _context.Inventories
                 .AsNoTracking()
-                .Select(inventory =>
-                    inventory.ProductId);
+                .Select(inventory => inventory.ProductId);
 
         model.Products =
             await _context.Products
                 .AsNoTracking()
-                .Include(product =>
-                    product.Category)
+                .Include(product => product.Category)
                 .Where(product =>
-                    !usedProductIds.Contains(
-                        product.ProductId) ||
+                    !usedProductIds.Contains(product.ProductId) ||
                     (
                         includeProductId.HasValue &&
-                        product.ProductId ==
-                        includeProductId.Value
+                        product.ProductId == includeProductId.Value
                     ))
                 .OrderBy(product =>
                     product.Category.CategoryName)
@@ -156,41 +125,28 @@ public class InventoriesController : Controller
                 .Select(product =>
                     new InventoryProductChoiceViewModel
                     {
-                        ProductId =
-                            product.ProductId,
-
-                        ProductName =
-                            product.ProductName,
-
-                        CategoryName =
-                            product.Category.CategoryName,
-
-                        Price =
-                            product.Price,
-
-                        Status =
-                            product.Status
+                        ProductId = product.ProductId, 
+                        ProductName = product.ProductName, 
+                        CategoryName = product.Category.CategoryName, 
+                        Price = product.Price, 
+                        Status = product.Status
                     })
                 .ToListAsync();
     }
 
     // =========================================
     // DANH SÁCH TỒN KHO
-    // GET: /Inventories
-    // =========================================
-
     [HttpGet]
     public async Task<IActionResult> Index(
         string? search,
         string? stock)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
 
-        search =
-            search?.Trim() ?? "";
+        search = search?.Trim() ?? "";
 
         stock =
             stock?.Trim().ToLowerInvariant()
@@ -250,11 +206,8 @@ public class InventoriesController : Controller
         var model =
             new InventoryManagementIndexViewModel
             {
-                Search =
-                    search,
-
-                StockFilter =
-                    stock,
+                Search = search, 
+                StockFilter = stock,
 
                 TotalInventories =
                     await _context.Inventories
@@ -280,11 +233,9 @@ public class InventoriesController : Controller
                         .CountAsync(inventory =>
                             inventory.Quantity <= 0),
 
-                TotalQuantity =
-                    totalQuantity,
+                TotalQuantity = totalQuantity,
 
-                Inventories =
-                    inventoryEntities
+                Inventories = inventoryEntities
                         .Select(inventory =>
                             new InventoryManagementItemViewModel
                             {
@@ -331,13 +282,10 @@ public class InventoriesController : Controller
 
     // =========================================
     // CHI TIẾT TỒN KHO
-    // GET: /Inventories/Details/5
-    // =========================================
-
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -408,13 +356,10 @@ public class InventoriesController : Controller
 
     // =========================================
     // FORM TẠO TỒN KHO
-    // GET: /Inventories/Create
-    // =========================================
-
     [HttpGet]
     public async Task<IActionResult> Create()
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -438,15 +383,12 @@ public class InventoriesController : Controller
 
     // =========================================
     // LƯU TỒN KHO MỚI
-    // POST: /Inventories/Create
-    // =========================================
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
         InventoryManagementFormViewModel model)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -542,14 +484,11 @@ public class InventoriesController : Controller
     }
 
     // =========================================
-    // FORM CHỈNH SỬA
-    // GET: /Inventories/Edit/5
-    // =========================================
-
+    // FORM CHỈNH SỬA 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -606,7 +545,7 @@ public class InventoriesController : Controller
         int id,
         InventoryManagementFormViewModel model)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -673,16 +612,13 @@ public class InventoriesController : Controller
 
     // =========================================
     // NHẬP THÊM HOẶC XUẤT BỚT NHANH
-    // POST: /Inventories/AdjustStock
-    // =========================================
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdjustStock(
         int id,
         int change)
     {
-        if (!CanManageInventory())
+        if (!CanManageInvoices())
         {
             return RedirectUnauthorized();
         }
@@ -701,8 +637,7 @@ public class InventoriesController : Controller
 
         if (change == 0)
         {
-            TempData["Error"] =
-                "Số lượng thay đổi phải khác 0.";
+            TempData["Error"] = "Số lượng thay đổi phải khác 0.";
 
             return RedirectToAction(
                 nameof(Details),
@@ -712,8 +647,7 @@ public class InventoriesController : Controller
         if (change < -1000000 ||
             change > 1000000)
         {
-            TempData["Error"] =
-                "Số lượng thay đổi không hợp lệ.";
+            TempData["Error"] = "Số lượng thay đổi không hợp lệ.";
 
             return RedirectToAction(
                 nameof(Details),

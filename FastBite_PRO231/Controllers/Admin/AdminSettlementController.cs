@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
+using FastBite_PRO231.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +18,6 @@ public class AdminSettlementController : Controller
 
     private readonly PasswordHasher<User> _passwordHasher = new();
 
-    private static readonly string[] ValidShipperStatuses =
-    {
-        "Đang làm việc",
-        "Đã nghỉ việc"
-    };
-
     public AdminSettlementController(FastBiteDbContext context)
     {
         _context = context;
@@ -29,8 +25,6 @@ public class AdminSettlementController : Controller
 
     // =========================================
     // KIỂM TRA QUYỀN ADMIN
-    // =========================================
-
     private bool IsAdmin()
     {
         var role = HttpContext.Session.GetString("Role");
@@ -55,15 +49,15 @@ public class AdminSettlementController : Controller
     {
         return string.Equals(
             shipperStatus,
-            "Đang làm việc",
+            OrderStatusConstants.StaffWorking,
             StringComparison.OrdinalIgnoreCase)
-                ? "Hoạt động"
-                : "Ngừng hoạt động";
+                ? OrderStatusConstants.AccountActive
+                : OrderStatusConstants.AccountInactive;
     }
 
     private static bool IsCompletedOrder(string? status)
     {
-        return string.Equals(status, "Hoàn thành", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(status, OrderStatusConstants.Completed, StringComparison.OrdinalIgnoreCase);
     }
 
     private void NormalizeForm(ShipperManagementFormViewModel model)
@@ -84,7 +78,7 @@ public class AdminSettlementController : Controller
     {
         NormalizeForm(model);
 
-        if (!ValidShipperStatuses.Contains(model.Status, StringComparer.OrdinalIgnoreCase))
+        if (!OrderStatusConstants.ValidStaffStatuses.Contains(model.Status, StringComparer.OrdinalIgnoreCase))
         {
             ModelState.AddModelError(
                 nameof(model.Status),
@@ -139,9 +133,14 @@ public class AdminSettlementController : Controller
             ModelState.Remove(nameof(model.Password));
             ModelState.Remove(nameof(model.ConfirmPassword));
 
-            if (!string.IsNullOrWhiteSpace(model.Password))
+            // FIX: trước chỉ kiểm tra khi Password có giá trị. Nếu người dùng bỏ trống Password
+            // nhưng lỡ gõ vào ConfirmPassword thì không báo lỗi. Giờ kiểm tra cả hai chiều.
+            var passwordEntered = !string.IsNullOrWhiteSpace(model.Password);
+            var confirmEntered = !string.IsNullOrWhiteSpace(model.ConfirmPassword);
+
+            if (passwordEntered || confirmEntered)
             {
-                if (model.Password.Length < 6)
+                if (passwordEntered && model.Password.Length < 6)
                 {
                     ModelState.AddModelError(nameof(model.Password), "Mật khẩu mới phải có ít nhất 6 ký tự.");
                 }
@@ -180,15 +179,15 @@ public class AdminSettlementController : Controller
 
         if (status == "working")
         {
-            query = query.Where(shipper => shipper.Status == "Đang làm việc");
+            query = query.Where(shipper => shipper.Status == OrderStatusConstants.StaffWorking);
         }
         else if (status == "resigned")
         {
-            query = query.Where(shipper => shipper.Status == "Đã nghỉ việc");
+            query = query.Where(shipper => shipper.Status == OrderStatusConstants.StaffResigned);
         }
         else if (status == "inactive")
         {
-            query = query.Where(shipper => shipper.User.Status != "Hoạt động");
+            query = query.Where(shipper => shipper.User.Status != OrderStatusConstants.AccountActive);
         }
 
         var shippers = await query
@@ -204,7 +203,7 @@ public class AdminSettlementController : Controller
                 ShipperStatus = shipper.Status,
                 AccountStatus = shipper.User.Status,
                 OrdersHandled = shipper.Orders.Count,
-                CompletedOrders = shipper.Orders.Count(order => order.Status == "Hoàn thành")
+                CompletedOrders = shipper.Orders.Count(order => order.Status == OrderStatusConstants.Completed)
             })
             .ToListAsync();
 
@@ -216,13 +215,13 @@ public class AdminSettlementController : Controller
             TotalShippers = await _context.Shippers.CountAsync(),
 
             WorkingShippers = await _context.Shippers
-                .CountAsync(shipper => shipper.Status == "Đang làm việc"),
+                .CountAsync(shipper => shipper.Status == OrderStatusConstants.StaffWorking),
 
             ResignedShippers = await _context.Shippers
-                .CountAsync(shipper => shipper.Status == "Đã nghỉ việc"),
+                .CountAsync(shipper => shipper.Status == OrderStatusConstants.StaffResigned),
 
             ActiveAccounts = await _context.Shippers
-                .CountAsync(shipper => shipper.User.Status == "Hoạt động"),
+                .CountAsync(shipper => shipper.User.Status == OrderStatusConstants.AccountActive),
 
             Shippers = shippers
         };
@@ -273,9 +272,9 @@ public class AdminSettlementController : Controller
 
             PendingSettlementAmount = orders
                 .Where(order =>
-                    order.PaymentMethod == "COD" &&
-                    order.PaymentStatus == "Đã thanh toán" &&
-                    order.SettlementStatus == "Chưa đối soát")
+                    order.PaymentMethod == OrderStatusConstants.PaymentMethodCod &&
+                    order.PaymentStatus == OrderStatusConstants.PaymentStatusPaid &&
+                    order.SettlementStatus == OrderStatusConstants.SettlementPending)
                 .Sum(order => order.TotalAmount),
 
             RecentOrders = orders
@@ -308,7 +307,7 @@ public class AdminSettlementController : Controller
 
         var model = new ShipperManagementFormViewModel
         {
-            Status = "Đang làm việc"
+            Status = OrderStatusConstants.StaffWorking
         };
 
         return View("~/Views/Admin/Shipper/Create.cshtml", model);
@@ -478,15 +477,15 @@ public class AdminSettlementController : Controller
 
         var isWorking = string.Equals(
             shipper.Status,
-            "Đang làm việc",
+            OrderStatusConstants.StaffWorking,
             StringComparison.OrdinalIgnoreCase);
 
-        shipper.Status = isWorking ? "Đã nghỉ việc" : "Đang làm việc";
+        shipper.Status = isWorking ? OrderStatusConstants.StaffResigned : OrderStatusConstants.StaffResigned;
         shipper.User.Status = GetAccountStatus(shipper.Status);
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] = shipper.Status == "Đang làm việc"
+        TempData["Success"] = shipper.Status == OrderStatusConstants.StaffWorking
             ? $"Đã cho shipper “{shipper.User.FullName}” làm việc lại."
             : $"Đã chuyển shipper “{shipper.User.FullName}” sang nghỉ việc.";
 
@@ -500,15 +499,15 @@ public class AdminSettlementController : Controller
     [HttpGet]
     public async Task<IActionResult> Settlement()
     {
-        if (!IsAdmin()) return RedirectToAction("Login", "Login");
+        if (!IsAdmin()) return RedirectUnauthorized();
 
         var pendingOrders = await _context.Orders
             .AsNoTracking()
             .Include(o => o.Shipper).ThenInclude(s => s!.User)
             .Where(o =>
-                o.PaymentMethod == "COD" &&
-                o.PaymentStatus == "Đã thanh toán" &&
-                o.SettlementStatus == "Chưa đối soát" &&
+                o.PaymentMethod == OrderStatusConstants.PaymentMethodCod &&
+                o.PaymentStatus == OrderStatusConstants.PaymentStatusPaid &&
+                o.SettlementStatus == OrderStatusConstants.SettlementPending &&
                 o.ShipperId != null)
             .ToListAsync();
 
@@ -538,7 +537,7 @@ public class AdminSettlementController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmSettlement(List<int> orderIds)
     {
-        if (!IsAdmin()) return RedirectToAction("Login", "Login");
+        if (!IsAdmin()) return RedirectUnauthorized();
 
         if (orderIds == null || orderIds.Count == 0)
         {
@@ -546,19 +545,36 @@ public class AdminSettlementController : Controller
             return RedirectToAction(nameof(Settlement));
         }
 
+        // FIX: trước đây chỉ Where theo orderIds rồi update thẳng, tin tưởng hoàn toàn
+        // dữ liệu client gửi lên. Giờ lọc lại đúng điều kiện đối soát hợp lệ trong DB,
+        // để id bị chỉnh sửa / đơn không đủ điều kiện sẽ không bị đánh dấu "đã đối soát".
         var orders = await _context.Orders
-            .Where(o => orderIds.Contains(o.OrderId))
+            .Where(o =>
+                orderIds.Contains(o.OrderId) &&
+                o.PaymentMethod == OrderStatusConstants.PaymentMethodCod &&
+                o.PaymentStatus == OrderStatusConstants.PaymentStatusPaid &&
+                o.SettlementStatus == OrderStatusConstants.SettlementPending)
             .ToListAsync();
+
+        if (orders.Count == 0)
+        {
+            TempData["Error"] = "Các đơn hàng được chọn không còn hợp lệ để đối soát.";
+            return RedirectToAction(nameof(Settlement));
+        }
 
         foreach (var order in orders)
         {
-            order.SettlementStatus = "Đã đối soát";
+            order.SettlementStatus = OrderStatusConstants.SettlementDone;
             order.SettledAt = DateTime.Now;
         }
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] = $"Đã xác nhận đối soát {orders.Count} đơn hàng.";
+        var skipped = orderIds.Count - orders.Count;
+        TempData["Success"] = skipped > 0
+            ? $"Đã xác nhận đối soát {orders.Count} đơn hàng ({skipped} đơn bị bỏ qua vì không còn hợp lệ)."
+            : $"Đã xác nhận đối soát {orders.Count} đơn hàng.";
+
         return RedirectToAction(nameof(Settlement));
     }
 
@@ -569,7 +585,7 @@ public class AdminSettlementController : Controller
     [HttpGet]
     public async Task<IActionResult> AssignShipper(int orderId)
     {
-        if (!IsAdmin()) return RedirectToAction("Login", "Login");
+        if (!IsAdmin()) return RedirectUnauthorized();
 
         var order = await _context.Orders
             .AsNoTracking()
@@ -581,13 +597,17 @@ public class AdminSettlementController : Controller
 
         var shippers = await _context.Shippers
             .AsNoTracking()
-            .Where(s => s.Status == "Đang làm việc")
+            .Where(s => s.Status == OrderStatusConstants.StaffWorking)
             .Select(s => new ShipperOptionViewModel
             {
                 ShipperId = s.ShipperId,
                 FullName = s.User.FullName,
+                // FIX: dùng chung OrderStatusConstants.IsActiveOrder thay vì so sánh
+                // "Hoàn thành"/"Đã huỷ" gõ tay — trước đây "huỷ" lệch chính tả với
+                // "Đã hủy" dùng ở Dashboard nên đơn đã hủy không bị loại khỏi số đếm.
                 ActiveOrderCount = s.Orders.Count(o =>
-                    o.Status != "Hoàn thành" && o.Status != "Đã huỷ")
+                    o.Status != OrderStatusConstants.Completed &&
+                    o.Status != OrderStatusConstants.Cancelled)
             })
             .ToListAsync();
 
@@ -612,7 +632,7 @@ public class AdminSettlementController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignShipper(int orderId, int shipperId)
     {
-        if (!IsAdmin()) return RedirectToAction("Login", "Login");
+        if (!IsAdmin()) return RedirectUnauthorized();
 
         var order = await _context.Orders
             .FirstOrDefaultAsync(o => o.OrderId == orderId);
@@ -623,8 +643,16 @@ public class AdminSettlementController : Controller
             return RedirectToAction("Index");
         }
 
+        // FIX: chặn gán/gán lại shipper cho đơn đã hoàn thành hoặc đã hủy —
+        // trước đây admin có thể gán shipper cho đơn đã xong, gây sai lệch nghiệp vụ.
+        if (!OrderStatusConstants.IsActiveOrder(order.Status))
+        {
+            TempData["Error"] = "Không thể gán shipper cho đơn đã hoàn thành hoặc đã hủy.";
+            return RedirectToAction(nameof(AssignShipper), new { orderId });
+        }
+
         var shipperExists = await _context.Shippers
-            .AnyAsync(s => s.ShipperId == shipperId && s.Status == "Đang làm việc");
+            .AnyAsync(s => s.ShipperId == shipperId && s.Status == OrderStatusConstants.StaffWorking);
 
         if (!shipperExists)
         {
@@ -632,7 +660,7 @@ public class AdminSettlementController : Controller
             return RedirectToAction(nameof(AssignShipper), new { orderId });
         }
 
-        // Admin có quyền GÁN LẠI kể cả đơn đã có shipper khác 
+        // Admin có quyền GÁN LẠI kể cả đơn đã có shipper khác
         // (khác với shipper tự nhận — chỉ cho nhận đơn còn trống)
         order.ShipperId = shipperId;
 

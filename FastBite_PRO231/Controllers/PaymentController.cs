@@ -1,5 +1,6 @@
 ﻿using FastBite_PRO231.Helpers;
 using FastBite_PRO231.Models;
+using FastBite_PRO231.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,8 +25,6 @@ public class PaymentController : Controller
 
     // =========================================
     // TẠO URL THANH TOÁN, REDIRECT SANG VNPAY
-    // GET: /Payment/PayWithVnpay?orderId=5
-    // =========================================
     [HttpGet]
     public async Task<IActionResult> PayWithVnpay(int orderId)
     {
@@ -50,13 +49,13 @@ public class PaymentController : Controller
             return RedirectToAction("Index", "Cart");
         }
 
-        if (order.PaymentMethod != "VNPay")
+        if (order.PaymentMethod != OrderStatusConstants.PaymentMethodVnpay)
         {
             TempData["Error"] = "Đơn hàng này không sử dụng phương thức VNPay.";
             return RedirectToAction("Index", "Cart");
         }
 
-        if (order.PaymentStatus == "Đã thanh toán")
+        if (order.PaymentStatus == OrderStatusConstants.PaymentStatusPaid)
         {
             TempData["Success"] = "Đơn hàng đã được thanh toán trước đó.";
             return RedirectToAction("Success", "Checkout", new { orderId = order.OrderId });
@@ -70,7 +69,7 @@ public class PaymentController : Controller
         var returnUrl = _config["Vnpay:ReturnUrl"]!;
 
         // Số tiền VNPay yêu cầu nhân 100 (không có phần thập phân)
-        var amount = ((long)order.TotalAmount * 100).ToString();
+        var amount = ((long)(order.TotalAmount * 100)).ToString();
 
         vnpay.AddRequestData("vnp_Version", _config["Vnpay:Version"]!);
         vnpay.AddRequestData("vnp_Command", _config["Vnpay:Command"]!);
@@ -94,8 +93,6 @@ public class PaymentController : Controller
 
     // =========================================
     // CALLBACK TỪ VNPAY SAU KHI THANH TOÁN
-    // GET: /Payment/VnpayReturn
-    // =========================================
     [HttpGet]
     public async Task<IActionResult> VnpayReturn()
     {
@@ -142,7 +139,7 @@ public class PaymentController : Controller
         }
 
         // Nếu đã xử lý callback trước đó (VNPay có thể gọi lại), tránh xử lý 2 lần
-        if (order.PaymentStatus == "Đã thanh toán")
+        if (order.PaymentStatus == OrderStatusConstants.PaymentStatusPaid)
         {
             return RedirectToAction("Success", "Checkout", new { orderId = order.OrderId });
         }
@@ -151,8 +148,8 @@ public class PaymentController : Controller
 
         if (!isSuccess)
         {
-            order.PaymentStatus = "Thanh toán thất bại";
-            order.Status = "Đã huỷ";
+            order.PaymentStatus = OrderStatusConstants.PaymentStatusFailed;
+            order.Status = OrderStatusConstants.Cancelled;
 
             await _context.SaveChangesAsync();
 
@@ -191,12 +188,11 @@ public class PaymentController : Controller
 
         if (outOfStockItems.Count > 0)
         {
-            // Khách ĐÃ trả tiền nhưng hàng không đủ nữa
-            // -> đánh dấu đặc biệt để Admin xử lý hoàn tiền thủ công, KHÔNG tự ý trừ kho
-            order.PaymentStatus = "Đã thanh toán";
+            // Khách đã trả tiền nhưng hàng không đủ nữa
+            order.PaymentStatus = OrderStatusConstants.PaymentStatusPaid;
             order.TransactionId = transactionNo;
             order.PaidAt = DateTime.Now;
-            order.Status = "Cần hoàn tiền"; // trạng thái đặc biệt cho Admin xử lý
+            order.Status = OrderStatusConstants.RefundNeeded;
 
             await _context.SaveChangesAsync();
 
@@ -215,10 +211,10 @@ public class PaymentController : Controller
             inventory.UpdateAt = DateTime.Now;
         }
 
-        order.PaymentStatus = "Đã thanh toán";
+        order.PaymentStatus = OrderStatusConstants.PaymentStatusPaid;
         order.TransactionId = transactionNo;
         order.PaidAt = DateTime.Now;
-        order.Status = "Đang chờ xử lý";
+        order.Status = OrderStatusConstants.Pending;
 
         if (cart != null && cart.CartItems.Count > 0)
         {

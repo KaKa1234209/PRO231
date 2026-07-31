@@ -1,6 +1,11 @@
 USE FastBiteDB;
 GO
 
+DELETE FROM InvoiceDetails;
+DELETE FROM Invoices;
+DELETE FROM OrderDetails;
+DELETE FROM Orders;
+
 ALTER TABLE Orders
 ADD DeliveryFee DECIMAL(18,2) NOT NULL
 DEFAULT 0;

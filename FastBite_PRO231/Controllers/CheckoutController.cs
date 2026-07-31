@@ -1,5 +1,6 @@
 ﻿using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
+using FastBite_PRO231.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderModel = FastBite_PRO231.Models.Order;
@@ -208,8 +209,8 @@ public class CheckoutController : Controller
             return View("Index", model);
         }
 
-        // Chỉ chấp nhận 2 giá trị hợp lệ, tránh khách sửa tay HTML gửi giá trị lạ
-        if (model.PaymentMethod != "COD" && model.PaymentMethod != "VNPay")
+        if (model.PaymentMethod != OrderStatusConstants.PaymentMethodCod &&
+            model.PaymentMethod != OrderStatusConstants.PaymentMethodVnpay)
         {
             TempData["Error"] = "Phương thức thanh toán không hợp lệ.";
             return RedirectToAction("Index");
@@ -255,7 +256,7 @@ public class CheckoutController : Controller
                 CustomerId = customer.CustomerId,
                 EmployeeId = null,
                 OrderDate = DateTime.Now,
-                Status = "Đang chờ xử lý",
+                Status = OrderStatusConstants.Pending,
                 TotalAmount = 0,
 
                 DeliveryAddress = model.Address,
@@ -264,10 +265,7 @@ public class CheckoutController : Controller
                 Note = model.Note,
 
                 PaymentMethod = model.PaymentMethod,
-
-                // COD: coi như "chưa thanh toán" cho tới khi giao hàng thu tiền xong
-                // VNPay: cũng bắt đầu là "chưa thanh toán", chờ callback xác nhận mới đổi
-                PaymentStatus = "Chưa thanh toán"
+                PaymentStatus = OrderStatusConstants.PaymentStatusUnpaid,
             };
 
             foreach (var cartItem in cart.CartItems)
@@ -283,14 +281,18 @@ public class CheckoutController : Controller
                     UnitPrice = unitPrice
                 });
 
-                var inventory = inventoryDictionary[cartItem.ProductId];
-                inventory.Quantity -= cartItem.Quantity;
-                inventory.UpdateAt = DateTime.Now;
+                if (model.PaymentMethod == OrderStatusConstants.PaymentMethodCod)
+                {
+                    var inventory = inventoryDictionary[cartItem.ProductId];
+                    inventory.Quantity -= cartItem.Quantity;
+                    inventory.UpdateAt = DateTime.Now;
+                }
             }
                 
             var deliveryFee = CalculateDeliveryFee(totalAmount, model.Latitude, model.Longitude);
             order.DeliveryFee = deliveryFee;
             order.TotalAmount = totalAmount + deliveryFee;
+
 
             _context.Orders.Add(order);
             _context.CartItems.RemoveRange(cart.CartItems);
@@ -301,15 +303,9 @@ public class CheckoutController : Controller
 
             // ===== RẼ NHÁNH THEO PHƯƠNG THỨC THANH TOÁN =====
 
-            if (model.PaymentMethod == "VNPay")
+            if (model.PaymentMethod == OrderStatusConstants.PaymentMethodVnpay)
             {
-                // Chưa xoá giỏ hàng khỏi transaction là ĐÚNG ở đây vì đơn đã tạo,
-                // giờ chỉ cần đẩy khách sang cổng thanh toán VNPay.
-                // Sẽ implement action tạo URL thanh toán ở bước tiếp theo.
-                return RedirectToAction(
-                    "PayWithVnpay",
-                    "Payment",
-                    new { orderId = order.OrderId });
+                return RedirectToAction("PayWithVnpay", "Payment", new { orderId = order.OrderId });
             }
 
             // COD: hoàn tất luôn, không cần thanh toán online

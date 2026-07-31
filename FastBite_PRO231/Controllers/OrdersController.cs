@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FastBite_PRO231.Common;
 using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -13,31 +14,6 @@ public class OrdersController : Controller
 {
     private readonly FastBiteDbContext _context;
 
-    private static readonly HashSet<string> AllowedStatuses =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            "Đang chờ xử lý",
-            "Đang xử lý",
-            "Đang chuẩn bị",
-            "Đang giao",
-            "Hoàn thành",
-            "Đã hủy"
-        };
-
-    private static readonly string[] PendingStatuses =
-    {
-        "Đang chờ xử lý",
-        "Chờ xử lý",
-        "Chờ xác nhận"
-    };
-
-    private static readonly string[] ProcessingStatuses =
-    {
-        "Đang xử lý",
-        "Đang chuẩn bị",
-        "Đang giao"
-    };
-
     public OrdersController(FastBiteDbContext context)
     {
         _context = context;
@@ -46,24 +22,8 @@ public class OrdersController : Controller
     private bool CanManageOrders()
     {
         var role = HttpContext.Session.GetString("Role");
-
-        if (string.Equals(
-                role,
-                "Admin",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        if (string.Equals(
-                role,
-                "Employee",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return false;
+        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(role, "Employee", StringComparison.OrdinalIgnoreCase);
     }
 
     private IActionResult RedirectToLogin()
@@ -196,44 +156,30 @@ public class OrdersController : Controller
             TotalOrders =
                 await _context.Orders.CountAsync(),
 
-            PendingOrders =
-                await _context.Orders.CountAsync(order =>
-                    PendingStatuses.Contains(order.Status)),
+            PendingOrders = await _context.Orders.CountAsync(o =>
+                OrderStatusConstants.PendingStatuses.Contains(o.Status)),
 
-            ProcessingOrders =
-                await _context.Orders.CountAsync(order =>
-                    ProcessingStatuses.Contains(order.Status)),
+            ProcessingOrders = await _context.Orders.CountAsync(o =>
+                OrderStatusConstants.ProcessingStatuses.Contains(o.Status)),
 
-            CompletedOrders =
-                await _context.Orders.CountAsync(order =>
-                    order.Status == "Hoàn thành"),
+            CompletedOrders = await _context.Orders.CountAsync(o =>
+                o.Status == OrderStatusConstants.Completed),
 
             Orders = orderEntities
                 .Select(order =>
                     new OrderManagementListItemViewModel
                     {
-                        OrderId = order.OrderId,
-
-                        CustomerName =
-                            order.Customer.User.FullName,
-
-                        Phone =
-                            order.Customer.User.Phone,
-
-                        EmployeeName =
-                            order.Employee == null
+                        OrderId = order.OrderId, 
+                        CustomerName = order.Customer.User.FullName, 
+                        Phone = order.Customer.User.Phone, 
+                        EmployeeName = order.Employee == null
                                 ? "Chưa tiếp nhận"
-                                : order.Employee.User.FullName,
-
+                                : order.Employee.User.FullName, 
                         OrderDate = order.OrderDate,
-                        Status = order.Status,
-
-                        TotalQuantity =
-                            order.OrderDetails.Sum(detail =>
-                                detail.Quantity),
-
-                        TotalAmount =
-                            order.TotalAmount
+                        Status = order.Status, 
+                        TotalQuantity = order.OrderDetails.Sum(detail =>
+                                detail.Quantity), 
+                        TotalAmount = order.TotalAmount
                     })
                 .ToList()
         };
@@ -245,9 +191,6 @@ public class OrdersController : Controller
 
     // ==========================================
     // CHI TIẾT ĐƠN
-    // GET: /Orders/Details/5
-    // ==========================================
-
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
@@ -300,37 +243,27 @@ public class OrdersController : Controller
         {
             OrderId = order.OrderId,
 
-            CustomerName =
-                order.Customer.User.FullName,
+            CustomerName = order.Customer.User.FullName,
+            UserName = order.Customer.User.UserName,
+            Phone = order.Customer.User.Phone,
+            Email = order.Customer.User.Email,
 
-            UserName =
-                order.Customer.User.UserName,
+            Address = order.DeliveryAddress ?? order.Customer.Address,
 
-            Phone =
-                order.Customer.User.Phone,
+            Latitude = order.Latitude,
+            Longitude = order.Longitude,
 
-            Email =
-                order.Customer.User.Email,
-
-            Address =
-                order.Customer.Address,
-
-            EmployeeName =
-                order.Employee == null
-                    ? "Chưa tiếp nhận"
-                    : order.Employee.User.FullName,
+            EmployeeName = order.Employee == null
+        ? "Chưa tiếp nhận"
+        : order.Employee.User.FullName,
 
             OrderDate = order.OrderDate,
             Status = order.Status,
 
-            TotalQuantity =
-                items.Sum(item => item.Quantity),
+            TotalQuantity = items.Sum(item => item.Quantity),
+            TotalAmount = order.TotalAmount,
 
-            TotalAmount =
-                order.TotalAmount,
-
-            HasInvoice =
-                order.Invoices.Any(),
+            HasInvoice = order.Invoices.Any(),
 
             Items = items
         };
@@ -342,15 +275,16 @@ public class OrdersController : Controller
 
     // ==========================================
     // CẬP NHẬT TRẠNG THÁI
-    // POST: /Orders/UpdateStatus
-    // ==========================================
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(
         int id,
         string status)
     {
+        var allowedStatuses = new HashSet<string>(
+            OrderStatusConstants.AllowedOrderStatuses,
+            StringComparer.OrdinalIgnoreCase);
+
         if (!CanManageOrders())
         {
             return RedirectToLogin();
@@ -358,10 +292,9 @@ public class OrdersController : Controller
 
         status = status?.Trim() ?? "";
 
-        if (!AllowedStatuses.Contains(status))
+        if (!allowedStatuses.Contains(status))
         {
-            TempData["Error"] =
-                "Trạng thái đơn hàng không hợp lệ.";
+            TempData["Error"] = "Trạng thái đơn hàng không hợp lệ.";
 
             return RedirectToAction(
                 nameof(Details),
@@ -379,18 +312,11 @@ public class OrdersController : Controller
             return NotFound();
         }
 
-        if (string.Equals(
-                order.Status,
-                "Đã hủy",
-                StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.Status, OrderStatusConstants.Cancelled, StringComparison.OrdinalIgnoreCase))
         {
-            if (!string.Equals(
-                    status,
-                    "Đã hủy",
-                    StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(status, OrderStatusConstants.Cancelled, StringComparison.OrdinalIgnoreCase))
             {
-                TempData["Error"] =
-                    "Đơn đã hủy không thể kích hoạt lại.";
+                TempData["Error"] = "Đơn đã hủy không thể kích hoạt lại.";
 
                 return RedirectToAction(
                     nameof(Details),
@@ -398,18 +324,11 @@ public class OrdersController : Controller
             }
         }
 
-        if (string.Equals(
-                order.Status,
-                "Hoàn thành",
-                StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.Status, OrderStatusConstants.Completed, StringComparison.OrdinalIgnoreCase))
         {
-            if (!string.Equals(
-                    status,
-                    "Hoàn thành",
-                    StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(status, OrderStatusConstants.Completed, StringComparison.OrdinalIgnoreCase))
             {
-                TempData["Error"] =
-                    "Đơn đã hoàn thành không thể đổi lại trạng thái.";
+                TempData["Error"] = "Đơn đã hoàn thành không thể đổi lại trạng thái.";
 
                 return RedirectToAction(
                     nameof(Details),
@@ -418,19 +337,13 @@ public class OrdersController : Controller
         }
 
         var isCancelling =
-            !string.Equals(
-                order.Status,
-                "Đã hủy",
-                StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(
-                status,
-                "Đã hủy",
-                StringComparison.OrdinalIgnoreCase);
+            !string.Equals(order.Status, OrderStatusConstants.Cancelled, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(status, OrderStatusConstants.Cancelled, StringComparison.OrdinalIgnoreCase);
+
 
         if (isCancelling && order.Invoices.Any())
         {
-            TempData["Error"] =
-                "Đơn đã có hóa đơn nên không thể hủy.";
+            TempData["Error"] = "Đơn đã có hóa đơn nên không thể hủy.";
 
             return RedirectToAction(
                 nameof(Details),
@@ -456,17 +369,10 @@ public class OrdersController : Controller
                     {
                         inventory = new Inventory
                         {
-                            ProductId =
-                                detail.ProductId,
-
-                            Quantity =
-                                detail.Quantity,
-
-                            Unit =
-                                "Phần",
-
-                            UpdateAt =
-                                DateTime.Now
+                            ProductId = detail.ProductId, 
+                            Quantity = detail.Quantity, 
+                            Unit = "Phần",
+                            UpdateAt = DateTime.Now
                         };
 
                         _context.Inventories.Add(
@@ -474,11 +380,8 @@ public class OrdersController : Controller
                     }
                     else
                     {
-                        inventory.Quantity +=
-                            detail.Quantity;
-
-                        inventory.UpdateAt =
-                            DateTime.Now;
+                        inventory.Quantity += detail.Quantity;
+                        inventory.UpdateAt = DateTime.Now;
                     }
                 }
             }
@@ -490,8 +393,7 @@ public class OrdersController : Controller
             {
                 if (!order.EmployeeId.HasValue)
                 {
-                    order.EmployeeId =
-                        employeeId.Value;
+                    order.EmployeeId = employeeId.Value;
                 }
             }
 
@@ -540,7 +442,7 @@ public class OrdersController : Controller
             return NotFound();
         }
 
-        if (!string.Equals(order.Status, "Đang chờ xử lý", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(order.Status, OrderStatusConstants.Pending, StringComparison.OrdinalIgnoreCase))
         {
             TempData["Error"] = "Không thể nhận đơn này.";
             return RedirectToAction(nameof(Index));
@@ -561,7 +463,7 @@ public class OrdersController : Controller
         }
 
         order.EmployeeId = employee.EmployeeId;
-        order.Status = "Đang xử lý";
+        order.Status = OrderStatusConstants.Processing;
 
         await _context.SaveChangesAsync();
 
@@ -588,7 +490,7 @@ public class OrdersController : Controller
             return NotFound();
         }
 
-        if (!string.Equals(order.Status, "Đang chờ xử lý", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(order.Status, OrderStatusConstants.Pending, StringComparison.OrdinalIgnoreCase))
         {
             TempData["Error"] = "Không thể phân công đơn này.";
             return RedirectToAction(nameof(Index));
@@ -609,7 +511,7 @@ public class OrdersController : Controller
         }
 
         order.EmployeeId = employeeId;
-        order.Status = "Đang xử lý";
+        order.Status = OrderStatusConstants.Processing;
 
         await _context.SaveChangesAsync();
 

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
+using FastBite_PRO231.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,25 +13,6 @@ namespace FastBite_PRO231.Controllers.Admin;
 public class AdminDashboardController : Controller
 {
     private readonly FastBiteDbContext _context;
-
-    private static readonly string[] PendingStatuses =
-    {
-        "Đang chờ xử lý",
-        "Đang xác nhận"
-    };
-
-    private static readonly string[] ProcessingStatuses =
-    {
-        "Đang xử lý",
-        "Đang giao",
-        "Processing"
-    };
-
-    private static readonly string[] CompletedStatuses =
-    {
-        "Hoàn thành",
-        "Completed"
-    };
 
     public AdminDashboardController(
         FastBiteDbContext context)
@@ -52,7 +34,7 @@ public class AdminDashboardController : Controller
     private IActionResult RedirectUnauthorized()
     {
         TempData["Error"] = "Bạn cần đăng nhập bằng tài khoản Admin.";
-        return RedirectToAction( "Login", "Login");
+        return RedirectToAction("Login", "Login");
     }
 
     [HttpGet]
@@ -72,7 +54,7 @@ public class AdminDashboardController : Controller
 
         //Doanh Thu - Chỉ tính đơn còn hoạt động
         //Theo ngày
-        var revenueToday =await _context.Invoices
+        var revenueToday = await _context.Invoices
                 .AsNoTracking()
                 .Where(invoice =>
                     invoice.Status &&
@@ -112,25 +94,25 @@ public class AdminDashboardController : Controller
         var pendingOrders = await _context.Orders
                 .AsNoTracking()
                 .CountAsync(order =>
-                    PendingStatuses.Contains(
+                    OrderStatusConstants.PendingStatuses.Contains(
                         order.Status));
 
         var processingOrders = await _context.Orders
                 .AsNoTracking()
                 .CountAsync(order =>
-                    ProcessingStatuses.Contains(
+                    OrderStatusConstants.ProcessingStatuses.Contains(
                         order.Status));
 
         var completedOrders = await _context.Orders
                 .AsNoTracking()
                 .CountAsync(order =>
-                    CompletedStatuses.Contains(
+                    OrderStatusConstants.CompletedStatuses.Contains(
                         order.Status));
 
         var cancelledOrders = await _context.Orders
                 .AsNoTracking()
                 .CountAsync(order =>
-                    order.Status == "Đã hủy");
+                    order.Status == OrderStatusConstants.Cancelled);
 
         //Thống kê cửa hàng
         var totalCustomers = await _context.Customers
@@ -145,7 +127,7 @@ public class AdminDashboardController : Controller
                 .AsNoTracking()
                 .CountAsync(employee =>
                     employee.Status ==
-                    "Đang làm việc");
+                    OrderStatusConstants.ShipperWorking);
 
         var activePromotions = await _context.Promotions
                 .AsNoTracking()
@@ -153,14 +135,14 @@ public class AdminDashboardController : Controller
                     promotion.Status ==
                     "Đang hoạt động");
 
-            //Sp sắp hết hàng
+        //Sp sắp hết hàng
         var lowStockProducts = await _context.Inventories
                 .AsNoTracking()
                 .CountAsync(inventory =>
                     inventory.Quantity > 0 &&
                     inventory.Quantity <= 10);
 
-            //Sp hết hàng
+        //Sp hết hàng
         var outOfStockProducts = await _context.Inventories
                 .AsNoTracking()
                 .CountAsync(inventory =>
@@ -179,7 +161,7 @@ public class AdminDashboardController : Controller
                     {
                         Date = group.Key,
                         InvoiceCount = group.Count(),
-                        Revenue = group.Sum(invoice =>  invoice.TotalAmount)
+                        Revenue = group.Sum(invoice => invoice.TotalAmount)
                     })
                 .OrderBy(item => item.Date)
                 .ToListAsync();
@@ -194,9 +176,9 @@ public class AdminDashboardController : Controller
                 .Select(item =>
                     new AdminDashboardDailyRevenueViewModel
                     {
-                        Date = item.Date, 
-                        InvoiceCount = item.InvoiceCount, 
-                        Revenue = item.Revenue, 
+                        Date = item.Date,
+                        InvoiceCount = item.InvoiceCount,
+                        Revenue = item.Revenue,
                         Percent = maximumDailyRevenue <= 0
                                 ? 0
                                 : Math.Round(
@@ -225,9 +207,9 @@ public class AdminDashboardController : Controller
                 .Select(group =>
                     new
                     {
-                        ProductId = group.Key.ProductId, 
-                        ProductName = group.Key.ProductName, 
-                        Quantity = group.Sum(detail => detail.Quantity), 
+                        ProductId = group.Key.ProductId,
+                        ProductName = group.Key.ProductName,
+                        Quantity = group.Sum(detail => detail.Quantity),
                         Revenue = group.Sum(detail => detail.SubTotal)
                     })
                 .OrderByDescending(item => item.Quantity)
@@ -262,7 +244,7 @@ public class AdminDashboardController : Controller
             await _context.Orders
                 .AsNoTracking()
                 .Include(order => order.Customer)
-                    .ThenInclude(customer => customer.User)
+                    .ThenInclude(customer => customer!.User)
                 .Include(order => order.Employee)
                     .ThenInclude(employee => employee!.User) //null-forgiving operator: Báo cho compilor bt ee can null nhg t bt nó ko null nên k warning
                 .Include(order => order.Invoices)
@@ -273,8 +255,12 @@ public class AdminDashboardController : Controller
                     new AdminDashboardRecentOrderViewModel
                     {
                         OrderId = order.OrderId,
-                        CustomerName = order.Customer.User.FullName,
-                        EmployeeName = order.Employee == null
+                        // FIX: tránh NullReferenceException nếu Customer hoặc Customer.User bị null
+                        // (dữ liệu lỗi / quan hệ không bắt buộc), thay vì giả định luôn tồn tại.
+                        CustomerName = order.Customer != null && order.Customer.User != null
+                                ? order.Customer.User.FullName
+                                : "Khách vãng lai",
+                        EmployeeName = order.Employee == null || order.Employee.User == null
                                 ? "Chưa phân công"
                                 : order.Employee.User.FullName,
                         OrderDate = order.OrderDate,
@@ -315,18 +301,18 @@ public class AdminDashboardController : Controller
         var model =
             new AdminDashboardViewModel
             {
-                RevenueToday = revenueToday, 
-                RevenueWeek = revenueWeek, 
-                RevenueMonth = revenueMonth, 
-                TotalOrders = totalOrders, 
+                RevenueToday = revenueToday,
+                RevenueWeek = revenueWeek,
+                RevenueMonth = revenueMonth,
+                TotalOrders = totalOrders,
                 TodayOrders = todayOrders,
-                PendingOrders = pendingOrders, 
-                ProcessingOrders = processingOrders, 
-                CompletedOrders = completedOrders, 
-                CancelledOrders = cancelledOrders, 
-                TotalCustomers = totalCustomers, 
-                TotalProducts = totalProducts, 
-                WorkingEmployees = workingEmployees, 
+                PendingOrders = pendingOrders,
+                ProcessingOrders = processingOrders,
+                CompletedOrders = completedOrders,
+                CancelledOrders = cancelledOrders,
+                TotalCustomers = totalCustomers,
+                TotalProducts = totalProducts,
+                WorkingEmployees = workingEmployees,
                 ActivePromotions = activePromotions,
                 LowStockProducts = lowStockProducts,
                 OutOfStockProducts = outOfStockProducts,

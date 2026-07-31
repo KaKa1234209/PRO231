@@ -1,4 +1,5 @@
-﻿using FastBite_PRO231.Models;
+﻿using FastBite_PRO231.Common;
+using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +52,6 @@ public class ShipperHomeController : Controller
         }
 
         var today = DateTime.Today;
-        var tomorrow = today.AddDays(1);
 
         var allMyOrders = await _context.Orders
             .AsNoTracking()
@@ -59,8 +59,9 @@ public class ShipperHomeController : Controller
             .Where(o => o.ShipperId == shipperId.Value)
             .ToListAsync();
 
+        // IsActiveOrder chạy trên List<Order> đã load về (LINQ-to-Objects) nên dùng được ở đây
         var myActiveOrders = allMyOrders
-            .Where(o => o.Status != "Hoàn thành" && o.Status != "Đã huỷ")
+            .Where(o => OrderStatusConstants.IsActiveOrder(o.Status))
             .OrderBy(o => o.OrderDate)
             .Select(o => new ShipperOrderViewModel
             {
@@ -79,14 +80,15 @@ public class ShipperHomeController : Controller
             })
             .ToList();
 
+        // Đây là query EF Core (chưa ToListAsync) nên không gọi được IsActiveOrder,
+        // phải so sánh trực tiếp với hằng số để EF dịch được sang SQL.
         var availableOrders = _context.Orders
             .AsNoTracking()
             .Include(o => o.Customer).ThenInclude(c => c.User)
             .Where(o =>
                 o.ShipperId == null &&
-                o.Status != "Hoàn thành" &&
-                o.Status != "Đã huỷ" &&
-                o.Status != "Chờ thanh toán")
+                o.Status != OrderStatusConstants.Completed &&
+                o.Status != OrderStatusConstants.Cancelled)
             .OrderBy(o => o.OrderDate)
             .Select(o => new ShipperOrderViewModel
             {
@@ -113,15 +115,15 @@ public class ShipperHomeController : Controller
             MyActiveOrders = myActiveOrders.Count,
 
             TodayCompletedOrders = allMyOrders.Count(o =>
-                o.Status == "Hoàn thành" &&
+                o.Status == OrderStatusConstants.Completed &&
                 o.PaidAt.HasValue &&
                 o.PaidAt.Value.Date == today),
 
             PendingSettlementAmount = allMyOrders
                 .Where(o =>
-                    o.PaymentMethod == "COD" &&
-                    o.PaymentStatus == "Đã thanh toán" &&
-                    o.SettlementStatus == "Chưa đối soát")
+                    o.PaymentMethod == OrderStatusConstants.PaymentMethodCod &&
+                    o.PaymentStatus == OrderStatusConstants.PaymentStatusPaid &&
+                    o.SettlementStatus == OrderStatusConstants.SettlementPending)
                 .Sum(o => o.TotalAmount),
 
             MyOrders = myActiveOrders,
@@ -144,9 +146,8 @@ public class ShipperHomeController : Controller
             .Where(o =>
                 o.OrderId == orderId &&
                 o.ShipperId == null &&
-                o.Status != "Hoàn thành" &&
-                o.Status != "Đã huỷ" &&
-                o.Status != "Chờ thanh toán")
+                o.Status != OrderStatusConstants.Completed &&
+                o.Status != OrderStatusConstants.Cancelled)
             .ExecuteUpdateAsync(setter => setter
                 .SetProperty(o => o.ShipperId, shipperId.Value));
 
@@ -177,19 +178,19 @@ public class ShipperHomeController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (order.Status == "Hoàn thành")
+        if (order.Status == OrderStatusConstants.Completed)
         {
             TempData["Error"] = "Đơn này đã được xác nhận trước đó.";
             return RedirectToAction(nameof(Index));
         }
 
-        if (order.PaymentMethod == "COD")
+        if (order.PaymentMethod == OrderStatusConstants.PaymentMethodCod)
         {
-            order.PaymentStatus = "Đã thanh toán";
+            order.PaymentStatus = OrderStatusConstants.PaymentStatusPaid;
             order.PaidAt = DateTime.Now;
         }
 
-        order.Status = "Hoàn thành";
+        order.Status = OrderStatusConstants.Completed;
 
         await _context.SaveChangesAsync();
 

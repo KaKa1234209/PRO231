@@ -9,14 +9,22 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace FastBite_PRO231.Controllers.Auth;
 
+
 public class LoginController : Controller
 {
     private readonly FastBiteDbContext _context;
     private readonly PasswordHasher<User> _passwordHasher = new();
+    private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
 
-    public LoginController(FastBiteDbContext context)
+    public LoginController(
+        FastBiteDbContext context,
+        IMemoryCache cache,
+        IEmailService emailService)
     {
         _context = context;
+        _cache = cache;
+        _emailService = emailService;
     }
 
     // Chuẩn hóa tên quyền
@@ -88,19 +96,6 @@ public class LoginController : Controller
         return user.Password == enteredPassword
             ? PasswordVerificationResult.SuccessRehashNeeded
             : PasswordVerificationResult.Failed;
-    }
-
-    private readonly IMemoryCache _cache;
-    private readonly IEmailService _emailService;
-
-    public LoginController(
-        FastBiteDbContext context,
-        IMemoryCache cache,
-        IEmailService emailService)
-    {
-        _context = context;
-        _cache = cache;
-        _emailService = emailService;
     }
 
     //Đăng nhập
@@ -345,7 +340,6 @@ public class LoginController : Controller
 
     // =========================================
     // BƯỚC 1: NHẬP EMAIL, GỬI OTP
-    // =========================================
     [HttpGet]
     public IActionResult ForgotPassword()
     {
@@ -394,7 +388,6 @@ public class LoginController : Controller
 
     // =========================================
     // BƯỚC 2: NHẬP OTP
-    // =========================================
     [HttpGet]
     public IActionResult VerifyOtp(string email)
     {
@@ -431,7 +424,6 @@ public class LoginController : Controller
 
     // =========================================
     // BƯỚC 3: ĐẶT MẬT KHẨU MỚI
-    // =========================================
     [HttpGet]
     public IActionResult ResetPassword(string email, string token)
     {

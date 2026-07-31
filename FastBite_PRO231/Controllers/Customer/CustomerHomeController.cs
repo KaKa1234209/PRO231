@@ -12,28 +12,6 @@ namespace FastBite_PRO231.Controllers;
 public class CustomerHomeController : Controller
 {
     private readonly FastBiteDbContext _context;
-
-    private static readonly string[] PendingStatuses =
-    {
-        "Đang chờ xử lý",
-        "Chờ xử lý",
-        "Chờ xác nhận"
-    };
-
-    private static readonly string[] ProcessingStatuses =
-    {
-        "Đang xử lý",
-        "Đang chuẩn bị",
-        "Đang giao",
-        "Processing"
-    };
-
-    private static readonly string[] CompletedStatuses =
-    {
-        "Hoàn thành",
-        "Completed"
-    };
-
     public CustomerHomeController(
         FastBiteDbContext context)
     {
