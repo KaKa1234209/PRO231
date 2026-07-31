@@ -115,6 +115,34 @@
                             : "Chưa tạo hóa đơn")
                     </strong>
                 </div>
+
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <section class="fbdash-panel mt-3">
+                        <h2>Vị trí giao hàng</h2>
+
+                        <div id="orderMap" style="height:300px;border-radius:10px;"></div>
+                    </section>
+
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+                    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const map = L.map("orderMap").setView([@Model.Latitude, @Model.Longitude], 16);
+
+                                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                                                attribution: "&copy; OpenStreetMap contributors"
+                                            }).addTo(map);
+
+                                            L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
+                                        });
+                    </script>
+                }
+                else
+                {
+                    <p class="text-muted">Khách không ghim vị trí trên bản đồ — chỉ có địa chỉ dạng chữ.</p>
+                }
             </section>
 
             <!-- THÔNG TIN KHÁCH HÀNG -->

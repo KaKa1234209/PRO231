@@ -3,8 +3,20 @@
   "WorkspaceRootPath": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\views\\checkout\\success.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:views\\checkout\\success.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\views\\shipperhome\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:views\\shipperhome\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\views\\admin\\order\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:views\\admin\\order\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\controllers\\employee\\shipperhomecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:controllers\\employee\\shipperhomecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\viewmodels\\shipperorderviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:viewmodels\\shipperorderviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\views\\checkout\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -13,6 +25,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\controllers\\checkoutcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:controllers\\checkoutcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\views\\checkout\\success.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|solutionrelative:views\\checkout\\success.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{80F763AE-9947-50EB-7031-CB9CF1835161}|FastBite_PRO231.csproj|d:\\k\u1EF3 7\\pro231\\pro231\\fastbite_pro231\\viewmodels\\ordermanagementviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -38,58 +54,45 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "OrdersController.cs",
-              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\OrdersController.cs",
-              "RelativeDocumentMoniker": "Controllers\\OrdersController.cs",
-              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\OrdersController.cs",
-              "RelativeToolTip": "Controllers\\OrdersController.cs",
-              "ViewState": "AgIAAEkCAAAAAAAAAAAowGsCAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-29T16:27:10.464Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "CheckoutViewModel.cs",
-              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\CheckoutViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\CheckoutViewModel.cs",
-              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\CheckoutViewModel.cs",
-              "RelativeToolTip": "ViewModels\\CheckoutViewModel.cs",
-              "ViewState": "AgIAADwAAAAAAAAAAAAUwFMAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-29T16:27:04.355Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Order.cs",
-              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Models\\Order.cs",
-              "RelativeDocumentMoniker": "Models\\Order.cs",
-              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Models\\Order.cs",
-              "RelativeToolTip": "Models\\Order.cs",
-              "ViewState": "AgIAAB0AAAAAAAAAAAA2wDUAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-29T16:26:58.491Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Checkout\\Index.cshtml",
-              "RelativeDocumentMoniker": "Views\\Checkout\\Index.cshtml",
-              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Checkout\\Index.cshtml",
-              "RelativeToolTip": "Views\\Checkout\\Index.cshtml",
-              "ViewState": "AgIAAL8AAAAAAAAAAAAYwOIAAAABAAAAAAAAAA==",
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Admin\\Order\\Details.cshtml",
+              "RelativeDocumentMoniker": "Views\\Admin\\Order\\Details.cshtml",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Admin\\Order\\Details.cshtml*",
+              "RelativeToolTip": "Views\\Admin\\Order\\Details.cshtml*",
+              "ViewState": "AgIAAGoAAAAAAAAAAAAUwHUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-07-29T16:18:51.399Z",
+              "WhenOpened": "2026-07-31T04:26:05.13Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\ShipperHome\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\ShipperHome\\Index.cshtml",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\ShipperHome\\Index.cshtml",
+              "RelativeToolTip": "Views\\ShipperHome\\Index.cshtml",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAUwLgAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-07-31T04:24:20.665Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ShipperHomeController.cs",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\Employee\\ShipperHomeController.cs",
+              "RelativeDocumentMoniker": "Controllers\\Employee\\ShipperHomeController.cs",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\Employee\\ShipperHomeController.cs*",
+              "RelativeToolTip": "Controllers\\Employee\\ShipperHomeController.cs*",
+              "ViewState": "AgIAADMAAAAAAAAAAAAowE4AAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T04:23:24.72Z",
               "EditorCaption": ""
             },
             {
@@ -102,7 +105,69 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
+              "Title": "ShipperOrderViewModel.cs",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\ShipperOrderViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\ShipperOrderViewModel.cs",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\ShipperOrderViewModel.cs",
+              "RelativeToolTip": "ViewModels\\ShipperOrderViewModel.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAA9wB0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T04:23:01.125Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "OrdersController.cs",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\OrdersController.cs",
+              "RelativeDocumentMoniker": "Controllers\\OrdersController.cs",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\OrdersController.cs",
+              "RelativeToolTip": "Controllers\\OrdersController.cs",
+              "ViewState": "AgIAAEkCAAAAAAAAAAAowGsCAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-29T16:27:10.464Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "CheckoutViewModel.cs",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\CheckoutViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\CheckoutViewModel.cs",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\CheckoutViewModel.cs",
+              "RelativeToolTip": "ViewModels\\CheckoutViewModel.cs",
+              "ViewState": "AgIAADwAAAAAAAAAAAAUwFMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-29T16:27:04.355Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Order.cs",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Models\\Order.cs",
+              "RelativeDocumentMoniker": "Models\\Order.cs",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Models\\Order.cs",
+              "RelativeToolTip": "Models\\Order.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAA2wDUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-29T16:26:58.491Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Checkout\\Index.cshtml",
+              "RelativeDocumentMoniker": "Views\\Checkout\\Index.cshtml",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Checkout\\Index.cshtml*",
+              "RelativeToolTip": "Views\\Checkout\\Index.cshtml*",
+              "ViewState": "AgIAACsAAAAAAAAAAAAowEoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-07-29T16:18:51.399Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "Success.cshtml",
               "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Views\\Checkout\\Success.cshtml",
               "RelativeDocumentMoniker": "Views\\Checkout\\Success.cshtml",
@@ -110,12 +175,11 @@
               "RelativeToolTip": "Views\\Checkout\\Success.cshtml",
               "ViewState": "AgIAADoAAAAAAAAAAAAowFwAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-07-29T16:19:07.987Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-29T16:19:07.987Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "OrderManagementViewModel.cs",
               "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\ViewModels\\OrderManagementViewModel.cs",
               "RelativeDocumentMoniker": "ViewModels\\OrderManagementViewModel.cs",
@@ -123,18 +187,17 @@
               "RelativeToolTip": "ViewModels\\OrderManagementViewModel.cs",
               "ViewState": "AgIAACsAAAAAAAAAAAA1wFYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-29T09:59:36.26Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-29T09:59:36.26Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "CheckoutController.cs",
               "DocumentMoniker": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\CheckoutController.cs",
               "RelativeDocumentMoniker": "Controllers\\CheckoutController.cs",
-              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\CheckoutController.cs",
-              "RelativeToolTip": "Controllers\\CheckoutController.cs",
-              "ViewState": "AgIAADABAAAAAAAAAAAowFIBAAABAAAAAAAAAA==",
+              "ToolTip": "D:\\K\u1EF3 7\\PRO231\\PRO231\\FastBite_PRO231\\Controllers\\CheckoutController.cs*",
+              "RelativeToolTip": "Controllers\\CheckoutController.cs*",
+              "ViewState": "AgIAAAsBAAAAAAAAAADwvyEBAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-20T09:30:22.594Z",
               "EditorCaption": ""

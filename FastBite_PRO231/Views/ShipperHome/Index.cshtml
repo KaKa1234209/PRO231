@@ -157,9 +157,19 @@
                                 </td>
 
                                 <td class="text-end">
+                                    @if (order.Latitude.HasValue && order.Longitude.HasValue)
+                                    {
+                                        <a href="https://www.openstreetmap.org/?mlat=@order.Latitude&mlon=@order.Longitude#map=17/@order.Latitude/@order.Longitude"
+                                           target="_blank"
+                                           class="fbew-small-button">
+                                            🗺️ Bản đồ
+                                        </a>
+                                    }
+
                                     <form asp-controller="ShipperHome"
                                           asp-action="ConfirmDelivered"
-                                          method="post">
+                                          method="post"
+                                          class="d-inline">
 
                                         @Html.AntiForgeryToken()
 

@@ -67,6 +67,12 @@
                                 <span asp-validation-for="Email" class="text-danger"></span>
                             </div>
 
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                            <small class="text-muted d-block mt-1">
+                                📍 Chọn vị trí trên bản đồ để tính phí ship chính xác theo khoảng cách (không bắt buộc).
+                            </small>
+                            <div id="searchResult" class="list-group mt-1"></div>
+
                             <div class="col-12">
                                 <label asp-for="Address" class="form-label fw-bold">
                                     Địa chỉ giao hàng
@@ -224,4 +230,158 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Toạ độ mặc định (tạm để trung tâm TP.HCM) -
+            // NÊN THAY bằng toạ độ THẬT của cửa hàng FastBite để bản đồ mở đúng vị trí ban đầu
+            const defaultLat = 10.7769;
+            const defaultLng = 106.7009;
+
+            const addressInput = document.getElementById("address");
+            const searchResultBox = document.getElementById("searchResult");
+            const latInput = document.getElementById("Latitude");
+            const lngInput = document.getElementById("Longitude");
+
+            // Khởi tạo bản đồ
+            const map = L.map("map").setView([defaultLat, defaultLng], 13);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors",
+                maxZoom: 19
+            }).addTo(map);
+
+            let marker = null;
+
+            function setMarker(lat, lng) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    // draggable: true -> khách có thể kéo ghim để tinh chỉnh vị trí chính xác hơn
+                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+                    marker.on("dragend", function() {
+                        const pos = marker.getLatLng();
+                        latInput.value = pos.lat;
+                        lngInput.value = pos.lng;
+
+                        // Reverse geocode: khách kéo ghim xong, tự động điền lại địa chỉ text cho khớp
+                        reverseGeocode(pos.lat, pos.lng);
+                    });
+                }
+
+                map.setView([lat, lng], 16);
+                latInput.value = lat;
+                lngInput.value = lng;
+            }
+
+            // Tìm kiếm địa chỉ qua Nominatim (API miễn phí của OpenStreetMap)
+            let debounceTimer = null;
+
+            addressInput.addEventListener("input", function() {
+                const query = addressInput.value.trim();
+
+                clearTimeout(debounceTimer);
+                searchResultBox.innerHTML = "";
+
+                if (query.length < 5) return; // tránh gọi API khi mới gõ vài ký tự
+
+                // Debounce 500ms - tránh gọi API liên tục mỗi lần gõ 1 ký tự
+                debounceTimer = setTimeout(function() {
+                    searchAddress(query);
+                }, 500);
+            });
+
+            async function searchAddress(query) {
+                try {
+                    // countrycodes=vn giới hạn kết quả trong Việt Nam cho chính xác hơn
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=vn&limit=5&q=${encodeURIComponent(query)}`;
+
+                    const response = await fetch(url, {
+                        headers: { "Accept-Language": "vi" }
+                    });
+
+                    const results = await response.json();
+
+                    renderSearchResults(results);
+                } catch (error) {
+                    console.error("Lỗi tìm kiếm địa chỉ:", error);
+                }
+            }
+
+            function renderSearchResults(results) {
+                searchResultBox.innerHTML = "";
+
+                if (results.length === 0) return;
+
+                results.forEach(function(place) {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "list-group-item list-group-item-action";
+                    item.textContent = place.display_name;
+
+                    item.addEventListener("click", function() {
+                        addressInput.value = place.display_name;
+                        setMarker(parseFloat(place.lat), parseFloat(place.lon));
+                        searchResultBox.innerHTML = "";
+                    });
+
+                    searchResultBox.appendChild(item);
+                });
+            }
+
+            // Reverse geocode: từ toạ độ -> ra địa chỉ text (dùng khi khách kéo ghim)
+            async function reverseGeocode(lat, lng) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+
+                    const response = await fetch(url, {
+                        headers: { "Accept-Language": "vi" }
+                    });
+
+                    const result = await response.json();
+
+                    if (result && result.display_name) {
+                        addressInput.value = result.display_name;
+                    }
+                } catch (error) {
+                    console.error("Lỗi reverse geocode:", error);
+                }
+            }
+
+            // Nếu khách đã có Latitude/Longitude từ trước (model binding lúc validate lỗi, quay lại form),
+            // hiển thị lại đúng marker cũ thay vì mặc định trung tâm thành phố
+            const existingLat = latInput.value;
+            const existingLng = lngInput.value;
+
+            if (existingLat && existingLng) {
+                setMarker(parseFloat(existingLat), parseFloat(existingLng));
+            }
+
+            // Nút "Dùng vị trí hiện tại" - tiện cho khách trên điện thoại
+            const geoButton = document.createElement("button");
+            geoButton.type = "button";
+            geoButton.className = "btn btn-outline-secondary btn-sm mt-2";
+            geoButton.textContent = "📍 Dùng vị trí hiện tại của tôi";
+
+            geoButton.addEventListener("click", function() {
+                if (!navigator.geolocation) {
+                    alert("Trình duyệt không hỗ trợ định vị.");
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        setMarker(position.coords.latitude, position.coords.longitude);
+                        reverseGeocode(position.coords.latitude, position.coords.longitude);
+                    },
+                    function() {
+                        alert("Không thể lấy vị trí. Vui lòng nhập địa chỉ thủ công.");
+                    }
+                );
+            });
+
+            addressInput.insertAdjacentElement("afterend", geoButton);
+        });
+    </script>
 }

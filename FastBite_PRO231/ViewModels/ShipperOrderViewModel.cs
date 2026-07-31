@@ -20,6 +20,8 @@ public class ShipperOrderViewModel
     public string CustomerName { get; set; } = "";
     public string CustomerPhone { get; set; } = "";
     public string DeliveryAddress { get; set; } = "";
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string? Note { get; set; }
     public decimal TotalAmount { get; set; }
     public string PaymentMethod { get; set; } = "";

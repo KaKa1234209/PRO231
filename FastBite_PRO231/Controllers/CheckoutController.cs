@@ -37,11 +37,51 @@ public class CheckoutController : Controller
         return $"/images/products/{image}";
     }
 
-    private static decimal CalculateDeliveryFee(decimal subtotal)
+    // TODO: THAY bằng toạ độ THẬT của quán FastBite (lấy từ Google Maps, click chuột phải vào vị trí quán)
+    private const double StoreLatitude = 10.762622;
+    private const double StoreLongitude = 106.660172;
+
+    // Công thức Haversine - tính khoảng cách đường chim bay giữa 2 toạ độ (km)
+    private static double CalculateDistanceKm(double lat1, double lng1, double lat2, double lng2)
     {
-        return subtotal >= 200000
-            ? 0m
-            : 15000m;
+        const double earthRadiusKm = 6371;
+
+        double dLat = ToRadians(lat2 - lat1);
+        double dLng = ToRadians(lng2 - lng1);
+
+        double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                   Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                   Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return earthRadiusKm * c;
+    }
+
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180;
+    private static decimal CalculateDeliveryFee(decimal subtotal, double? lat, double? lng)
+    {
+        // Miễn phí ship nếu đơn đủ lớn, bất kể khoảng cách
+        if (subtotal >= 200000m)
+        {
+            return 0m;
+        }
+
+        // Khách KHÔNG ghim vị trí (chỉ gõ địa chỉ tay) -> không tính được khoảng cách
+        // -> dùng mức phí mặc định cố định, không bắt buộc phải ghim mới đặt được hàng
+        if (!lat.HasValue || !lng.HasValue)
+        {
+            return 15000m;
+        }
+
+        var distanceKm = CalculateDistanceKm(StoreLatitude, StoreLongitude, lat.Value, lng.Value);
+
+        return distanceKm switch
+        {
+            <= 3 => 15000m,
+            <= 7 => 25000m,
+            _ => 35000m
+        };
     }
 
     private IActionResult RedirectToLogin()
@@ -109,8 +149,7 @@ public class CheckoutController : Controller
 
             PaymentMethod = "COD",
             Note = null,
-            DeliveryFee = CalculateDeliveryFee(subtotal),
-
+            DeliveryFee = CalculateDeliveryFee(subtotal, null, null),
 
             Items = items
         };
@@ -163,8 +202,8 @@ public class CheckoutController : Controller
             }).ToList();
 
             model.TotalQuantity = model.Items.Sum(item => item.Quantity);
-            model.TotalAmount =  model.Items.Sum(item => item.SubTotal);
-            model.DeliveryFee = CalculateDeliveryFee(model.TotalAmount);
+            model.TotalAmount = model.Items.Sum(item => item.SubTotal);
+            model.DeliveryFee = CalculateDeliveryFee(model.TotalAmount, model.Latitude, model.Longitude);
 
             return View("Index", model);
         }
@@ -248,8 +287,8 @@ public class CheckoutController : Controller
                 inventory.Quantity -= cartItem.Quantity;
                 inventory.UpdateAt = DateTime.Now;
             }
-
-            var deliveryFee = CalculateDeliveryFee(totalAmount);
+                
+            var deliveryFee = CalculateDeliveryFee(totalAmount, model.Latitude, model.Longitude);
             order.DeliveryFee = deliveryFee;
             order.TotalAmount = totalAmount + deliveryFee;
 

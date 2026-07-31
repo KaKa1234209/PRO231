@@ -69,6 +69,8 @@ public class ShipperHomeController : Controller
                 CustomerName = o.Customer.User!.FullName ?? o.Customer.User.UserName ?? "Khách hàng",
                 CustomerPhone = o.Customer.User!.Phone ?? "",
                 DeliveryAddress = o.DeliveryAddress ?? "",
+                Latitude = o.Latitude,
+                Longitude = o.Longitude,
                 Note = o.Note,
                 TotalAmount = o.TotalAmount,
                 PaymentMethod = o.PaymentMethod,
