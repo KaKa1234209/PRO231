@@ -11,7 +11,7 @@
                 <p>🛒 GIỎ HÀNG FASTBITE</p>
                 <h1>Giỏ hàng của bạn</h1>
                 <span>
-                    Kiểm tra số lượng và tổng tiền trước khi đặt hàng.
+                    Tick chọn món muốn mua, sau đó bấm "Tiến hành đặt hàng".
                 </span>
             </div>
 
@@ -59,9 +59,29 @@
         {
             <div class="fbc-grid">
                 <div class="fbc-list">
+                    <div class="form-check mb-3">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="selectAll"
+                               checked />
+
+                        <label class="form-check-label fw-bold" for="selectAll">
+                            Chọn tất cả
+                        </label>
+                    </div>
+
                     @foreach (var item in Model.Items)
                     {
                         <article class="fbc-item">
+                            <div class="form-check me-2">
+                                <input type="checkbox"
+                                       class="form-check-input fbc-select-checkbox"
+                                       value="@item.CartItemId"
+                                       data-qty="@item.Quantity"
+                                       data-subtotal="@item.SubTotal"
+                                       checked />
+                            </div>
+
                             @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                             {
                                 <img src="@item.ImageUrl"
@@ -119,11 +139,6 @@
                                             +
                                         </button>
                                     </div>
-
-                                    <button type="submit"
-                                            class="fbc-update-button">
-                                        Cập nhật
-                                    </button>
                                 </form>
 
                                 <strong class="fbc-subtotal">
@@ -155,35 +170,30 @@
                     <h2>Tóm tắt giỏ hàng</h2>
 
                     <div class="fbc-summary-row">
+                        <span>Món đã chọn</span>
+                        <strong id="selectedCount">0</strong>
+                    </div>
+
+                    <div class="fbc-summary-row">
                         <span>Tổng số lượng</span>
-                        <strong>@Model.TotalQuantity phần</strong>
+                        <strong id="summaryQuantity">0 phần</strong>
                     </div>
 
                     <div class="fbc-summary-row">
                         <span>Tạm tính</span>
-                        <strong>
-                            @Model.TotalPrice.ToString("N0")đ
-                        </strong>
-                    </div>
-
-                    <div class="fbc-summary-row">
-                        <span>Phí giao hàng</span>
-                        <strong>0đ</strong>
+                        <strong id="summarySubtotal">0đ</strong>
                     </div>
 
                     <div class="fbc-summary-total">
                         <span>Tổng thanh toán</span>
-
-                        <strong>
-                            @Model.TotalPrice.ToString("N0")đ
-                        </strong>
+                        <strong id="summaryTotal">0đ</strong>
                     </div>
 
-                    <a asp-controller="Checkout"
-                       asp-action="Index"
-                       class="fbc-checkout-button">
+                    <button type="button"
+                            id="proceedCheckoutBtn"
+                            class="fbc-checkout-button">
                         Tiến hành đặt hàng
-                    </a>
+                    </button>
 
                     <form asp-controller="Cart"
                           asp-action="Clear"
@@ -205,26 +215,161 @@
 
 @section Scripts {
     <script>
-        document.querySelectorAll(".fbc-minus").forEach(button => {
-            button.addEventListener("click", function () {
-                const input = this.parentElement
-                    .querySelector(".fbc-quantity-input");
+        // ===== CẬP NHẬT SỐ LƯỢNG BẰNG AJAX - KHÔNG RELOAD TRANG =====
+        async function updateQuantityAjax(form) {
+            // Chặn double-click / double-submit khi request trước chưa xong
+            if (form.dataset.updating === "true") {
+                return;
+            }
+            form.dataset.updating = "true";
 
+            const article = form.closest(".fbc-item");
+            const input = form.querySelector(".fbc-quantity-input");
+            const checkbox = article.querySelector(".fbc-select-checkbox");
+            const subtotalEl = article.querySelector(".fbc-subtotal");
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    body: new FormData(form)
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data.message || "Không thể cập nhật số lượng.");
+
+                    // Trả ô số lượng về đúng giá trị server đang lưu (nếu có)
+                    if (typeof data.quantity === "number") {
+                        input.value = data.quantity;
+                    } else {
+                        input.value = checkbox.dataset.qty;
+                    }
+
+                    return;
+                }
+
+                input.value = data.quantity;
+                checkbox.dataset.qty = data.quantity;
+                checkbox.dataset.subtotal = data.subTotal;
+                subtotalEl.textContent =
+                    Number(data.subTotal).toLocaleString("vi-VN") + "đ";
+
+                recalculateSummary();
+            } catch (error) {
+                console.error("Lỗi cập nhật số lượng:", error);
+                alert("Có lỗi xảy ra, vui lòng thử lại.");
+            } finally {
+                form.dataset.updating = "false";
+            }
+        }
+
+        document.querySelectorAll(".fbc-minus").forEach(button => {
+            button.addEventListener("click", function() {
+                const form = this.closest("form");
+
+                if (form.dataset.updating === "true") {
+                    return;
+                }
+
+                const input = form.querySelector(".fbc-quantity-input");
                 const current = parseInt(input.value) || 1;
                 input.value = Math.max(1, current - 1);
+
+                updateQuantityAjax(form);
             });
         });
 
         document.querySelectorAll(".fbc-plus").forEach(button => {
-            button.addEventListener("click", function () {
-                const input = this.parentElement
-                    .querySelector(".fbc-quantity-input");
+            button.addEventListener("click", function() {
+                const form = this.closest("form");
 
+                if (form.dataset.updating === "true") {
+                    return;
+                }
+
+                const input = form.querySelector(".fbc-quantity-input");
                 const current = parseInt(input.value) || 1;
                 const max = parseInt(input.max) || 999;
-
                 input.value = Math.min(max, current + 1);
+
+                updateQuantityAjax(form);
             });
+        });
+
+        // Nếu khách gõ tay số lượng trực tiếp vào ô input rồi rời khỏi ô (blur),
+        // cũng tự động cập nhật bằng AJAX cho nhất quán với nút +/-.
+        document.querySelectorAll(".fbc-quantity-input").forEach(input => {
+            input.addEventListener("change", function() {
+                const form = this.closest("form");
+
+                if (form.dataset.updating === "true") {
+                    return;
+                }
+
+                const min = parseInt(this.min) || 1;
+                const max = parseInt(this.max) || 999;
+                const current = parseInt(this.value) || min;
+                this.value = Math.min(max, Math.max(min, current));
+
+                updateQuantityAjax(form);
+            });
+        });
+
+        // ===== TÍNH LẠI TỔNG THEO MÓN ĐƯỢC TICK =====
+        const checkboxes = document.querySelectorAll(".fbc-select-checkbox");
+        const selectAllBox = document.getElementById("selectAll");
+
+        function recalculateSummary() {
+            let totalQuantity = 0;
+            let totalSubtotal = 0;
+            let selectedCount = 0;
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    totalQuantity += parseInt(cb.dataset.qty) || 0;
+                    totalSubtotal += parseFloat(cb.dataset.subtotal) || 0;
+                    selectedCount++;
+                }
+            });
+
+            document.getElementById("selectedCount").textContent = selectedCount;
+            document.getElementById("summaryQuantity").textContent = totalQuantity + " phần";
+            document.getElementById("summarySubtotal").textContent =
+                totalSubtotal.toLocaleString("vi-VN") + "đ";
+            document.getElementById("summaryTotal").textContent =
+                totalSubtotal.toLocaleString("vi-VN") + "đ";
+
+            // Đồng bộ trạng thái checkbox "Chọn tất cả"
+            selectAllBox.checked = selectedCount === checkboxes.length;
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener("change", recalculateSummary);
+        });
+
+        selectAllBox.addEventListener("change", function() {
+            checkboxes.forEach(cb => {
+                cb.checked = selectAllBox.checked;
+            });
+            recalculateSummary();
+        });
+
+        // Tính lần đầu khi trang load
+        recalculateSummary();
+
+        // ===== NÚT "TIẾN HÀNH ĐẶT HÀNG" =====
+        document.getElementById("proceedCheckoutBtn").addEventListener("click", function() {
+            const checked = Array.from(checkboxes).filter(cb => cb.checked);
+
+            if (checked.length === 0) {
+                alert("Vui lòng chọn ít nhất 1 món để đặt hàng.");
+                return;
+            }
+
+            const params = checked.map(cb => `itemIds=${cb.value}`).join("&");
+            window.location.href = `/Checkout?${params}`;
         });
     </script>
 }

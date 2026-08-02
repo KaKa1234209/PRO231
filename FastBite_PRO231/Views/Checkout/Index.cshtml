@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Xác nhận đơn hàng";
 }
+
 <link rel="stylesheet"
       href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
@@ -42,6 +43,10 @@
               method="post">
 
             @Html.AntiForgeryToken()
+            @foreach (var id in Model.SelectedCartItemIds)
+            {
+                <input type="hidden" name="SelectedCartItemIds" value="@id" />
+            }
 
             <div class="fbco-grid">
                 <div class="fbco-left">
@@ -83,8 +88,6 @@
                                        class="form-control"
                                        autocomplete="off"
                                        placeholder="Nhập địa chỉ..." />
-
-                                <span asp-validation-for="Address" class="text-danger"></span>
 
                                 <div id="searchResult" class="list-group mt-1"></div>
 

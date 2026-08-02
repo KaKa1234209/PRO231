@@ -41,6 +41,8 @@ public partial class Order
 
     public decimal DeliveryFee { get; set; }
 
+    public DateTime? CompletedAt { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual Employee? Employee { get; set; }

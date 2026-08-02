@@ -68,6 +68,14 @@ public class PromotionManagementFormViewModel
     [Display(Name = "Trạng thái")]
     public string Status { get; set; } = "Đang hoạt động";
 
+    [Required(ErrorMessage = "Vui lòng chọn ngày bắt đầu")]
+    [Display(Name = "Ngày bắt đầu")]
+    public DateTime StartDate { get; set; } = DateTime.Today;
+
+    [Required(ErrorMessage = "Vui lòng chọn ngày kết thúc")]
+    [Display(Name = "Ngày kết thúc")]
+    public DateTime EndDate { get; set; } = DateTime.Today.AddDays(7);
+
     public List<int> SelectedProductIds { get; set; }
         = new();
 
@@ -99,6 +107,10 @@ public class PromotionManagementDetailsViewModel
     public string DiscountType { get; set; } = "";
 
     public decimal DiscountValue { get; set; }
+
+    public DateTime StartDate { get; set; } = DateTime.Today;
+
+    public DateTime EndDate { get; set; } = DateTime.Today.AddDays(7);
 
     public string Status { get; set; } = "";
 

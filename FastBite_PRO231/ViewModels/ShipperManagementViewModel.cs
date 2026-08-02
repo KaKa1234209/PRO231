@@ -67,13 +67,16 @@ public class ShipperManagementFormViewModel
     public int UserId { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập họ tên")]
+    [StringLength(100, ErrorMessage = "Họ tên không được vượt quá 100 ký tự.")]
     public string FullName { get; set; } = "";
 
     [Required(ErrorMessage = "Vui lòng nhập tên đăng nhập")]
+    [StringLength(50, MinimumLength = 3, ErrorMessage = "Tên đăng nhập phải từ 3 đến 50 ký tự.")]
     public string UserName { get; set; } = "";
 
     [Required(ErrorMessage = "Vui lòng nhập email")]
     [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    [StringLength(255, ErrorMessage = "Email không được vượt quá 255 ký tự.")]
     public string Email { get; set; } = "";
 
     [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
@@ -84,5 +87,7 @@ public class ShipperManagementFormViewModel
     public string Status { get; set; } = "";
 
     public string Password { get; set; } = "";
+
+    [Compare(nameof(Password), ErrorMessage = "Mật khẩu xác nhận không khớp.")]
     public string ConfirmPassword { get; set; } = "";
 }

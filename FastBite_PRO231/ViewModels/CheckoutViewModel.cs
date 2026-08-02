@@ -34,6 +34,8 @@ public class CheckoutViewModel
 
     public decimal DeliveryFee { get; set; }
 
+    public List<int> SelectedCartItemIds { get; set; } = new();
+
     public List<CheckoutItemViewModel> Items { get; set; } = new();
 }
 

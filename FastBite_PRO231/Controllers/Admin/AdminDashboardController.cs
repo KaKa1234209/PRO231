@@ -127,13 +127,13 @@ public class AdminDashboardController : Controller
                 .AsNoTracking()
                 .CountAsync(employee =>
                     employee.Status ==
-                    OrderStatusConstants.ShipperWorking);
+                    OrderStatusConstants.StaffWorking);
 
         var activePromotions = await _context.Promotions
-                .AsNoTracking()
-                .CountAsync(promotion =>
-                    promotion.Status ==
-                    "Đang hoạt động");
+        .AsNoTracking()
+        .CountAsync(promotion =>
+            promotion.Status ==
+            OrderStatusConstants.PromotionActive);   
 
         //Sp sắp hết hàng
         var lowStockProducts = await _context.Inventories

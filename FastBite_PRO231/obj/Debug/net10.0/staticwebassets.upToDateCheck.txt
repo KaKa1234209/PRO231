@@ -10,7 +10,6 @@ wwwroot\images\products\1a151025922341d6a8f608570c95b8c0.jpg
 wwwroot\images\products\22440eedc5be425095a090add1caebd5.jpg
 wwwroot\images\products\buger1.jpg
 wwwroot\images\products\burger_ga.jpg
-wwwroot\images\products\ecb2a598d8f440519e9cd0b2a8d07d13.jpg
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
@@ -72,6 +71,7 @@ wwwroot\lib\jquery\dist\jquery.slim.js
 wwwroot\lib\jquery\dist\jquery.slim.min.js
 wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
+wwwroot\images\products\ecb2a598d8f440519e9cd0b2a8d07d13.jpg
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\wwwroot\css\admin.css
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\wwwroot\css\customer.css
 D:\Kỳ 7\PRO231\PRO231\FastBite_PRO231\wwwroot\css\inventory.css

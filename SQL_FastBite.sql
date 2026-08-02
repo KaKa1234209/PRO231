@@ -1,6 +1,9 @@
 USE FastBiteDB;
 GO
 
+ALTER TABLE Orders
+ADD CompletedAt DATETIME NULL;
+
 DELETE FROM InvoiceDetails;
 DELETE FROM Invoices;
 DELETE FROM OrderDetails;

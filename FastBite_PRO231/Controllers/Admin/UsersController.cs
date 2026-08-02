@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FastBite_PRO231.Common;
 using FastBite_PRO231.Models;
 using FastBite_PRO231.ViewModels;
 using Microsoft.AspNetCore.Http;
@@ -13,83 +14,44 @@ namespace FastBite_PRO231.Controllers.Admin;
 public class UsersController : Controller
 {
     private readonly FastBiteDbContext _context;
-
-    private readonly PasswordHasher<User> _passwordHasher =
-        new();
-
-    private static readonly string[] ValidStatuses =
-    {
-        "Hoạt động",
-        "Ngừng hoạt động"
-    };
+    private readonly PasswordHasher<User> _passwordHasher = new();
 
     public UsersController(FastBiteDbContext context)
     {
         _context = context;
     }
 
-    // =========================================
-    // KIỂM TRA QUYỀN ADMIN
-    // =========================================
-
     private bool IsAdmin()
     {
-        var role =
-            HttpContext.Session.GetString("Role");
-
-        return string.Equals(
-            role,
-            "Admin",
-            StringComparison.OrdinalIgnoreCase);
+        var role = HttpContext.Session.GetString("Role");
+        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
     }
 
     private IActionResult RedirectUnauthorized()
     {
-        var userId =
-            HttpContext.Session.GetInt32("UserId");
+        var userId = HttpContext.Session.GetInt32("UserId");
 
         if (!userId.HasValue)
         {
-            TempData["Error"] =
-                "Vui lòng đăng nhập tài khoản Admin.";
-
-            return RedirectToAction(
-                "Login",
-                "Login");
+            TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin.";
+            return RedirectToAction("Login", "Login");
         }
 
-        TempData["Error"] =
-            "Chỉ tài khoản Admin mới được quản lý tài khoản.";
-
-        return RedirectToAction(
-            "Index",
-            "Home");
+        TempData["Error"] = "Chỉ tài khoản Admin mới được quản lý tài khoản.";
+        return RedirectToAction("Index", "Home");
     }
 
-    // =========================================
-    // DANH SÁCH TÀI KHOẢN
-    // GET: /Users
-    // =========================================
-
     [HttpGet]
-    public async Task<IActionResult> Index(
-        string? search,
-        string? role,
-        string? status)
+    public async Task<IActionResult> Index(string? search, string? role, string? status)
     {
         if (!IsAdmin())
         {
             return RedirectUnauthorized();
         }
 
-        search =
-            search?.Trim() ?? "";
-
-        role =
-            role?.Trim().ToLowerInvariant() ?? "";
-
-        status =
-            status?.Trim().ToLowerInvariant() ?? "";
+        search = search?.Trim() ?? "";
+        role = role?.Trim().ToLowerInvariant() ?? "";
+        status = status?.Trim().ToLowerInvariant() ?? "";
 
         var query = _context.Users
             .AsNoTracking()
@@ -109,119 +71,72 @@ public class UsersController : Controller
 
         if (role == "admin")
         {
-            query = query.Where(user =>
-                user.Role.RoleName == "Admin");
+            query = query.Where(user => user.Role.RoleName == "Admin");
         }
         else if (role == "employee")
         {
-            query = query.Where(user =>
-                user.Role.RoleName == "Employee");
+            query = query.Where(user => user.Role.RoleName == "Employee");
+        }
+        else if (role == "shipper")   // MỚI
+        {
+            query = query.Where(user => user.Role.RoleName == "Shipper");
         }
         else if (role == "customer")
         {
-            query = query.Where(user =>
-                user.Role.RoleName == "Customer");
+            query = query.Where(user => user.Role.RoleName == "Customer");
         }
 
         if (status == "active")
         {
-            query = query.Where(user =>
-                user.Status == "Hoạt động");
+            query = query.Where(user => user.Status == OrderStatusConstants.AccountActive);
         }
         else if (status == "inactive")
         {
-            query = query.Where(user =>
-                user.Status != "Hoạt động");
+            query = query.Where(user => user.Status != OrderStatusConstants.AccountActive);
         }
 
         var userEntities = await query
-            .OrderByDescending(user =>
-                user.CreatedAt)
-            .ThenByDescending(user =>
-                user.UserId)
+            .OrderByDescending(user => user.CreatedAt)
+            .ThenByDescending(user => user.UserId)
             .ToListAsync();
 
-        var model =
-            new UserManagementIndexViewModel
-            {
-                Search =
-                    search,
+        var model = new UserManagementIndexViewModel
+        {
+            Search = search,
+            RoleFilter = role,
+            StatusFilter = status,
 
-                RoleFilter =
-                    role,
+            TotalUsers = await _context.Users.CountAsync(),
 
-                StatusFilter =
-                    status,
+            ActiveUsers = await _context.Users.CountAsync(user =>
+                user.Status == OrderStatusConstants.AccountActive),
 
-                TotalUsers =
-                    await _context.Users.CountAsync(),
+            InactiveUsers = await _context.Users.CountAsync(user =>
+                user.Status != OrderStatusConstants.AccountActive),
 
-                ActiveUsers =
-                    await _context.Users.CountAsync(user =>
-                        user.Status == "Hoạt động"),
+            AdminUsers = await _context.Users.CountAsync(user => user.Role.RoleName == "Admin"),
+            EmployeeUsers = await _context.Users.CountAsync(user => user.Role.RoleName == "Employee"),
+            CustomerUsers = await _context.Users.CountAsync(user => user.Role.RoleName == "Customer"),
 
-                InactiveUsers =
-                    await _context.Users.CountAsync(user =>
-                        user.Status != "Hoạt động"),
+            Users = userEntities
+                .Select(user => new UserManagementItemViewModel
+                {
+                    UserId = user.UserId,
+                    UserName = user.UserName,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    RoleName = user.Role.RoleName,
+                    Status = user.Status,
+                    CreatedAt = user.CreatedAt,
+                    HasCustomerProfile = user.Customer != null,
+                    HasEmployeeProfile = user.Employee != null
+                })
+                .ToList()
+        };
 
-                AdminUsers =
-                    await _context.Users.CountAsync(user =>
-                        user.Role.RoleName == "Admin"),
-
-                EmployeeUsers =
-                    await _context.Users.CountAsync(user =>
-                        user.Role.RoleName == "Employee"),
-
-                CustomerUsers =
-                    await _context.Users.CountAsync(user =>
-                        user.Role.RoleName == "Customer"),
-
-                Users = userEntities
-                    .Select(user =>
-                        new UserManagementItemViewModel
-                        {
-                            UserId =
-                                user.UserId,
-
-                            UserName =
-                                user.UserName,
-
-                            FullName =
-                                user.FullName,
-
-                            Email =
-                                user.Email,
-
-                            Phone =
-                                user.Phone,
-
-                            RoleName =
-                                user.Role.RoleName,
-
-                            Status =
-                                user.Status,
-
-                            CreatedAt =
-                                user.CreatedAt,
-
-                            HasCustomerProfile =
-                                user.Customer != null,
-
-                            HasEmployeeProfile =
-                                user.Employee != null
-                        })
-                    .ToList()
-            };
-
-        return View(
-            "~/Views/Admin/User/Index.cshtml",
-            model);
+        return View("~/Views/Admin/User/Index.cshtml", model);
     }
-
-    // =========================================
-    // CHI TIẾT TÀI KHOẢN
-    // GET: /Users/Details/5
-    // =========================================
 
     [HttpGet]
     public async Task<IActionResult> Details(int id)
@@ -236,72 +151,36 @@ public class UsersController : Controller
             .Include(item => item.Role)
             .Include(item => item.Customer)
             .Include(item => item.Employee)
-            .FirstOrDefaultAsync(item =>
-                item.UserId == id);
+            .FirstOrDefaultAsync(item => item.UserId == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        var model =
-            new UserManagementDetailsViewModel
-            {
-                UserId =
-                    user.UserId,
+        var model = new UserManagementDetailsViewModel
+        {
+            UserId = user.UserId,
+            UserName = user.UserName,
+            FullName = user.FullName,
+            Email = user.Email,
+            Phone = user.Phone,
+            RoleName = user.Role.RoleName,
+            Status = user.Status,
+            CreatedAt = user.CreatedAt,
 
-                UserName =
-                    user.UserName,
+            CustomerId = user.Customer?.CustomerId,
+            CustomerAddress = user.Customer?.Address ?? "",
+            CustomerPoint = user.Customer?.Point ?? 0,
 
-                FullName =
-                    user.FullName,
+            EmployeeId = user.Employee?.EmployeeId,
+            EmployeePosition = user.Employee?.Position ?? "",
+            EmployeeHireDate = user.Employee?.HireDate,
+            EmployeeStatus = user.Employee?.Status ?? ""
+        };
 
-                Email =
-                    user.Email,
-
-                Phone =
-                    user.Phone,
-
-                RoleName =
-                    user.Role.RoleName,
-
-                Status =
-                    user.Status,
-
-                CreatedAt =
-                    user.CreatedAt,
-
-                CustomerId =
-                    user.Customer?.CustomerId,
-
-                CustomerAddress =
-                    user.Customer?.Address ?? "",
-
-                CustomerPoint =
-                    user.Customer?.Point ?? 0,
-
-                EmployeeId =
-                    user.Employee?.EmployeeId,
-
-                EmployeePosition =
-                    user.Employee?.Position ?? "",
-
-                EmployeeHireDate =
-                    user.Employee?.HireDate,
-
-                EmployeeStatus =
-                    user.Employee?.Status ?? ""
-            };
-
-        return View(
-            "~/Views/Admin/User/Details.cshtml",
-            model);
+        return View("~/Views/Admin/User/Details.cshtml", model);
     }
-
-    // =========================================
-    // TẠO TÀI KHOẢN ADMIN
-    // GET: /Users/Create
-    // =========================================
 
     [HttpGet]
     public IActionResult Create()
@@ -311,154 +190,82 @@ public class UsersController : Controller
             return RedirectUnauthorized();
         }
 
-        return View(
-            "~/Views/Admin/User/Create.cshtml",
-            new AdminAccountCreateViewModel());
+        return View("~/Views/Admin/User/Create.cshtml", new AdminAccountCreateViewModel());
     }
-
-    // =========================================
-    // LƯU TÀI KHOẢN ADMIN
-    // POST: /Users/Create
-    // =========================================
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(
-        AdminAccountCreateViewModel model)
+    public async Task<IActionResult> Create(AdminAccountCreateViewModel model)
     {
         if (!IsAdmin())
         {
             return RedirectUnauthorized();
         }
 
-        model.UserName =
-            model.UserName?.Trim() ?? "";
+        model.UserName = model.UserName?.Trim() ?? "";
+        model.FullName = model.FullName?.Trim() ?? "";
+        model.Email = model.Email?.Trim() ?? "";
+        model.Phone = model.Phone?.Trim() ?? "";
 
-        model.FullName =
-            model.FullName?.Trim() ?? "";
-
-        model.Email =
-            model.Email?.Trim() ?? "";
-
-        model.Phone =
-            model.Phone?.Trim() ?? "";
-
-        var userNameExists =
-            await _context.Users.AnyAsync(user =>
-                user.UserName == model.UserName);
-
+        var userNameExists = await _context.Users.AnyAsync(user => user.UserName == model.UserName);
         if (userNameExists)
         {
-            ModelState.AddModelError(
-                nameof(model.UserName),
-                "Tên đăng nhập này đã tồn tại.");
+            ModelState.AddModelError(nameof(model.UserName), "Tên đăng nhập này đã tồn tại.");
         }
 
-        var emailExists =
-            await _context.Users.AnyAsync(user =>
-                user.Email == model.Email);
-
+        var emailExists = await _context.Users.AnyAsync(user => user.Email == model.Email);
         if (emailExists)
         {
-            ModelState.AddModelError(
-                nameof(model.Email),
-                "Email này đã được sử dụng.");
+            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
         }
 
-        var phoneExists =
-            await _context.Users.AnyAsync(user =>
-                user.Phone == model.Phone);
-
+        var phoneExists = await _context.Users.AnyAsync(user => user.Phone == model.Phone);
         if (phoneExists)
         {
-            ModelState.AddModelError(
-                nameof(model.Phone),
-                "Số điện thoại này đã được sử dụng.");
+            ModelState.AddModelError(nameof(model.Phone), "Số điện thoại này đã được sử dụng.");
         }
 
         if (!ModelState.IsValid)
         {
-            return View(
-                "~/Views/Admin/User/Create.cshtml",
-                model);
+            return View("~/Views/Admin/User/Create.cshtml", model);
         }
 
-        var adminRole =
-            await _context.Roles
-                .FirstOrDefaultAsync(item =>
-                    item.RoleName == "Admin");
+        var adminRole = await _context.Roles.FirstOrDefaultAsync(item => item.RoleName == "Admin");
 
         if (adminRole == null)
         {
-            ModelState.AddModelError(
-                "",
-                "Database chưa có quyền Admin.");
-
-            return View(
-                "~/Views/Admin/User/Create.cshtml",
-                model);
+            ModelState.AddModelError("", "Database chưa có quyền Admin.");
+            return View("~/Views/Admin/User/Create.cshtml", model);
         }
 
         try
         {
             var user = new User
             {
-                UserName =
-                    model.UserName,
-
-                FullName =
-                    model.FullName,
-
-                Email =
-                    model.Email,
-
-                Phone =
-                    model.Phone,
-
-                Password =
-                    "",
-
-                Status =
-                    "Hoạt động",
-
-                CreatedAt =
-                    DateTime.Now,
-
-                RoleId =
-                    adminRole.RoleId
+                UserName = model.UserName,
+                FullName = model.FullName,
+                Email = model.Email,
+                Phone = model.Phone,
+                Password = "",
+                Status = OrderStatusConstants.AccountActive,
+                CreatedAt = DateTime.Now,
+                RoleId = adminRole.RoleId
             };
 
-            user.Password =
-                _passwordHasher.HashPassword(
-                    user,
-                    model.Password);
+            user.Password = _passwordHasher.HashPassword(user, model.Password);
 
             _context.Users.Add(user);
-
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                $"Đã tạo tài khoản Admin “{user.UserName}”.";
-
-            return RedirectToAction(
-                nameof(Index));
+            TempData["Success"] = $"Đã tạo tài khoản Admin “{user.UserName}”.";
+            return RedirectToAction(nameof(Index));
         }
         catch (DbUpdateException)
         {
-            ModelState.AddModelError(
-                "",
-                "Không thể tạo tài khoản. Vui lòng kiểm tra lại dữ liệu.");
-
-            return View(
-                "~/Views/Admin/User/Create.cshtml",
-                model);
+            ModelState.AddModelError("", "Không thể tạo tài khoản. Vui lòng kiểm tra lại dữ liệu.");
+            return View("~/Views/Admin/User/Create.cshtml", model);
         }
     }
-
-    // =========================================
-    // FORM CHỈNH SỬA
-    // GET: /Users/Edit/5
-    // =========================================
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
@@ -471,54 +278,30 @@ public class UsersController : Controller
         var user = await _context.Users
             .AsNoTracking()
             .Include(item => item.Role)
-            .FirstOrDefaultAsync(item =>
-                item.UserId == id);
+            .FirstOrDefaultAsync(item => item.UserId == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        var model =
-            new UserManagementEditViewModel
-            {
-                UserId =
-                    user.UserId,
+        var model = new UserManagementEditViewModel
+        {
+            UserId = user.UserId,
+            UserName = user.UserName,
+            FullName = user.FullName,
+            Email = user.Email,
+            Phone = user.Phone,
+            RoleName = user.Role.RoleName,
+            Status = user.Status
+        };
 
-                UserName =
-                    user.UserName,
-
-                FullName =
-                    user.FullName,
-
-                Email =
-                    user.Email,
-
-                Phone =
-                    user.Phone,
-
-                RoleName =
-                    user.Role.RoleName,
-
-                Status =
-                    user.Status
-            };
-
-        return View(
-            "~/Views/Admin/User/Edit.cshtml",
-            model);
+        return View("~/Views/Admin/User/Edit.cshtml", model);
     }
-
-    // =========================================
-    // LƯU CHỈNH SỬA
-    // POST: /Users/Edit/5
-    // =========================================
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(
-        int id,
-        UserManagementEditViewModel model)
+    public async Task<IActionResult> Edit(int id, UserManagementEditViewModel model)
     {
         if (!IsAdmin())
         {
@@ -530,154 +313,94 @@ public class UsersController : Controller
             return NotFound();
         }
 
-        model.UserName =
-            model.UserName?.Trim() ?? "";
-
-        model.FullName =
-            model.FullName?.Trim() ?? "";
-
-        model.Email =
-            model.Email?.Trim() ?? "";
-
-        model.Phone =
-            model.Phone?.Trim() ?? "";
-
-        model.Status =
-            model.Status?.Trim() ?? "";
+        model.UserName = model.UserName?.Trim() ?? "";
+        model.FullName = model.FullName?.Trim() ?? "";
+        model.Email = model.Email?.Trim() ?? "";
+        model.Phone = model.Phone?.Trim() ?? "";
+        model.Status = model.Status?.Trim() ?? "";
 
         var user = await _context.Users
             .Include(item => item.Role)
-            .FirstOrDefaultAsync(item =>
-                item.UserId == id);
+            .FirstOrDefaultAsync(item => item.UserId == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        model.RoleName =
-            user.Role.RoleName;
+        model.RoleName = user.Role.RoleName;
 
-        if (!ValidStatuses.Contains(
-                model.Status,
-                StringComparer.OrdinalIgnoreCase))
+        if (!OrderStatusConstants.ValidAccountStatuses.Contains(model.Status, StringComparer.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError(
-                nameof(model.Status),
-                "Trạng thái tài khoản không hợp lệ.");
+            ModelState.AddModelError(nameof(model.Status), "Trạng thái tài khoản không hợp lệ.");
         }
 
-        var currentUserId =
-            HttpContext.Session.GetInt32("UserId");
+        var currentUserId = HttpContext.Session.GetInt32("UserId");
 
-        if (currentUserId == user.UserId &&
-            model.Status != "Hoạt động")
+        if (currentUserId == user.UserId && model.Status != OrderStatusConstants.AccountActive)
         {
-            ModelState.AddModelError(
-                nameof(model.Status),
-                "Bạn không thể tự khóa tài khoản đang đăng nhập.");
+            ModelState.AddModelError(nameof(model.Status), "Bạn không thể tự khóa tài khoản đang đăng nhập.");
         }
 
-        var duplicateUserName =
-            await _context.Users.AnyAsync(item =>
-                item.UserName == model.UserName &&
-                item.UserId != model.UserId);
+        var duplicateUserName = await _context.Users.AnyAsync(item =>
+            item.UserName == model.UserName && item.UserId != model.UserId);
 
         if (duplicateUserName)
         {
-            ModelState.AddModelError(
-                nameof(model.UserName),
-                "Tên đăng nhập này đã tồn tại.");
+            ModelState.AddModelError(nameof(model.UserName), "Tên đăng nhập này đã tồn tại.");
         }
 
-        var duplicateEmail =
-            await _context.Users.AnyAsync(item =>
-                item.Email == model.Email &&
-                item.UserId != model.UserId);
+        var duplicateEmail = await _context.Users.AnyAsync(item =>
+            item.Email == model.Email && item.UserId != model.UserId);
 
         if (duplicateEmail)
         {
-            ModelState.AddModelError(
-                nameof(model.Email),
-                "Email này đã được sử dụng.");
+            ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
         }
 
-        var duplicatePhone =
-            await _context.Users.AnyAsync(item =>
-                item.Phone == model.Phone &&
-                item.UserId != model.UserId);
+        var duplicatePhone = await _context.Users.AnyAsync(item =>
+            item.Phone == model.Phone && item.UserId != model.UserId);
 
         if (duplicatePhone)
         {
-            ModelState.AddModelError(
-                nameof(model.Phone),
-                "Số điện thoại này đã được sử dụng.");
+            ModelState.AddModelError(nameof(model.Phone), "Số điện thoại này đã được sử dụng.");
         }
 
         if (user.Role.RoleName == "Admin" &&
-            user.Status == "Hoạt động" &&
-            model.Status != "Hoạt động")
+            user.Status == OrderStatusConstants.AccountActive &&
+            model.Status != OrderStatusConstants.AccountActive)
         {
-            var activeAdminCount =
-                await _context.Users.CountAsync(item =>
-                    item.Role.RoleName == "Admin" &&
-                    item.Status == "Hoạt động");
+            var activeAdminCount = await _context.Users.CountAsync(item =>
+                item.Role.RoleName == "Admin" && item.Status == OrderStatusConstants.AccountActive);
 
             if (activeAdminCount <= 1)
             {
-                ModelState.AddModelError(
-                    nameof(model.Status),
-                    "Không thể khóa Admin hoạt động cuối cùng.");
+                ModelState.AddModelError(nameof(model.Status), "Không thể khóa Admin hoạt động cuối cùng.");
             }
         }
 
         if (!ModelState.IsValid)
         {
-            return View(
-                "~/Views/Admin/User/Edit.cshtml",
-                model);
+            return View("~/Views/Admin/User/Edit.cshtml", model);
         }
 
-        user.UserName =
-            model.UserName;
-
-        user.FullName =
-            model.FullName;
-
-        user.Email =
-            model.Email;
-
-        user.Phone =
-            model.Phone;
-
-        user.Status =
-            model.Status;
+        user.UserName = model.UserName;
+        user.FullName = model.FullName;
+        user.Email = model.Email;
+        user.Phone = model.Phone;
+        user.Status = model.Status;
 
         await _context.SaveChangesAsync();
 
         if (currentUserId == user.UserId)
         {
-            HttpContext.Session.SetString(
-                "UserName",
-                user.UserName);
-
-            HttpContext.Session.SetString(
-                "FullName",
-                user.FullName);
+            HttpContext.Session.SetString("UserName", user.UserName);
+            HttpContext.Session.SetString("FullName", user.FullName);
         }
 
-        TempData["Success"] =
-            $"Đã cập nhật tài khoản “{user.UserName}”.";
-
-        return RedirectToAction(
-            nameof(Details),
-            new { id = user.UserId });
+        TempData["Success"] = $"Đã cập nhật tài khoản “{user.UserName}”.";
+        return RedirectToAction(nameof(Details), new { id = user.UserId });
     }
-
-    // =========================================
-    // KHÓA HOẶC MỞ TÀI KHOẢN
-    // POST: /Users/ToggleStatus
-    // =========================================
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -690,67 +413,47 @@ public class UsersController : Controller
 
         var user = await _context.Users
             .Include(item => item.Role)
-            .FirstOrDefaultAsync(item =>
-                item.UserId == id);
+            .FirstOrDefaultAsync(item => item.UserId == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        var currentUserId =
-            HttpContext.Session.GetInt32("UserId");
+        var currentUserId = HttpContext.Session.GetInt32("UserId");
 
         if (currentUserId == user.UserId)
         {
-            TempData["Error"] =
-                "Bạn không thể tự khóa tài khoản đang đăng nhập.";
-
-            return RedirectToAction(
-                nameof(Index));
+            TempData["Error"] = "Bạn không thể tự khóa tài khoản đang đăng nhập.";
+            return RedirectToAction(nameof(Index));
         }
 
-        var isCurrentlyActive =
-            user.Status == "Hoạt động";
+        var isCurrentlyActive = user.Status == OrderStatusConstants.AccountActive;
 
-        if (isCurrentlyActive &&
-            user.Role.RoleName == "Admin")
+        if (isCurrentlyActive && user.Role.RoleName == "Admin")
         {
-            var activeAdminCount =
-                await _context.Users.CountAsync(item =>
-                    item.Role.RoleName == "Admin" &&
-                    item.Status == "Hoạt động");
+            var activeAdminCount = await _context.Users.CountAsync(item =>
+                item.Role.RoleName == "Admin" && item.Status == OrderStatusConstants.AccountActive);
 
             if (activeAdminCount <= 1)
             {
-                TempData["Error"] =
-                    "Không thể khóa Admin hoạt động cuối cùng.";
-
-                return RedirectToAction(
-                    nameof(Index));
+                TempData["Error"] = "Không thể khóa Admin hoạt động cuối cùng.";
+                return RedirectToAction(nameof(Index));
             }
         }
 
-        user.Status =
-            isCurrentlyActive
-                ? "Ngừng hoạt động"
-                : "Hoạt động";
+        user.Status = isCurrentlyActive
+            ? OrderStatusConstants.AccountInactive
+            : OrderStatusConstants.AccountActive;
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] =
-            user.Status == "Hoạt động"
-                ? $"Đã mở tài khoản “{user.UserName}”."
-                : $"Đã khóa tài khoản “{user.UserName}”.";
+        TempData["Success"] = user.Status == OrderStatusConstants.AccountActive
+            ? $"Đã mở tài khoản “{user.UserName}”."
+            : $"Đã khóa tài khoản “{user.UserName}”.";
 
-        return RedirectToAction(
-            nameof(Index));
+        return RedirectToAction(nameof(Index));
     }
-
-    // =========================================
-    // FORM ĐẶT LẠI MẬT KHẨU
-    // GET: /Users/ResetPassword/5
-    // =========================================
 
     [HttpGet]
     public async Task<IActionResult> ResetPassword(int id)
@@ -762,81 +465,52 @@ public class UsersController : Controller
 
         var user = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(item =>
-                item.UserId == id);
+            .FirstOrDefaultAsync(item => item.UserId == id);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        var model =
-            new AdminResetPasswordViewModel
-            {
-                UserId =
-                    user.UserId,
+        var model = new AdminResetPasswordViewModel
+        {
+            UserId = user.UserId,
+            UserName = user.UserName,
+            FullName = user.FullName
+        };
 
-                UserName =
-                    user.UserName,
-
-                FullName =
-                    user.FullName
-            };
-
-        return View(
-            "~/Views/Admin/User/ResetPassword.cshtml",
-            model);
+        return View("~/Views/Admin/User/ResetPassword.cshtml", model);
     }
-
-    // =========================================
-    // LƯU MẬT KHẨU MỚI
-    // POST: /Users/ResetPassword
-    // =========================================
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ResetPassword(
-        AdminResetPasswordViewModel model)
+    public async Task<IActionResult> ResetPassword(AdminResetPasswordViewModel model)
     {
         if (!IsAdmin())
         {
             return RedirectUnauthorized();
         }
 
-        var user = await _context.Users
-            .FirstOrDefaultAsync(item =>
-                item.UserId == model.UserId);
+        var user = await _context.Users.FirstOrDefaultAsync(item => item.UserId == model.UserId);
 
         if (user == null)
         {
             return NotFound();
         }
 
-        model.UserName =
-            user.UserName;
-
-        model.FullName =
-            user.FullName;
+        model.UserName = user.UserName;
+        model.FullName = user.FullName;
 
         if (!ModelState.IsValid)
         {
-            return View(
-                "~/Views/Admin/User/ResetPassword.cshtml",
-                model);
+            return View("~/Views/Admin/User/ResetPassword.cshtml", model);
         }
 
-        user.Password =
-            _passwordHasher.HashPassword(
-                user,
-                model.NewPassword);
+        user.Password = _passwordHasher.HashPassword(user, model.NewPassword);
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] =
-            $"Đã đặt lại mật khẩu cho tài khoản “{user.UserName}”.";
-
-        return RedirectToAction(
-            nameof(Details),
-            new { id = user.UserId });
+        TempData["Success"] = $"Đã đặt lại mật khẩu cho tài khoản “{user.UserName}”.";
+        return RedirectToAction(nameof(Details), new { id = user.UserId });
     }
 }

@@ -1,7 +1,10 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FastBite_PRO231.Models;
+using Microsoft.AspNetCore.Http;
+using System;
+
+namespace FastBite_PRO231.Controllers.Admin;
 
 public class CategoriesController : Controller
 {
@@ -12,9 +15,36 @@ public class CategoriesController : Controller
         _context = context;
     }
 
+    // =========================================
+    // KIỂM TRA QUYỀN ADMIN
+    private bool IsAdmin()
+    {
+        var role = HttpContext.Session.GetString("Role");
+        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private IActionResult RedirectUnauthorized()
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+
+        if (!userId.HasValue)
+        {
+            TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin.";
+            return RedirectToAction("Login", "Login");
+        }
+
+        TempData["Error"] = "Chỉ tài khoản Admin mới được quản lý danh mục.";
+        return RedirectToAction("Index", "Home");
+    }
+
     // Trang chủ: Danh sách + tìm kiếm
     public async Task<IActionResult> Index(string? searchString)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         var query = _context.Categories
             .AsNoTracking()
             .AsQueryable();
@@ -40,6 +70,11 @@ public class CategoriesController : Controller
     // Xem chi tiết
     public async Task<IActionResult> Details(int? categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         if (categoryid == null)
         {
             return NotFound();
@@ -59,6 +94,11 @@ public class CategoriesController : Controller
     [HttpGet]
     public IActionResult Create()
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         var category = new Category
         {
             CategoryName = "",
@@ -73,6 +113,11 @@ public class CategoriesController : Controller
     public async Task<IActionResult> Create(
         [Bind("CategoryName,Description")] Category category)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         category.CategoryName = category.CategoryName?.Trim() ?? "";
         category.Description = category.Description?.Trim() ?? "";
 
@@ -108,6 +153,11 @@ public class CategoriesController : Controller
     [HttpGet]
     public async Task<IActionResult> Edit(int? categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         if (categoryid == null)
         {
             return NotFound();
@@ -129,6 +179,11 @@ public class CategoriesController : Controller
         int? categoryid,
         [Bind("CategoryId,CategoryName,Description,Status")] Category category)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         if (categoryid == null || categoryid.Value != category.CategoryId)
         {
             return NotFound();
@@ -179,6 +234,11 @@ public class CategoriesController : Controller
     [HttpGet]
     public async Task<IActionResult> Delete(int? categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         if (categoryid == null)
         {
             return NotFound();
@@ -201,6 +261,11 @@ public class CategoriesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         var category = await _context.Categories
             .FirstOrDefaultAsync(item => item.CategoryId == categoryid);
 
@@ -229,6 +294,11 @@ public class CategoriesController : Controller
     [HttpGet]
     public async Task<IActionResult> Stop(int? categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         if (categoryid == null)
         {
             return NotFound();
@@ -250,6 +320,11 @@ public class CategoriesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> StopConfirmed(int categoryid)
     {
+        if (!IsAdmin())
+        {
+            return RedirectUnauthorized();
+        }
+
         var category = await _context.Categories
             .Include(item => item.Products)
             .FirstOrDefaultAsync(item => item.CategoryId == categoryid);
@@ -270,15 +345,5 @@ public class CategoriesController : Controller
         TempData["Success"] = "Đã ngừng sử dụng danh mục.";
 
         return RedirectToAction(nameof(Index));
-    }
-
-    private async Task<bool> CategoryExists(int categoryId)
-    {
-        return await _context.Categories.AnyAsync(item => item.CategoryId == categoryId);
-    }
-
-    private bool CategoryExists(int? categoryid)
-    {
-        return _context.Categories.Any(e => e.CategoryId == categoryid);
     }
 }

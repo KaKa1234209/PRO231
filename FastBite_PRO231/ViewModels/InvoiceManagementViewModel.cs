@@ -49,6 +49,13 @@ public class InvoiceCreateViewModel
         ErrorMessage = "Đơn hàng không hợp lệ.")]
     public int OrderId { get; set; }
 
+    // FIX: EmployeeId là int? (nullable) nhưng chỉ có [Range] — với kiểu nullable,
+    // [Range] coi giá trị null là HỢP LỆ (bỏ qua validate), nên form có thể submit
+    // không chọn nhân viên mà vẫn qua được ModelState.IsValid, mặc dù thông báo lỗi
+    // "Vui lòng chọn nhân viên." cho thấy đây phải là trường bắt buộc.
+    // Thêm [Required] để chặn giá trị null.
+    [Required(
+        ErrorMessage = "Vui lòng chọn nhân viên.")]
     [Range(
         1,
         int.MaxValue,

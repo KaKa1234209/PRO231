@@ -10,15 +10,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FastBite_PRO231.Controllers.Admin;
+namespace FastBite_PRO231.Controllers.Employee;
 
-public class AdminSettlementController : Controller
+public class ShippersController : Controller
 {
     private readonly FastBiteDbContext _context;
 
     private readonly PasswordHasher<User> _passwordHasher = new();
 
-    public AdminSettlementController(FastBiteDbContext context)
+    public ShippersController(FastBiteDbContext context)
     {
         _context = context;
     }
@@ -460,7 +460,6 @@ public class AdminSettlementController : Controller
 
     // =========================================
     // ĐỔI TRẠNG THÁI LÀM VIỆC
-    // POST: /Shippers/ToggleStatus
     // =========================================
 
     [HttpPost]
@@ -480,7 +479,9 @@ public class AdminSettlementController : Controller
             OrderStatusConstants.StaffWorking,
             StringComparison.OrdinalIgnoreCase);
 
-        shipper.Status = isWorking ? OrderStatusConstants.StaffResigned : OrderStatusConstants.StaffResigned;
+        // SỬA: trước đây cả 2 nhánh đều gán StaffResigned (lỗi copy-paste),
+        // khiến shipper không bao giờ được kích hoạt lại được.
+        shipper.Status = isWorking ? OrderStatusConstants.StaffResigned : OrderStatusConstants.StaffWorking;
         shipper.User.Status = GetAccountStatus(shipper.Status);
 
         await _context.SaveChangesAsync();
@@ -490,43 +491,6 @@ public class AdminSettlementController : Controller
             : $"Đã chuyển shipper “{shipper.User.FullName}” sang nghỉ việc.";
 
         return RedirectToAction(nameof(Index));
-    }
-
-    // =========================================
-    // TRANG ĐỐI SOÁT — liệt kê tiền từng shipper cần nộp
-    // GET: /Shippers/Settlement
-    // =========================================
-    [HttpGet]
-    public async Task<IActionResult> Settlement()
-    {
-        if (!IsAdmin()) return RedirectUnauthorized();
-
-        var pendingOrders = await _context.Orders
-            .AsNoTracking()
-            .Include(o => o.Shipper).ThenInclude(s => s!.User)
-            .Where(o =>
-                o.PaymentMethod == OrderStatusConstants.PaymentMethodCod &&
-                o.PaymentStatus == OrderStatusConstants.PaymentStatusPaid &&
-                o.SettlementStatus == OrderStatusConstants.SettlementPending &&
-                o.ShipperId != null)
-            .ToListAsync();
-
-        var groups = pendingOrders
-            .GroupBy(o => o.ShipperId!.Value)
-            .Select(g => new SettlementGroupViewModel
-            {
-                ShipperId = g.Key,
-                ShipperName = g.First().Shipper?.User.FullName ?? "Shipper",
-                ShipperPhone = g.First().Shipper?.User.Phone ?? "",
-                OrderCount = g.Count(),
-                TotalAmount = g.Sum(o => o.TotalAmount),
-                OrderIds = g.Select(o => o.OrderId).ToList()
-            })
-            .OrderByDescending(g => g.TotalAmount)
-            .ToList();
-
-        var model = new SettlementViewModel { Groups = groups };
-        return View("~/Views/Admin/Shipper/Settlement.cshtml", model);
     }
 
     // =========================================
@@ -542,7 +506,7 @@ public class AdminSettlementController : Controller
         if (orderIds == null || orderIds.Count == 0)
         {
             TempData["Error"] = "Không có đơn hàng nào được chọn.";
-            return RedirectToAction(nameof(Settlement));
+            return RedirectToAction(nameof(Shipper));
         }
 
         // FIX: trước đây chỉ Where theo orderIds rồi update thẳng, tin tưởng hoàn toàn
@@ -559,7 +523,7 @@ public class AdminSettlementController : Controller
         if (orders.Count == 0)
         {
             TempData["Error"] = "Các đơn hàng được chọn không còn hợp lệ để đối soát.";
-            return RedirectToAction(nameof(Settlement));
+            return RedirectToAction(nameof(Shipper));
         }
 
         foreach (var order in orders)
@@ -575,7 +539,7 @@ public class AdminSettlementController : Controller
             ? $"Đã xác nhận đối soát {orders.Count} đơn hàng ({skipped} đơn bị bỏ qua vì không còn hợp lệ)."
             : $"Đã xác nhận đối soát {orders.Count} đơn hàng.";
 
-        return RedirectToAction(nameof(Settlement));
+        return RedirectToAction(nameof(Shipper));
     }
 
     // =========================================

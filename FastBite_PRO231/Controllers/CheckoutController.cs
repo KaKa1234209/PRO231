@@ -94,12 +94,18 @@ public class CheckoutController : Controller
     // =========================================
     // TRANG XÁC NHẬN ĐƠN HÀNG
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int[]? itemIds)
     {
         if (!IsCustomer()) return RedirectToLogin();
 
         var userId = HttpContext.Session.GetInt32("UserId");
         if (!userId.HasValue) return RedirectToLogin();
+
+        if (itemIds == null || itemIds.Length == 0)
+        {
+            TempData["Error"] = "Vui lòng chọn ít nhất 1 món để đặt hàng.";
+            return RedirectToAction("Index", "Cart");
+        }
 
         var customer = await _context.Customers
             .AsNoTracking()
@@ -124,7 +130,18 @@ public class CheckoutController : Controller
             return RedirectToAction("Index", "Cart");
         }
 
-        var items = cart.CartItems
+        // CHỈ lấy đúng những CartItem có ID nằm trong danh sách khách đã tick
+        var selectedCartItems = cart.CartItems
+            .Where(ci => itemIds.Contains(ci.CartItemId))
+            .ToList();
+
+        if (selectedCartItems.Count == 0)
+        {
+            TempData["Error"] = "Món đã chọn không còn trong giỏ hàng. Vui lòng chọn lại.";
+            return RedirectToAction("Index", "Cart");
+        }
+
+        var items = selectedCartItems
             .Select(item => new CheckoutItemViewModel
             {
                 ProductId = item.ProductId,
@@ -151,6 +168,9 @@ public class CheckoutController : Controller
             PaymentMethod = "COD",
             Note = null,
             DeliveryFee = CalculateDeliveryFee(subtotal, null, null),
+
+            // Lưu lại danh sách ID để gửi kèm khi submit PlaceOrder
+            SelectedCartItemIds = selectedCartItems.Select(ci => ci.CartItemId).ToList(),
 
             Items = items
         };
@@ -190,9 +210,35 @@ public class CheckoutController : Controller
             return RedirectToAction("Index", "Cart");
         }
 
+        // CHỈ lấy đúng những món đã được tick chọn từ trước
+        // CheckoutController.PlaceOrder — thay đoạn lấy selectedCartItems
+        var selectedIds = model.SelectedCartItemIds ?? new List<int>();
+
+        if (selectedIds.Count == 0)
+        {
+            TempData["Error"] = "Không tìm thấy món đã chọn. Vui lòng thử lại từ giỏ hàng.";
+            return RedirectToAction("Index", "Cart");
+        }
+
+        var selectedCartItems = cart.CartItems
+            .Where(ci => selectedIds.Contains(ci.CartItemId))
+            .ToList();
+
+        if (selectedCartItems.Count == 0)
+        {
+            TempData["Error"] = "Món đã chọn không còn trong giỏ hàng. Vui lòng thử lại từ giỏ hàng.";
+            return RedirectToAction("Index", "Cart");
+        }
+
+        if (selectedCartItems.Count == 0)
+        {
+            TempData["Error"] = "Không tìm thấy món đã chọn. Vui lòng thử lại từ giỏ hàng.";
+            return RedirectToAction("Index", "Cart");
+        }
+
         if (!ModelState.IsValid)
         {
-            model.Items = cart.CartItems.Select(item => new CheckoutItemViewModel
+            model.Items = selectedCartItems.Select(item => new CheckoutItemViewModel
             {
                 ProductId = item.ProductId,
                 ProductName = item.Product?.ProductName ?? "Sản phẩm",
@@ -209,14 +255,13 @@ public class CheckoutController : Controller
             return View("Index", model);
         }
 
-        if (model.PaymentMethod != OrderStatusConstants.PaymentMethodCod &&
-            model.PaymentMethod != OrderStatusConstants.PaymentMethodVnpay)
+        if (model.PaymentMethod != "COD" && model.PaymentMethod != "VNPay")
         {
             TempData["Error"] = "Phương thức thanh toán không hợp lệ.";
             return RedirectToAction("Index");
         }
 
-        var productIds = cart.CartItems.Select(item => item.ProductId).Distinct().ToList();
+        var productIds = selectedCartItems.Select(item => item.ProductId).Distinct().ToList();
 
         var inventories = await _context.Inventories
             .Where(item => productIds.Contains(item.ProductId))
@@ -224,7 +269,7 @@ public class CheckoutController : Controller
 
         var inventoryDictionary = inventories.ToDictionary(item => item.ProductId);
 
-        foreach (var cartItem in cart.CartItems)
+        foreach (var cartItem in selectedCartItems)
         {
             if (cartItem.Product == null || !cartItem.Product.Status)
             {
@@ -256,7 +301,7 @@ public class CheckoutController : Controller
                 CustomerId = customer.CustomerId,
                 EmployeeId = null,
                 OrderDate = DateTime.Now,
-                Status = OrderStatusConstants.Pending,
+                Status = "Đang chờ xử lý",
                 TotalAmount = 0,
 
                 DeliveryAddress = model.Address,
@@ -265,10 +310,10 @@ public class CheckoutController : Controller
                 Note = model.Note,
 
                 PaymentMethod = model.PaymentMethod,
-                PaymentStatus = OrderStatusConstants.PaymentStatusUnpaid,
+                PaymentStatus = "Chưa thanh toán"
             };
 
-            foreach (var cartItem in cart.CartItems)
+            foreach (var cartItem in selectedCartItems)
             {
                 var unitPrice = cartItem.Product?.Price ?? cartItem.Price;
                 var subTotal = unitPrice * cartItem.Quantity;
@@ -281,34 +326,35 @@ public class CheckoutController : Controller
                     UnitPrice = unitPrice
                 });
 
-                if (model.PaymentMethod == OrderStatusConstants.PaymentMethodCod)
-                {
-                    var inventory = inventoryDictionary[cartItem.ProductId];
-                    inventory.Quantity -= cartItem.Quantity;
-                    inventory.UpdateAt = DateTime.Now;
-                }
+                var inventory = inventoryDictionary[cartItem.ProductId];
+                inventory.Quantity -= cartItem.Quantity;
+                inventory.UpdateAt = DateTime.Now;
             }
-                
+
             var deliveryFee = CalculateDeliveryFee(totalAmount, model.Latitude, model.Longitude);
             order.DeliveryFee = deliveryFee;
             order.TotalAmount = totalAmount + deliveryFee;
 
-
             _context.Orders.Add(order);
-            _context.CartItems.RemoveRange(cart.CartItems);
-            cart.TotalPrice = 0;
+
+            // CHỈ xoá những món ĐÃ CHỌN khỏi giỏ hàng - món chưa chọn vẫn giữ nguyên
+            _context.CartItems.RemoveRange(selectedCartItems);
+
+            // Tính lại tổng giỏ hàng dựa trên những món CÒN LẠI (chưa đặt)
+            var remainingSubtotal = cart.CartItems
+                .Where(ci => !model.SelectedCartItemIds.Contains(ci.CartItemId))
+                .Sum(ci => ci.SubTotal);
+
+            cart.TotalPrice = remainingSubtotal;
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // ===== RẼ NHÁNH THEO PHƯƠNG THỨC THANH TOÁN =====
-
-            if (model.PaymentMethod == OrderStatusConstants.PaymentMethodVnpay)
+            if (model.PaymentMethod == "VNPay")
             {
                 return RedirectToAction("PayWithVnpay", "Payment", new { orderId = order.OrderId });
             }
 
-            // COD: hoàn tất luôn, không cần thanh toán online
             TempData["Success"] = "Đặt hàng thành công.";
             return RedirectToAction(nameof(Success), new { orderId = order.OrderId });
         }

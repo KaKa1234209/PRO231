@@ -24,6 +24,16 @@ public class CartController : Controller
             StringComparison.OrdinalIgnoreCase);
     }
 
+    // Nhận biết request gọi bằng fetch()/AJAX (JS gửi kèm header này)
+    // để trả về JSON thay vì redirect như submit form thường.
+    private bool IsAjaxRequest()
+    {
+        return string.Equals(
+            Request.Headers["X-Requested-With"],
+            "XMLHttpRequest",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task<Customer?> GetCurrentCustomerAsync()
     {
         var userId = HttpContext.Session.GetInt32("UserId");
@@ -323,11 +333,17 @@ public class CartController : Controller
         int cartItemId,
         int quantity)
     {
+        var isAjax = IsAjaxRequest();
         var userId =
             HttpContext.Session.GetInt32("UserId");
 
         if (!IsCustomer() || !userId.HasValue)
         {
+            if (isAjax)
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập lại." });
+            }
+
             return RedirectToAction(
                 "Login",
                 "Login");
@@ -342,6 +358,11 @@ public class CartController : Controller
 
         if (cartItem == null)
         {
+            if (isAjax)
+            {
+                return Json(new { success = false, message = "Không tìm thấy món trong giỏ hàng." });
+            }
+
             TempData["Error"] =
                 "Không tìm thấy món trong giỏ hàng.";
 
@@ -355,6 +376,11 @@ public class CartController : Controller
             _context.CartItems.Remove(cartItem);
             await _context.SaveChangesAsync();
             await RecalculateCartAsync(cartId);
+
+            if (isAjax)
+            {
+                return Json(new { success = true, removed = true, cartItemId });
+            }
 
             TempData["Success"] =
                 "Đã xóa món khỏi giỏ hàng.";
@@ -372,6 +398,17 @@ public class CartController : Controller
 
         if (quantity > stock)
         {
+            if (isAjax)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Sản phẩm chỉ còn {stock} phần.",
+                    quantity = cartItem.Quantity,
+                    subTotal = cartItem.SubTotal
+                });
+            }
+
             TempData["Error"] =
                 $"Sản phẩm chỉ còn {stock} phần.";
 
@@ -384,6 +421,18 @@ public class CartController : Controller
 
         await _context.SaveChangesAsync();
         await RecalculateCartAsync(cartItem.CartId);
+
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                cartItemId,
+                quantity = cartItem.Quantity,
+                subTotal = cartItem.SubTotal,
+                stock
+            });
+        }
 
         TempData["Success"] =
             "Đã cập nhật số lượng.";

@@ -197,6 +197,7 @@ public partial class FastBiteDbContext : DbContext
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF387FBEC1");
 
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.DeliveryAddress).HasMaxLength(255);
             entity.Property(e => e.DeliveryFee).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Note).HasMaxLength(500);

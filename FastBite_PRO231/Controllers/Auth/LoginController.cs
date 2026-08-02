@@ -284,7 +284,7 @@ public class LoginController : Controller
                 FullName = model.FullName,
                 Email = model.Email,
                 Phone = model.Phone,
-                Status = "Hoạt động",
+                Status = FastBite_PRO231.Common.OrderStatusConstants.AccountActive, 
                 CreatedAt = DateTime.Now,
                 RoleId = customerRole.RoleId
             };
